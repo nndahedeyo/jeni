@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>jeni 試験版</title>
+</head>
+<body>
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="color-scheme" content="dark light">
+<style>
+/* 画面の考え方：いちばん上にプロフィールカード（メニューを兼ねる）、その下にカードが流れる。カードはすべて 1.586:1 */
+:root{
+  --bg:#0f1411; --card:#171e19; --sunk:#1f2822; --ink:#e7ede8; --mute:#8fa094; --line:#2b372f;
+  --gold:#e2c06b; --gold-ink:#1a1608; --leaf:#7fbf8a; --leaf-soft:#1f3326;
+  --t-rwa:#1d2a1f; --t-media:#1b1f2e; --t-text:#2a2219; --t-person:#232319;
+  --ratio:1.586;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#efe9dc; --card:#f8f4ea; --sunk:#e6dfcf; --ink:#2b261c; --mute:#7a705d; --line:#d8cfbb;
+  --gold:#b8892a; --gold-ink:#fffaf0; --leaf:#3f7a4c; --leaf-soft:#dde9da;
+  --t-rwa:#e9ecdc; --t-media:#e3e4ea; --t-text:#efe3d1; --t-person:#ebe6d4;
+  color-scheme:light;}}
+:root[data-theme="light"]{
+  --bg:#efe9dc; --card:#f8f4ea; --sunk:#e6dfcf; --ink:#2b261c; --mute:#7a705d; --line:#d8cfbb;
+  --gold:#b8892a; --gold-ink:#fffaf0; --leaf:#3f7a4c; --leaf-soft:#dde9da;
+  --t-rwa:#e9ecdc; --t-media:#e3e4ea; --t-text:#efe3d1; --t-person:#ebe6d4;
+  color-scheme:light;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+.wrap{max-width:420px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+
+/* プロフィールカード */
+.me{aspect-ratio:var(--ratio);max-width:100%;border-radius:18px;background:var(--card);border:1px solid var(--line);
+  padding:16px;display:grid;grid-template-rows:auto 1fr auto;gap:8px}
+.me-top{display:flex;align-items:center;gap:10px}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--leaf-soft);color:var(--leaf);font-weight:700;flex:none}
+.me-name{font-weight:700;font-size:17px;line-height:1.2}
+.me-line{font-size:12px;color:var(--mute)}
+.bal{margin-left:auto;display:flex;align-items:center;gap:5px;color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}
+.bal svg.i{width:22px;height:22px}
+.menu{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;align-self:end}
+.menu button{aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;min-height:36px}
+.menu button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf)}
+.menu button.make{background:var(--gold);color:var(--gold-ink)}
+.cap{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);padding:0 4px}
+
+/* アセットカード */
+.feed{display:grid;gap:12px}
+.card{aspect-ratio:var(--ratio);max-width:100%;border-radius:18px;padding:16px;border:1px solid var(--line);
+  display:grid;grid-template-rows:auto 1fr auto;gap:6px;background:var(--card)}
+.card[data-k="rwa"]{background:var(--t-rwa)} .card[data-k="music"],.card[data-k="video"],.card[data-k="picture"]{background:var(--t-media)}
+.card[data-k="text"]{background:var(--t-text)}
+.kind{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
+.kind svg.i{width:16px;height:16px}
+.title{align-self:center;font-size:19px;font-weight:700;line-height:1.35;text-wrap:balance;min-width:0;overflow-wrap:anywhere}
+.foot{display:flex;align-items:flex-end;gap:10px}
+.who{display:grid;gap:2px;min-width:0;font-size:12px;color:var(--mute)}
+.who b{color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acts{margin-left:auto;display:flex;gap:8px}
+.acts button{display:flex;align-items:center;gap:5px;border-radius:999px;min-height:40px;padding:0 14px;font-weight:700;font-variant-numeric:tabular-nums}
+.tip{border:1px solid var(--line);background:transparent;color:var(--gold)}
+.hold{border:0;background:var(--leaf);color:var(--bg)}
+.empty{color:var(--mute);text-align:center;padding:32px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--sunk);color:var(--ink);
+  border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-shell" viewBox="0 0 24 24"><path d="M12 20 3.5 9.5C6 6 9 4.5 12 4.5S18 6 20.5 9.5Z"/><path d="M12 20 8 6M12 20V4.5M12 20l4-14M12 20 5.5 7.5M12 20l6.5-12.5"/><path d="M10 20h4"/></symbol>
+  <symbol id="i-hold" viewBox="0 0 24 24"><rect x="7" y="4" width="13" height="9" rx="2"/><rect x="4" y="9" width="13" height="9" rx="2"/></symbol>
+  <symbol id="i-all" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-rwa" viewBox="0 0 24 24"><path d="M4 10h16l-1.5 9h-13Z"/><path d="M8 10l2-5M16 10l-2-5"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="15" r="2.5"/><path d="M9.5 17V6l10-2v11"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></symbol>
+  <symbol id="i-picture" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 6-5 4 3 3-2 4 3"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 19l1-4L16 5l3 3L9 18Z"/><path d="M14 7l3 3"/></symbol>
+  <symbol id="i-friends" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c.7-3 3-4.5 5.5-4.5s4.8 1.5 5.5 4.5"/><circle cx="17" cy="8" r="2.4"/><path d="M15.5 13.5c2.3 0 4.2 1.3 5 4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+<div class="wrap">
+  <section class="me" aria-label="プロフィール">
+    <div class="me-top">
+      <div class="av">K</div>
+      <div><div class="me-name">Kenji</div><div class="me-line">自然を愛するつくり手</div></div>
+      <div class="bal" title="持っている jeni"><svg class="i"><use href="#i-shell"/></svg><span>10,000</span></div>
+    </div>
+    <div></div>
+    <nav class="menu" id="menu" aria-label="表示するカード"></nav>
+  </section>
+  <div class="cap"><span id="field"></span><span>見本のカード</span></div>
+  <main class="feed" id="feed"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+// メニュー：プロフィールカードの上のアイコンだけで、見るカードを切り替える
+const FIELDS = [
+  ["all", "すべて"], ["rwa", "現物"], ["music", "音楽"], ["video", "動画"],
+  ["picture", "写真"], ["text", "文章"], ["friends", "仲間のカード"],
+];
+const KIND = {rwa: "現物", music: "音楽", video: "動画", picture: "写真", text: "文章"};
+// 見本（app30 の見本を元にしたもの）
+const CARDS = [
+  {k: "rwa", title: "朝採り大根 3本セット", by: "Farmer_S", price: 80, friend: true},
+  {k: "music", title: "Ambient Waves", by: "SoundArchitect", price: 50},
+  {k: "text", title: "土を耕すということ", by: "Farmer_S", price: 0, friend: true},
+  {k: "rwa", title: "天然酵母カンパーニュ", by: "Bakery_Haru", price: 60},
+  {k: "picture", title: "夜明けの田んぼ", by: "Farmer_S", price: 0, friend: true},
+  {k: "video", title: "畑の一日（3分）", by: "Farmer_S", price: 30, friend: true},
+];
+let field = "all";
+try { field = sessionStorage.getItem("jeni.field") || "all"; } catch (e) {}
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+function render() {
+  $("menu").innerHTML = FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")
+    + `<button type="button" class="make" data-make aria-label="カードを作る" title="カードを作る">${icon("plus")}</button>`;
+  const list = CARDS.filter(c => field === "all" || (field === "friends" ? c.friend : c.k === field));
+  $("field").textContent = `${FIELDS.find(f => f[0] === field)[1]}・${list.length}枚`;
+  $("feed").innerHTML = list.length ? list.map((c, i) => `<article class="card" data-k="${c.k}">
+      <div class="kind">${icon(c.k)}${KIND[c.k]}</div>
+      <div class="title">${esc(c.title)}</div>
+      <div class="foot">
+        <div class="who"><b>${esc(c.by)}</b></div>
+        <div class="acts">
+          <button type="button" class="tip" data-tip="${i}" aria-label="投げ銭">${icon("shell")}</button>
+          <button type="button" class="hold" data-hold="${i}">${icon("hold")}${c.price ? c.price : "無料"}</button>
+        </div>
+      </div>
+    </article>`).join("") : `<p class="empty">まだカードがありません</p>`;
+}
+let tt;
+const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 1800); };
+document.addEventListener("click", e => {
+  const f = e.target.closest("[data-f]");
+  if (f) { field = f.dataset.f; try { sessionStorage.setItem("jeni.field", field); } catch (x) {} return render(); }
+  if (e.target.closest("[data-make]")) return toast("作る画面は次の段階で");
+  if (e.target.closest("[data-tip]")) return toast("見本なので、jeni は動きません");
+  if (e.target.closest("[data-hold]")) return toast("見本なので、jeni は動きません");
+});
+render();
+</script>
+
+</body>
+</html>
