@@ -1,0 +1,144 @@
+// jeni の決まりの確かめ。使い方: node tests/rules.test.js
+const test = require("node:test"), assert = require("node:assert");
+const {reduce, sha256hex, R} = require("../app/rules.js");
+const crypto = require("node:crypto");
+const K = n => n.repeat(64).slice(0, 64);           // 見本のかぎ（a… b… c…）
+const A = K("a"), B = K("b"), C = K("c"), D = K("d"), E = K("e");
+let seq = 0;
+const ev = (pk, at, c) => ({id: String(++seq).padStart(6, "0"), pubkey: pk, created_at: at, kind: 7720, content: JSON.stringify(c)});
+const opt = {founders: [A]};
+// A が最初の人。A が B と C を認める
+const base = () => [ev(A, 1, {t: "profile", name: "A"}), ev(A, 2, {t: "vouch", who: B}), ev(A, 3, {t: "vouch", who: C})];
+const total = S => Object.values(S.users).reduce((s, u) => s + u.bal, 0);
+const members = S => Object.values(S.users).filter(u => u.member).length;
+
+test("はじまり：認められると 1000 jeni。1人が認められるのは3人まで。jeni は参加した人数×1000 から増えない", () => {
+  const e = [...base(), ev(A, 4, {t: "vouch", who: D}), ev(A, 5, {t: "vouch", who: E})];
+  const S = reduce(e, 10, opt);
+  assert.equal(S.users[B].bal, 1000); assert.equal(S.users[D].bal, 1000);
+  assert.ok(!(S.users[E] || {}).member);                 // 4人目は認められない
+  assert.equal(total(S), members(S) * 1000);
+});
+test("参加していない人は認められない・二重に認めても増えない", () => {
+  const S = reduce([ev(D, 1, {t: "vouch", who: E}), ...base(), ev(C, 5, {t: "vouch", who: B})], 10, opt);
+  assert.ok(!(S.users[E] || {}).member); assert.equal(S.users[B].bal, 1000);
+});
+test("持つ：値段の分が作った人へ。値段は変わらない。自分のカードは持てない", () => {
+  const card = ev(B, 10, {t: "card", kind: "music", title: "曲", price: 50});
+  const S = reduce([...base(), card, ev(C, 11, {t: "hold", card: card.id}), ev(B, 12, {t: "hold", card: card.id})], 20, opt);
+  assert.equal(S.users[C].bal, 950); assert.equal(S.users[B].bal, 1050);
+  assert.equal(S.cards[card.id].holders, 1);
+});
+test("上限：同じカードは3枚まで、無料のカードは1枚まで", () => {
+  const paid = ev(B, 10, {t: "card", kind: "text", title: "文", price: 10});
+  const free = ev(B, 11, {t: "card", kind: "text", title: "無料", price: 0});
+  const e = [...base(), paid, free];
+  for (let i = 0; i < 5; i++) e.push(ev(C, 20 + i, {t: "hold", card: paid.id}), ev(C, 40 + i, {t: "hold", card: free.id}));
+  const S = reduce(e, 100, opt);
+  assert.equal(S.cards[paid.id].copies.length, 3); assert.equal(S.cards[free.id].copies.length, 1);
+  assert.equal(S.users[C].bal, 970);
+});
+test("jeni が足りなければ持てない", () => {
+  const card = ev(B, 10, {t: "card", kind: "rwa", title: "高いもの", price: 1001, supply: 1});
+  const S = reduce([...base(), card, ev(C, 11, {t: "hold", card: card.id})], 20, opt);
+  assert.equal(S.cards[card.id].copies.length, 0); assert.equal(S.users[C].bal, 1000);
+});
+test("数に限りのあるカード：残りがなくなったら作った人からは持てない。最後の1個は先に出した人", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "大根", price: 80, supply: 1});
+  const S = reduce([...base(), card, ev(C, 12, {t: "hold", card: card.id}), ev(B, 12, {t: "hold", card: card.id})], 20, opt);
+  const owner = S.cards[card.id].copies[0].owner;
+  assert.equal(S.cards[card.id].left, 0); assert.equal(S.cards[card.id].copies.length, 1);
+  assert.ok(owner === B || owner === C);       // 同じ時刻なら番号の小さい出来事（どの画面でも同じ）
+});
+test("譲る：順番を待つ人へ、持ち主が同じ値段で譲る。jeni は手放した人へ", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "靴", price: 300, supply: 1});
+  const e = [...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(C, 12, {t: "want", card: card.id}), ev(B, 13, {t: "pass", card: card.id, to: C})];
+  const S = reduce(e, 20, opt);
+  assert.equal(S.cards[card.id].copies[0].owner, C);
+  assert.equal(S.users[B].bal, 1000); assert.equal(S.users[C].bal, 700); assert.equal(S.users[A].bal, 1300);
+});
+test("順番を待っていない人には譲れない（勝手に押しつけて jeni を取れない）", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "靴", price: 300, supply: 1});
+  const S = reduce([...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(B, 13, {t: "pass", card: card.id, to: C})], 20, opt);
+  assert.equal(S.cards[card.id].copies[0].owner, B); assert.equal(S.users[C].bal, 1000);
+});
+test("投げ銭：半分は作った人、半分は持っている人へ枚数に応じて。端数は作った人へ", () => {
+  const card = ev(A, 10, {t: "card", kind: "music", title: "曲", price: 10});
+  const e = [...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(B, 12, {t: "hold", card: card.id}), ev(C, 13, {t: "hold", card: card.id}),
+    ev(C, 14, {t: "tip", card: card.id, amount: 101})];
+  const S = reduce(e, 20, opt);
+  // 半分=50 → B:2枚 33、C:1枚 16、作った人 101-49=52
+  assert.equal(S.users[B].bal, 1000 - 20 + 33); assert.equal(S.users[C].bal, 1000 - 10 - 101 + 16);
+  assert.equal(S.users[A].bal, 1000 + 30 + 52);
+  assert.equal(total(S), members(S) * 1000);
+});
+test("投げ銭：数に限りのあるカードは全額が作った人へ", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "パン", price: 60, supply: 3});
+  const S = reduce([...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(C, 12, {t: "tip", card: card.id, amount: 40})], 20, opt);
+  assert.equal(S.users[B].bal, 940); assert.equal(S.users[A].bal, 1100);
+});
+test("使う：作った人が受け取りを記録すると、その1枚は使ったことになり、また持てる", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 10});
+  const e = [...base(), card];
+  for (let i = 0; i < 3; i++) e.push(ev(B, 11 + i, {t: "hold", card: card.id}));
+  e.push(ev(B, 15, {t: "hold", card: card.id}), ev(A, 16, {t: "used", card: card.id, holder: B}), ev(B, 17, {t: "hold", card: card.id}));
+  const S = reduce(e, 20, opt);
+  assert.equal(S.cards[card.id].copies.filter(x => x.owner === B && !x.used).length, 3);
+  assert.equal(S.cards[card.id].copies.length, 4);
+});
+test("贈る：持っているカードを参加している人へ（jeni は動かない）", () => {
+  const card = ev(A, 10, {t: "card", kind: "picture", title: "写真", price: 20});
+  const S = reduce([...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(B, 12, {t: "gift", card: card.id, to: C})], 20, opt);
+  assert.equal(S.cards[card.id].copies[0].owner, C); assert.equal(S.users[C].bal, 1000);
+});
+test("返す：売った人だけが、まだ持っている人へ払った額を返せる。譲ったあとは返せない", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "靴", price: 300, supply: 2});
+  const e = [...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(C, 12, {t: "refund", card: card.id, holder: B}), ev(A, 13, {t: "refund", card: card.id, holder: B})];
+  let S = reduce(e, 20, opt);
+  assert.equal(S.users[B].bal, 1000); assert.equal(S.cards[card.id].copies.length, 0); assert.equal(S.cards[card.id].left, 2);
+  const e2 = [...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(B, 12, {t: "gift", card: card.id, to: C}), ev(A, 13, {t: "refund", card: card.id, holder: C})];
+  S = reduce(e2, 20, opt);
+  assert.equal(S.users[A].bal, 1300); assert.equal(S.cards[card.id].copies[0].owner, C);
+});
+test("その場で売る：QR の番号を知っている人だけが期限内に持てる。持つと同時に受け取り済み", () => {
+  const code = crypto.randomBytes(8).toString("hex");
+  assert.equal(sha256hex(code), crypto.createHash("sha256").update(code).digest("hex"));
+  const card = ev(A, 100, {t: "card", kind: "rwa", title: "パン", price: 120, supply: 1, lock: sha256hex(code), until: 400});
+  const e = [...base(), card, ev(B, 150, {t: "hold", card: card.id, code: "ちがう番号"}), ev(C, 160, {t: "hold", card: card.id, code})];
+  const S = reduce(e, 500, opt);
+  assert.equal(S.cards[card.id].copies[0].owner, C); assert.ok(S.cards[card.id].copies[0].used);
+  assert.equal(S.users[A].bal, 1120);
+  const late = reduce([...base(), card, ev(C, 401, {t: "hold", card: card.id, code})], 500, opt);
+  assert.equal(late.cards[card.id].copies.length, 0);     // 期限が過ぎたら持てない
+  const sha = crypto.createHash("sha256").update("日本語のテスト").digest("hex");
+  assert.equal(sha256hex("日本語のテスト"), sha);
+});
+test("未来の時刻の出来事は数えない・壊れた出来事は無視", () => {
+  const card = ev(B, 10, {t: "card", kind: "text", title: "文", price: 10});
+  const S = reduce([...base(), card, {id: "x", pubkey: C, created_at: 11, content: "{壊れた"}, ev(C, 5000, {t: "hold", card: card.id})], 100, opt);
+  assert.equal(S.cards[card.id].copies.length, 0);
+});
+test("どんな順番で届いても、同じ結果になる", () => {
+  const card = ev(A, 10, {t: "card", kind: "music", title: "曲", price: 10});
+  const lim = ev(A, 11, {t: "card", kind: "rwa", title: "靴", price: 100, supply: 1});
+  const e = [...base(), card, lim, ev(B, 12, {t: "hold", card: card.id}), ev(C, 13, {t: "hold", card: lim.id}), ev(B, 14, {t: "want", card: lim.id}),
+    ev(C, 15, {t: "pass", card: lim.id, to: B}), ev(C, 16, {t: "tip", card: card.id, amount: 7}), ev(B, 17, {t: "tip", card: lim.id, amount: 3})];
+  const a = JSON.stringify(Object.values(reduce(e, 100, opt).users).map(u => [u.pk, u.bal]).sort());
+  for (let k = 0; k < 20; k++) {
+    const sh = e.slice().sort(() => Math.random() - .5);
+    assert.equal(JSON.stringify(Object.values(reduce(sh, 100, opt).users).map(u => [u.pk, u.bal]).sort()), a);
+  }
+});
+test("たくさん動かしても、jeni の合計は参加人数×1000 のまま（増えも減りもしない）", () => {
+  const ppl = [A, B, C, D]; const e = [...base(), ev(B, 4, {t: "vouch", who: D})];
+  const cards = [];
+  for (let i = 0; i < 6; i++) { const c = ev(ppl[i % 4], 10 + i, {t: "card", kind: i % 2 ? "rwa" : "music", title: "c" + i, price: (i * 37) % 200, supply: i % 2 ? 2 : null}); cards.push(c); e.push(c); }
+  let at = 100;
+  for (let k = 0; k < 400; k++) {
+    const who = ppl[k * 7 % 4], c = cards[k * 5 % 6], to = ppl[k * 3 % 4], r = k % 6;
+    e.push(ev(who, at++, r === 0 || r === 1 ? {t: "hold", card: c.id} : r === 2 ? {t: "tip", card: c.id, amount: 1 + k % 50} : r === 3 ? {t: "want", card: c.id} : r === 4 ? {t: "pass", card: c.id, to} : {t: "refund", card: c.id, holder: to}));
+  }
+  const S = reduce(e, at + 1, opt);
+  assert.equal(total(S), members(S) * 1000);
+  assert.ok(Object.values(S.users).every(u => u.bal >= 0));
+});
