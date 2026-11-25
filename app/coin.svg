@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 日の丸（日本の国旗）を象徴する深い赤色の背景円 -->
+  <circle cx="100" cy="100" r="95" fill="#BC002D"/>
+  
+  <!-- Jと＝を融合させた白抜き文字 -->
+  <g stroke="#FFFFFF" fill="none" stroke-linecap="round">
+    <!-- 「J」本体の力強いライン -->
+    <path d="M 115,45 V 140 C 115,170 70,170 70,140" stroke-width="22"/>
+    
+    <!-- 「＝」を表す2本の水平ライン（横幅を20%縮小） -->
+    <line x1="64" y1="82" x2="136" y2="82" stroke-width="18"/>
+    <line x1="64" y1="112" x2="136" y2="112" stroke-width="18"/>
+  </g>
+</svg>

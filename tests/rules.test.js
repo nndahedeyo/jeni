@@ -142,3 +142,24 @@ test("たくさん動かしても、jeni の合計は参加人数×1000 のま�
   assert.equal(total(S), members(S) * 1000);
   assert.ok(Object.values(S.users).every(u => u.bal >= 0));
 });
+test("持ち方：鍵をかけて持てるのは数に限りのないカードだけ。鍵をかけた人は人数にも投げ銭の分け前にも入らない", () => {
+  const card = ev(A, 10, {t: "card", kind: "music", title: "曲", price: 10});
+  const lim = ev(A, 11, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 5});
+  const e = [...base(), card, lim, ev(B, 12, {t: "hold", card: card.id, vis: "lock"}), ev(C, 13, {t: "hold", card: card.id, vis: "hide"}),
+    ev(B, 14, {t: "hold", card: lim.id, vis: "lock"}), ev(D, 15, {t: "tip", card: card.id, amount: 10})];
+  const S = reduce([...e, ev(A, 5, {t: "vouch", who: D})], 20, opt);
+  assert.equal(S.cards[card.id].holders, 1);                 // 画面に出さない C は数える。鍵の B は数えない
+  assert.equal(S.cards[lim.id].copies.length, 0);           // 数に限りのあるカードに鍵はかけられない
+  assert.equal(S.users[C].bal, 1000 - 10 + 5);             // 分け前は C だけ
+  assert.equal(S.users[B].bal, 990);
+});
+test("仲間の輪：輪の中のカードは、輪の人だけが持てる", () => {
+  const ci = ev(B, 10, {t: "circle", name: "畑の仲間", members: [A]});
+  const e = [...base(), ci];
+  const card = ev(B, 11, {t: "card", kind: "text", title: "段取り", price: 0, circle: ci.id});
+  const S = reduce([...e, card, ev(A, 12, {t: "hold", card: card.id}), ev(C, 13, {t: "hold", card: card.id})], 20, opt);
+  assert.equal(S.cards[card.id].circle, ci.id);
+  assert.deepEqual(S.cards[card.id].copies.map(x => x.owner), [A]);
+  const S2 = reduce([...e, ev(C, 11, {t: "card", kind: "text", title: "入っていない人", price: 0, circle: ci.id})], 20, opt);
+  assert.equal(Object.keys(S2.cards).length, 0);           // 輪の外の人は輪にカードを出せない
+});

@@ -52,7 +52,7 @@
     const founders = new Set(opt.founders || R.founders);
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
-    const S = {users: {}, cards: {}, log: []};
+    const S = {users: {}, cards: {}, circles: {}, log: []};
     const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null});
     // カード1枚ずつ（copy）を持ち主ごとに数える。used：使った（受け取った）もの。from：作った人から持ったか、譲り受けたか
     const holdsOf = (c, pk) => c.copies.filter(x => x.owner === pk && !x.used);
@@ -78,13 +78,25 @@
         me.vouched.push(c.who); join(c.who, t, e.pubkey); ok(e, "vouch"); continue;
       }
 
+      // 仲間の輪：作った人と、選ばれた人たち。輪の中のカードの中身は、輪の鍵で封をして置く（外からは読めない）
+      if (c.t === "circle") {
+        if (!Array.isArray(c.members) || c.members.length > 50 || !c.members.every(m => isHex(m, 64))) continue;
+        S.circles[e.id] = {id: e.id, by: e.pubkey, name: str(c.name, 40), members: [...new Set([e.pubkey, ...c.members])], at: t};
+        ok(e, "circle"); continue;
+      }
+      if (c.t === "circle-add") {
+        const ci = S.circles[c.circle]; if (!ci || ci.by !== e.pubkey || !isHex(c.who, 64)) continue;
+        if (!ci.members.includes(c.who)) ci.members.push(c.who); continue;
+      }
+
       // カードを作る（参加していなくても作れる。持つには jeni が要る）
       if (c.t === "card") {
         if (!KINDS.includes(c.kind) || !int(c.price, 0, R.priceMax)) continue;
         const supply = c.supply == null ? null : (int(c.supply, 1, 100000) ? c.supply : undefined);
         if (supply === undefined) continue;
         const card = {id: e.id, by: e.pubkey, at: t, kind: c.kind, title: str(c.title, 80), body: str(c.body, 2000), media: str(c.media, 300),
-          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0};
+          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null};
+        if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.lock !== undefined) {
           if (!isHex(c.lock, 64) || !int(c.until, t, t + R.saleMax) || supply !== 1) continue;
@@ -101,8 +113,12 @@
         if (!me.member || e.pubkey === card.by || left(card) <= 0) continue;
         if (holdsOf(card, e.pubkey).length >= cap(card) || me.bal < card.price) continue;
         if (card.lock && (t > card.until || typeof c.code !== "string" || sha256hex(c.code) !== card.lock)) continue;
+        if (card.circle && !S.circles[card.circle].members.includes(e.pubkey)) continue;
+        // 持ち方：show＝みんなに見せる、hide＝画面に出さない（記録を調べれば分かる）、lock＝何を持ったかに鍵（数に限りのないカードだけ。投げ銭の分け前は受け取らない）
+        const vis = ["show", "hide", "lock"].includes(c.vis) ? c.vis : "show";
+        if (vis === "lock" && card.supply != null) continue;
         pay(e.pubkey, card.by, card.price);
-        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null});
+        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis});
         card.queue = card.queue.filter(p => p !== e.pubkey);
         ok(e, "hold"); continue;
       }
@@ -119,7 +135,7 @@
         if (!mine.length || !card.queue.includes(to) || !U(to).member) continue;
         if (holdsOf(card, to).length >= cap(card) || U(to).bal < card.price) continue;
         pay(to, e.pubkey, card.price);
-        Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t});
+        Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t, vis: "show"});
         card.queue = card.queue.filter(p => p !== to); ok(e, "pass"); continue;
       }
 
@@ -128,7 +144,7 @@
         const to = c.to, mine = holdsOf(card, e.pubkey);
         if (!mine.length || !isHex(to, 64) || to === e.pubkey || to === card.by || !U(to).member) continue;
         if (holdsOf(card, to).length >= cap(card)) continue;
-        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t}); ok(e, "gift"); continue;
+        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t, vis: "show"}); ok(e, "gift"); continue;
       }
 
       // 使う：現物を受け取ったことを、作った人が記録する（その1枚は「使った」になり、上限が空く）
@@ -151,7 +167,7 @@
       if (c.t === "tip") {
         if (!me.member || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;
         const holders = {};
-        if (card.supply == null) for (const x of card.copies) if (!x.used) holders[x.owner] = (holders[x.owner] || 0) + 1;
+        if (card.supply == null) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
         const n = Object.values(holders).reduce((a, b) => a + b, 0);
         me.bal -= c.amount;
         let toCreator = c.amount;
@@ -167,7 +183,7 @@
     // まとめ：カードごとの残り・持っている人数
     for (const card of Object.values(S.cards)) {
       card.left = card.supply == null ? null : left(card);
-      card.holders = new Set(card.copies.filter(x => !x.used).map(x => x.owner)).size;
+      card.holders = new Set(card.copies.filter(x => !x.used && x.vis !== "lock").map(x => x.owner)).size;
     }
     return S;
   }
