@@ -83,6 +83,15 @@ const SHOT = process.env.SHOT;
     await p.click("#sheet [data-close]"); await p.click("#home [data-rules]"); await p.waitForTimeout(200);
     check(tag + " きまりに「運営のサーバーはありません」", (await p.textContent("#sheet")).includes("運営のサーバーはありません"));
     check(tag + " 詳細も横にはみ出さない", !(await p.evaluate(() => document.getElementById("sheet").scrollWidth > innerWidth)));
+    // 変わったところ：11項目それぞれ押すと画面が開く
+    await p.click("#sheet [data-close]").catch(() => {});
+    for (let i = 0; i < 11; i++) {
+      await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(250);
+      const open = await p.evaluate(() => !document.getElementById("sheet").hidden), txt = open ? await p.textContent("#sheet") : await p.textContent("#home");
+      const want = [/来週の種まき|Ambient Waves/, /特製スパイスカレー/, /だれでも最初の8秒/, /持ち方を選ぶ/, /投げ銭/, /順番|譲る/, /受け取った/, /買う人に読んでもらう|QRを出す/, /まだ参加していない人が読むと/, /来週の種まき/, /運営のサーバーはありません/][i];
+      check(`${tag} 変わったところ ${i + 1}`, want.test(txt) && !(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
+      if (SHOT && i === 0) { await p.click("#guide"); await p.waitForTimeout(150); await p.screenshot({path: `${SHOT}/guide-${w}.png`}); await p.click("#sheet [data-close]"); }
+    }
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }

@@ -152,6 +152,12 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--sunk);color:var(--ink);
   border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1}
+.guide{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;border:1px dashed var(--gold);background:var(--card);color:var(--gold);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;min-height:34px;box-shadow:0 6px 18px -8px rgba(0,0,0,.6)}
+.gl{display:grid;gap:8px}
+.gi{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.gi .n{width:24px;height:24px;border-radius:50%;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center;font-size:12px;font-weight:700}
+.gi b{font-size:14px} .gi small{grid-column:2/4;font-size:12px;color:var(--mute);line-height:1.5}
+.gi .pill{min-height:34px;font-size:13px}
 
 /* カード（1.586）：中身はカードいっぱい、情報はその上。持っているときだけ黄金らせんの印が現れて光る */
 .jc2{container-type:inline-size;aspect-ratio:1.586;max-width:100%;position:relative;perspective:1400px}
@@ -216,6 +222,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 <div class="wrap" id="home"></div>
 <div class="sheet" id="sheet" hidden></div>
 <div class="toast" id="toast" role="status"></div>
+<button type="button" class="guide" id="guide" data-guide aria-label="変わったところを見る">変わったところ</button>
 <audio id="player" preload="none"></audio>
 
 <script>// jeni の決まり（試験版）。署名つきの出来事（イベント）の並びから、だれが計算しても同じ状態になる。
@@ -277,7 +284,8 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
     // カード1枚ずつ（copy）を持ち主ごとに数える。used：使った（受け取った）もの。from：作った人から持ったか、譲り受けたか
     const holdsOf = (c, pk) => c.copies.filter(x => x.owner === pk && !x.used);
     const cap = c => c.price ? R.capPaid : R.capFree;
-    const left = c => c.supply == null ? Infinity : c.supply - c.copies.filter(x => x.fromCreator).length;
+    // 残り＝作った数から、作った人が渡した数を引いたもの（譲ったり贈ったりしても戻らない。返したときだけ戻る）
+    const left = c => c.supply == null ? Infinity : c.supply - c.issued;
     const pay = (from, to, n) => { U(from).bal -= n; U(to).bal += n; };
     const join = (pk, at, by) => { const u = U(pk); u.member = true; u.bal += R.start; u.joinedAt = at; u.vouchedBy = by; };
     const ok = (e, what) => S.log.push({at: e.created_at, id: e.id, by: e.pubkey, what});
@@ -315,7 +323,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const supply = c.supply == null ? null : (int(c.supply, 1, 100000) ? c.supply : undefined);
         if (supply === undefined) continue;
         const card = {id: e.id, by: e.pubkey, at: t, kind: c.kind, title: str(c.title, 80), body: str(c.body, 2000), media: str(c.media, 300),
-          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null};
+          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null, issued: 0};
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.lock !== undefined) {
@@ -338,7 +346,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const vis = ["show", "hide", "lock"].includes(c.vis) ? c.vis : "show";
         if (vis === "lock" && card.supply != null) continue;
         pay(e.pubkey, card.by, card.price);
-        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis});
+        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis}); card.issued++;
         card.queue = card.queue.filter(p => p !== e.pubkey);
         ok(e, "hold"); continue;
       }
@@ -380,7 +388,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const i = card.copies.findIndex(x => x.owner === c.holder && x.fromCreator && (!x.used || card.handover));
         if (i < 0 || me.bal < card.copies[i].paid) continue;
         pay(e.pubkey, c.holder, card.copies[i].paid);
-        card.copies.splice(i, 1); card.refunds++; ok(e, "refund"); continue;
+        card.copies.splice(i, 1); card.issued--; card.refunds++; ok(e, "refund"); continue;
       }
 
       // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードは全額が作った人へ
@@ -501,6 +509,7 @@ function seed() {
   const curry = card(C, {kind: "rwa", title: "特製スパイスカレー", price: 120, supply: 1}, {img: "media/curry.jpg", note: "1日1皿だけのカレー。", where: "東京都 の店頭"});
   const rain = card(D, {kind: "music", title: "雨の作業小屋", price: 40}, {src: "media/rain.mp3", len: "0:18", note: "雨の日の小屋で鳴っていた音を元に。"});
   emit(A.pk, {t: "hold", card: curry, vis: "show"});
+  emit(A.pk, {t: "hold", card: bread, vis: "show"});
   emit(C.pk, {t: "hold", card: waves, vis: "show"}); emit(B.pk, {t: "hold", card: waves, vis: "hide"});
   emit(D.pk, {t: "hold", card: paddy, vis: "show"}); emit(C.pk, {t: "hold", card: field, vis: "show"});
   emit(B.pk, {t: "want", card: curry});
@@ -894,6 +903,29 @@ document.addEventListener("timeupdate", e => {   // 詳細の試聴・試し見
   if (lim && el.currentTime >= +lim) { el.pause(); el.currentTime = 0; toast("ここまで。持つと全部"); }
 }, true);
 
+/* ---- 変わったところ（前の版から）：押すと、その画面へ ---- */
+const AS = name => P[name].pk;
+const cardBy = t => Object.values(S.cards).find(c => c.title === t);
+const GUIDE = [
+  ["一覧は小さな行に", "ひと目で中身が分かり、音楽は行の中でそのまま聞けます。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
+  ["カードは中身がいっぱいに", "持っているカードには黄金らせんの印が現れて光ります。印を押すと裏返ってQR。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
+  ["持つと中身が全部", "持つ前は、文章は書き出し・音楽は8秒・写真は小さくぼかしたもの。", () => { me = AS("kenji"); detail(cardBy("雨の作業小屋").id); }],
+  ["持ち方を選べる", "みんなに見せる／画面に出さない／何を持ったかに鍵をかける。", () => { me = AS("kenji"); holdAsk(cardBy("雨の作業小屋").id); }],
+  ["jeni の行き先を1行で", "押す前に「何 jeni がだれへ行くか」が出ます。投げ銭は半分ずつ。", () => { me = AS("kenji"); tipAsk(cardBy("Ambient Waves").id); }],
+  ["順番待ちと譲る", "残りのない現物は順番を待ち、持ち主が同じ値段で譲ります。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
+  ["受け取りと返す", "作った人だけが、受け取りの記録と、まだ持っている人への返金ができます。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); }],
+  ["その場で売る", "写真と値段で、一度きりのQR。残り時間は数字ではなく金の線で。", () => { me = AS("kenji"); MK.mode = "sale"; make(); }],
+  ["参加（認める）", "まだ参加していない人のQRを読んで認めると、1,000 jeni が届きます。", () => { me = AS("yuzu"); meCard(); }],
+  ["仲間の輪", "輪の中のカードは輪の人にしか見えません。SoundArchitect に切り替えると見えません。", () => { me = AS("kenji"); field = "circle"; closeSheet(); }],
+  ["jeni のきまり", "残高を押すと開きます。5つのきまりと、見えるもの・隠れるもの。", () => { me = AS("kenji"); rules(); }],
+];
+function guide() {
+  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
+    <h2 class="rh">変わったところ</h2><p class="sub">押すと、その画面が開きます。見ている人も自動で切り替わります。</p>
+    <div class="gl">${GUIDE.map(([t, d], i) => `<div class="gi"><span class="n">${i + 1}</span><b>${t}</b><button type="button" class="pill" data-go="${i}">見る</button><small>${d}</small></div>`).join("")}</div>
+    <button type="button" class="big ghost" data-reset style="margin-top:4px">最初の状態に戻す</button>`);
+}
+
 /* ---- 操作 ---- */
 document.addEventListener("change", e => {
   if (e.target.id === "who") { me = e.target.value; field = "all"; playing = ""; player.pause(); return home(); }
@@ -909,7 +941,9 @@ document.addEventListener("change", e => {
 document.addEventListener("click", e => {
   const q = s => e.target.closest(s);
   let b;
-  if (q("[data-reset]")) { seed(); me = P.kenji.pk; field = "all"; home(); return toast("最初の状態に戻しました"); }
+  if (q("[data-reset]")) { seed(); me = P.kenji.pk; field = "all"; if (!$("sheet").hidden) closeSheet(); home(); return toast("最初の状態に戻しました"); }
+  if (q("[data-guide]")) return guide();
+  if ((b = q("[data-go]"))) { const g = GUIDE[+b.dataset.go]; closeSheet(); g[2](); home(); return; }
   if ((b = q("[data-f]"))) { field = b.dataset.f; return home(); }
   if (q("[data-make]")) { if (!U().member) return toast("参加すると作れます"); return make(); }
   if ((b = q("[data-mode]"))) { readMK(); MK.mode = b.dataset.mode; return make(); }

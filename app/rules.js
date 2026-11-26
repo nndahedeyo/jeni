@@ -57,7 +57,8 @@
     // カード1枚ずつ（copy）を持ち主ごとに数える。used：使った（受け取った）もの。from：作った人から持ったか、譲り受けたか
     const holdsOf = (c, pk) => c.copies.filter(x => x.owner === pk && !x.used);
     const cap = c => c.price ? R.capPaid : R.capFree;
-    const left = c => c.supply == null ? Infinity : c.supply - c.copies.filter(x => x.fromCreator).length;
+    // 残り＝作った数から、作った人が渡した数を引いたもの（譲ったり贈ったりしても戻らない。返したときだけ戻る）
+    const left = c => c.supply == null ? Infinity : c.supply - c.issued;
     const pay = (from, to, n) => { U(from).bal -= n; U(to).bal += n; };
     const join = (pk, at, by) => { const u = U(pk); u.member = true; u.bal += R.start; u.joinedAt = at; u.vouchedBy = by; };
     const ok = (e, what) => S.log.push({at: e.created_at, id: e.id, by: e.pubkey, what});
@@ -95,7 +96,7 @@
         const supply = c.supply == null ? null : (int(c.supply, 1, 100000) ? c.supply : undefined);
         if (supply === undefined) continue;
         const card = {id: e.id, by: e.pubkey, at: t, kind: c.kind, title: str(c.title, 80), body: str(c.body, 2000), media: str(c.media, 300),
-          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null};
+          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null, issued: 0};
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.lock !== undefined) {
@@ -118,7 +119,7 @@
         const vis = ["show", "hide", "lock"].includes(c.vis) ? c.vis : "show";
         if (vis === "lock" && card.supply != null) continue;
         pay(e.pubkey, card.by, card.price);
-        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis});
+        card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis}); card.issued++;
         card.queue = card.queue.filter(p => p !== e.pubkey);
         ok(e, "hold"); continue;
       }
@@ -160,7 +161,7 @@
         const i = card.copies.findIndex(x => x.owner === c.holder && x.fromCreator && (!x.used || card.handover));
         if (i < 0 || me.bal < card.copies[i].paid) continue;
         pay(e.pubkey, c.holder, card.copies[i].paid);
-        card.copies.splice(i, 1); card.refunds++; ok(e, "refund"); continue;
+        card.copies.splice(i, 1); card.issued--; card.refunds++; ok(e, "refund"); continue;
       }
 
       // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードは全額が作った人へ

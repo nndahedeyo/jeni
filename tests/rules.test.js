@@ -163,3 +163,15 @@ test("仲間の輪：輪の中のカードは、輪の人だけが持てる", ()
   const S2 = reduce([...e, ev(C, 11, {t: "card", kind: "text", title: "入っていない人", price: 0, circle: ci.id})], 20, opt);
   assert.equal(Object.keys(S2.cards).length, 0);           // 輪の外の人は輪にカードを出せない
 });
+test("譲ったり贈ったりしても、作った人からの残りは戻らない（返したときだけ戻る）", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "カレー", price: 100, supply: 1});
+  const e = [...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(C, 12, {t: "want", card: card.id}), ev(B, 13, {t: "pass", card: card.id, to: C}),
+    ev(B, 14, {t: "hold", card: card.id})];
+  let S = reduce(e, 20, opt);
+  assert.equal(S.cards[card.id].left, 0); assert.equal(S.cards[card.id].copies.length, 1); assert.equal(S.users[B].bal, 1000);
+  const card2 = ev(A, 30, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 1});
+  S = reduce([...base(), card2, ev(B, 31, {t: "hold", card: card2.id}), ev(B, 32, {t: "gift", card: card2.id, to: C}), ev(B, 33, {t: "hold", card: card2.id})], 40, opt);
+  assert.equal(S.cards[card2.id].copies.length, 1); assert.equal(S.cards[card2.id].left, 0);
+  S = reduce([...base(), card2, ev(B, 31, {t: "hold", card: card2.id}), ev(A, 32, {t: "refund", card: card2.id, holder: B}), ev(C, 33, {t: "hold", card: card2.id})], 40, opt);
+  assert.equal(S.cards[card2.id].copies[0].owner, C);       // 返すと残りが戻り、ほかの人が持てる
+});
