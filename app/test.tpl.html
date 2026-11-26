@@ -37,7 +37,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .tbar .reset{border:0;background:none;color:var(--mute);text-decoration:underline;padding:4px}
 
 /* プロフィールカード（メニューを兼ねる） */
-.me{aspect-ratio:1.586;max-width:100%;border-radius:18px;background:var(--card);border:1px solid var(--line);padding:16px;display:grid;grid-template-rows:auto 1fr auto;gap:8px}
+.me{aspect-ratio:1.45;max-width:100%;border-radius:18px;background:var(--card);border:1px solid var(--line);padding:16px;display:grid;grid-template-rows:auto 1fr auto;gap:8px}
 .me-top{display:flex;align-items:center;gap:10px;min-width:0}
 .me-top>div:nth-child(2){min-width:0}
 .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--leaf-soft);color:var(--leaf);font-weight:700;flex:none}
@@ -57,14 +57,15 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .menu-w .make{flex:0 0 auto;width:max(34px, calc((100% - 28px) / 7.5));aspect-ratio:1;border:0;border-radius:12px;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;padding:0}
 .me-r{margin-left:auto;display:grid;justify-items:end;gap:4px}
 .me-line{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media (max-width:360px){.me{aspect-ratio:auto;min-height:190px}.cb{width:32px;height:32px}.comm{gap:4px}.me-top .av{width:36px;height:36px}}
+@media (max-width:360px){.me{aspect-ratio:auto;min-height:200px}.cb{width:28px;height:28px}.comm{gap:4px}.me-top .av{width:36px;height:36px}}
 .me-r .bal{margin-left:0}
 .comm{display:flex;gap:6px}
-.cb{position:relative;width:36px;height:36px;border:0;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center;padding:0}.cb svg.i{width:19px;height:19px}
-.cb b{position:absolute;top:1px;right:1px;width:9px;height:9px;border-radius:50%;background:#d63a2b;box-shadow:0 0 0 2px var(--card)}
-.list.slide{transition:transform .22s ease-out,opacity .22s}
+.cb{position:relative;width:30px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}.cb svg.i{width:17px;height:17px}
+.cb b{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#d63a2b;box-shadow:0 0 0 2px var(--card)}
 .menu button{aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}
-.menu button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf)}
+.menu button[aria-pressed="true"]{background:var(--leaf);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.mcap{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);padding:0 2px;min-height:16px}.mcap b{color:var(--leaf);font-weight:700}
+.fv svg.i{fill:#e0a92e;stroke:#e0a92e}
 .cap{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);padding:0 4px}
 .notice{background:var(--leaf-soft);color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
 .notice b{color:var(--leaf)}
@@ -298,6 +299,8 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .jc2 .bk dt{color:#7a705d} .jc2 .bk dd{margin:0;overflow-wrap:anywhere}
 .jc2 .pav{position:absolute;left:6cqw;top:12cqw;width:15cqw;height:15cqw;border-radius:50%;display:grid;place-items:center;background:#3f7a4c;color:#fff;font-weight:700;font-size:6cqw}
 .jc2 .circ{margin-left:2cqw;font-size:2.6cqw;padding:.4cqw 1.8cqw;border-radius:99cqw;background:rgba(0,0,0,.45);color:#fff;letter-spacing:.06em}
+.jc2 .pcomm{position:absolute;right:4.4cqw;bottom:4.4cqw;display:flex;gap:2cqw}.jc2 .pcomm button{width:10cqw;height:10cqw;border:0;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}.jc2 .pcomm svg.i{width:5cqw;height:5cqw}
+.jc2 .cfav{position:absolute;right:calc(4.4cqw + 15cqw);top:3.6cqw;width:9cqw;height:9cqw;border:0;border-radius:50%;background:rgba(0,0,0,.32);color:#fff;display:grid;place-items:center;padding:0}.jc2 .cfav svg.i{width:4.6cqw;height:4.6cqw}.jc2 .cfav.on svg.i{fill:#f2c14e;stroke:#f2c14e}
 .jc2 .ctalk{position:absolute;right:4.4cqw;top:3.6cqw;display:flex;align-items:center;gap:1cqw;border:0;background:rgba(0,0,0,.32);color:#fff;border-radius:99cqw;padding:1.2cqw 2.4cqw;font-size:3cqw;min-height:9cqw}
 .jc2 .ctalk svg.i{width:4.4cqw;height:4.4cqw}
 .jc2 .ctalk span:empty{display:none}
@@ -323,6 +326,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
   <symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v10"/><path d="m6 17 3.5-4 2.5 3 1.5-1.5L16 17"/></symbol>
   <symbol id="i-talk" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
+  <symbol id="i-fav" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9Z"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
   <symbol id="i-app" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M10 18h4"/></symbol>
   <symbol id="i-sale" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></symbol>
@@ -374,14 +378,15 @@ const FOUNDERS = [P.kenji.pk];
 const MEDIA = {};   // カードの中身（写真・音・本文）。本物では、輪のカードは鍵で封をしてから置く
 let EV = [], seq = 0, clock = 0, S = null, me = P.kenji.pk;
 const CHAT = {}; const pairKey = (a, b) => [a, b].sort().join(":");
-const READ = {}, CALLS = [], CSEEN = {};   // 読んだところ・通話の記録・電話の知らせを見たところ（見本の画面の中だけ）
+const READ = {}, CALLS = [], CSEEN = {}, FAV = {};   // FAV：お気に入り（人ごと・その人にしか見えない）
+const favOf = () => FAV[me] || (FAV[me] = {}), isFav = id => !!favOf()[id];   // 読んだところ・通話の記録・電話の知らせを見たところ（見本の画面の中だけ）
 function emit(who, c) {
   clock += 30;
   const e = {id: String(++seq).padStart(6, "0"), pubkey: who, created_at: clock, kind: 7720, content: JSON.stringify(c)};
   EV.push(e); S = reduce(EV, clock, {founders: FOUNDERS}); return e;
 }
 function seed() {
-  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k]; for (const k in CHAT) delete CHAT[k]; for (const k in READ) delete READ[k]; for (const k in NSEEN) delete NSEEN[k]; for (const k in CSEEN) delete CSEEN[k]; CALLS.length = 0;
+  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k]; for (const k in CHAT) delete CHAT[k]; for (const k in READ) delete READ[k]; for (const k in NSEEN) delete NSEEN[k]; for (const k in FAV) delete FAV[k]; for (const k in CSEEN) delete CSEEN[k]; CALLS.length = 0;
   const {kenji: A, farmer: B, haru: C, sound: D} = P;
   for (const p of [A, B, C, D]) emit(p.pk, {t: "profile", name: p.name});
   emit(A.pk, {t: "vouch", who: B.pk}); emit(A.pk, {t: "vouch", who: C.pk}); emit(B.pk, {t: "vouch", who: D.pk});
@@ -405,6 +410,8 @@ function seed() {
   // 友達（お互い）と、カードの会話
   emit(A.pk, {t: "friend", who: B.pk}); emit(B.pk, {t: "friend", who: A.pk}); emit(C.pk, {t: "friend", who: A.pk});
   emit(C.pk, {t: "comment", card: waves, text: "朝の仕込みのときに流しています。"});
+  FAV[A.pk] = {[waves]: clock};
+  emit(D.pk, {t: "comment", card: waves, text: "続きの曲を、来週カードにします。"});
   emit(A.pk, {t: "comment", card: paddy, text: "この光、見に行きたくなりました。"});
   emit(B.pk, {t: "comment", card: paddy, text: "冬至のころがいちばんきれいです。"});
   // プロジェクト：みんなの種の地図。自分のカードをつなげて育てる
@@ -464,7 +471,7 @@ let field = "all", opened = -1, playing = "", sel = null, keepScroll = false;
 
 function sub(c) {
   const by = `<span>${esc(nameOf(c.by))}</span>`, m = MEDIA[c.id] || {};
-  const lk = c.circle ? `<span class="lk">${icon("lock")}</span>` : "";
+  const lk = (isFav(c.id) ? `<span class="fv">${icon("fav")}</span>` : "") + (c.circle ? `<span class="lk">${icon("lock")}</span>` : "");
   if (mine(c).length) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${KEEP[c.kind] ? KEEP[c.kind][0] : `持っている ${mine(c).length}`}</span>${by}`;
   if (c.supply != null) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${c.left ? `残り${c.left}` : "残り0"}</span>${by}`;
   if (m.len) return `${lk}${icon(c.kind)}<span>${m.len}</span>${by}`;
@@ -486,11 +493,11 @@ function holdBtn(c) {
     : `<button type="button" class="hold free" data-detail="${c.id}">無料</button>`;
 }
 // 項目：1枚のもの → つなぐもの → 仲間の輪（見える範囲）。作る画面も同じ並び
-const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["event", "イベント"], ["service", "体験・サービス"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["app", "アプリ"], ["shop", "お店"], ["org", "会社・団体"], ["project", "プロジェクト"], ["place", "場所"], ["circle", "仲間の輪"]];
+const FIELDS = [["all", "すべて"], ["fav", "お気に入り"], ["rwa", "現物"], ["event", "イベント"], ["service", "体験・サービス"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["app", "アプリ"], ["shop", "お店"], ["org", "会社・団体"], ["project", "プロジェクト"], ["place", "場所"], ["circle", "仲間の輪"]];
 function visibleCards(all = false) {
   return Object.values(S.cards).filter(canSee).filter(c => !c.lock || c.by === me || mine(c).length || c.copies.some(x => x.owner === me))
     .filter(c => !c.hidden || c.by === me || c.copies.some(x => x.owner === me))
-    .filter(c => all || field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
+    .filter(c => all || field === "all" ? true : field === "fav" ? isFav(c.id) : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
 }
 visibleCards.all = () => visibleCards(true);
 function home() {
@@ -506,14 +513,13 @@ function home() {
           ${u.member ? `<div class="comm">${FX.map(f => { const n = f.dot(); return `<button type="button" class="cb" data-fx="${f.k}" aria-label="${f.l}${n ? "（新しい知らせあり）" : ""}" title="${f.l}">${icon(f.i)}${n ? `<b aria-hidden="true"></b>` : ""}</button>`; }).join("")}</div>` : ""}</div></div>
       <div class="me-mid"><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
       <div class="menu-w"><nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav><button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></div>
+      <div class="mcap" aria-live="polite"><span><b>${FIELDS.find(f => f[0] === field)[1]}</b>・${list.length}枚</span><span>${{circle: "輪の中は、輪の人にしか見えません", fav: "あなただけに見えます"}[field] || ""}</span></div>
     </section>
     ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
-    ${field === "place" ? `<div class="hmap">${mapSvg(visibleCards.all().filter(c => c.geo).map(c => ({g: c.geo, id: c.id, t: c.title})))}<p class="sub" style="margin:4px 2px 0;font-size:11px">場所・お店・イベントなど、地図の点があるカード</p></div>` : ""}
-    <div class="cap"><span>${FIELDS.find(f => f[0] === field)[1]}・${list.length}枚</span><span>${field === "circle" ? "輪の中は、輪の人にしか見えません" : ""}</span></div>
-    <main class="list">${list.length ? list.map(c => `<article class="row">
+    <main class="list">${field === "place" ? `<div class="hmap">${mapSvg(visibleCards.all().filter(c => c.geo).map(c => ({g: c.geo, id: c.id, t: c.title})))}</div>` : ""}${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
       ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
-      : `<p class="empty">${field === "circle" ? "入っている仲間の輪のカードはありません" : "まだカードがありません"}</p>`}</main>`;
+      : `<p class="empty">${{circle: "入っている仲間の輪のカードはありません", fav: "カードの右上の☆で、お気に入りに入れられます"}[field] || "まだカードがありません"}</p>`}</main>`;
   // 横に滑る並び：前の位置を保ち、選んだ項目が隠れていたら見える所まで滑らせる
   const m = document.querySelector("#home .menu"); if (m) { m.scrollLeft = mx; const sb = m.querySelector('[aria-pressed="true"]');
     if (sb && (sb.offsetLeft < m.scrollLeft || sb.offsetLeft + sb.offsetWidth > m.scrollLeft + m.clientWidth - 18)) m.scrollTo({left: sb.offsetLeft - (m.clientWidth - sb.offsetWidth) / 2, behavior: m0 ? "smooth" : "auto"}); }
@@ -526,6 +532,7 @@ function cardHtml(c, held) {
   const pp = PAPER[c.kind] || PAPER.text, ink = bg ? "l" : pp[2];
   const front = `<div class="face" data-ink="${ink}">${bg || `<div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,${pp[0]},${pp[1]})"></div>`}${gfield(bg ? 1 : .7)}<div class="shade"></div>
       <div class="jno">jeni No.${cardNo(c.id)}${c.circle ? `<span class="circ">${esc(S.circles[c.circle].name)}</span>` : ""}</div>
+      <button type="button" class="cfav${isFav(c.id) ? " on" : ""}" data-fav="${c.id}" aria-pressed="${isFav(c.id)}" aria-label="お気に入り">${icon("fav")}</button>
       <button type="button" class="ctalk" data-talk="${c.id}" aria-label="会話">${icon("talk")}<span>${(c.talk || []).filter(x => !S.comments[x].hidden).length || ""}</span></button>
       ${c.kind === "text" && !bg ? `<p class="excerpt">${esc(c.body)}</p>` : ""}
       <div class="txt"><div class="k">${KIND[c.kind]}</div><div class="t">${esc(c.title || "その場のカード")}</div><div class="by">${esc(nameOf(c.by))}</div></div>
@@ -700,18 +707,18 @@ function personCard(pk) {
     <div class="jc2"><div class="in"><div class="face" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#f3f6ea,#d9e3cc)"></div>${gfield(.7)}<div class="shade"></div>
       <div class="jno">jeni プロフィール</div>${av}
       <div class="txt"><div class="k">${esc(u.line || p.line || "")}</div><div class="t">${esc(nameOf(pk))}</div><div class="by">${theyFriend ? "あなたを友達にしています" : ""}</div></div>
+      ${mutual ? `<div class="pcomm"><button type="button" data-call="${pk}" aria-label="${esc(nameOf(pk))} さんに電話">${icon("phone")}</button><button type="button" data-chat="${pk}" aria-label="${esc(nameOf(pk))} さんと話す">${icon("talk")}</button></div>` : ""}
       </div></div></div>
-    <div class="acts2">${mutual ? `<button type="button" class="pill go" data-chat="${pk}">${icon("talk")}話す</button><button type="button" class="pill go" data-call="${pk}">${icon("phone")}通話</button>`
-      : mu.member && u.member && !iFriend ? `<button type="button" class="pill go" data-friend="${pk}">友達になる</button>` : ""}</div>
-    <p class="fline">${mutual ? "2人だけの会話と通話です（鍵つき）。" : iFriend ? "相手もあなたを友達にすると、2人で話せる・通話できるようになります。" : "お互いに友達になると、2人で話せる・通話できるようになります。知らない人からいきなり話しかけられないように。"}</p>
+    ${mu.member && u.member && !iFriend ? `<div class="acts2"><button type="button" class="pill go" data-friend="${pk}">友達になる</button></div>` : ""}
+    <p class="fline">${mutual ? "カードの右下から、2人だけで電話・会話（鍵つき）。" : iFriend ? "相手もあなたを友達にすると、2人で話せる・通話できるようになります。" : "お互いに友達になると、2人で話せる・通話できるようになります。知らない人からいきなり話しかけられないように。"}</p>
     <section class="box"><h3>${esc(nameOf(pk))} さんのカード ${theirs.length}</h3>${theirs.map(c => `<button type="button" class="mini" data-detail="${c.id}">${icon(kindIcon(c.kind))}<span>${esc(c.title)}</span><small>${c.price ? c.price + " jeni" : "無料"}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>
     ${iFriend ? `<button type="button" class="link" data-unfriend="${pk}" style="justify-self:start;color:var(--mute);font-size:12px">友達をやめる</button>` : ""}`);
 }
 // 残高の下の働き：吹き出し（会話）・受話器（電話）。ウォレットをつないだら、ここに1つ足すだけ（例：{k: "wallet", i: "wallet", l: "ウォレット", dot: …, open: …}）
 const FX = [
-  {k: "news", i: "bell", l: "お知らせ", dot: () => news().filter(n => n.at > (NSEEN[me] || 0)).length, open: () => newsList()},
-  {k: "chats", i: "talk", l: "話す", dot: () => unreadChat(), open: () => chatList()},
   {k: "phones", i: "phone", l: "電話", dot: () => missedCalls(), open: () => phoneList()},
+  {k: "chats", i: "talk", l: "話す", dot: () => unreadChat(), open: () => chatList()},
+  {k: "news", i: "bell", l: "お知らせ", dot: () => news().filter(n => n.at > (NSEEN[me] || 0)).length, open: () => newsList()},
 ];
 const NSEEN = {};
 function news() {
@@ -721,14 +728,19 @@ function news() {
     const mineCopy = b.copies.find(x => x.owner === me); if (!mineCopy) continue;
     for (const it of b.items) { const c = S.cards[it.card]; if (c && it.at > mineCopy.at && it.by !== me && canSee(c) && !c.hidden) out.push({at: it.at, b, c}); }
   }
+  for (const [id, at] of Object.entries(favOf())) {
+    const c = S.cards[id]; if (!c || !canSee(c)) continue;
+    for (const x of c.talk || []) { const cm = S.comments[x]; if (cm && cm.at > at && cm.by !== me && !cm.hidden) out.push({at: cm.at, b: c, fav: true, text: `${nameOf(cm.by)}：${cm.text}`}); }
+    if (!KEEP[c.kind]) for (const it of c.items) { const ic = S.cards[it.card]; if (ic && it.at > at && it.by !== me && canSee(ic)) out.push({at: it.at, b: c, c: ic, fav: true}); }
+  }
   return out.sort((x, y) => y.at - x.at);
 }
 function newsList() {
   const ns = news(), seen = NSEEN[me] || 0; NSEEN[me] = clock;
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
     <h2 class="rh">お知らせ</h2>
-    <section class="box">${ns.map(n => `<button type="button" class="mini" data-detail="${n.c.id}">${icon(kindIcon(n.c.kind))}<span>${esc(n.b.title)} に「${esc(n.c.title)}」${n.at > seen ? ` <i class="nb" aria-label="新しい"></i>` : ""}</span><small>${KEEP[n.b.kind][0]}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>
-    <p class="fline">お店の常連・会社や団体の会員・プロジェクトの仲間・場所を見守る人になると、新しくつながったカードがここに届きます。</p>`);
+    <section class="box">${ns.map(n => { const go = n.c || n.b; return `<button type="button" class="mini" data-detail="${go.id}">${icon(kindIcon(go.kind))}<span>${esc(n.b.title)} ${n.c ? `に「${esc(n.c.title)}」` : `の会話　${esc(n.text)}`}${n.at > seen ? ` <i class="nb" aria-label="新しい"></i>` : ""}</span><small>${n.fav ? "お気に入り" : KEEP[n.b.kind][0]}</small></button>`; }).join("") || `<p class="sub">まだありません</p>`}</section>
+    <p class="fline">常連・会員・仲間になったカードと、お気に入りのカードの新しい動きがここに届きます。</p>`);
 }
 const unreadOf = pk => (CHAT[pairKey(me, pk)] || []).filter(m => m.by === pk && m.at > (READ[me + ":" + pk] || 0)).length;
 const unreadChat = () => friendsOf(me).reduce((n, pk) => n + unreadOf(pk), 0);
@@ -1027,13 +1039,15 @@ const GUIDE = [
   ["場所と地図", "「場所」の項目では上に地図。点を押すとそのカード。場所・お店・イベント・体験は、作るときに地図を押して点を置けます。", () => { me = AS("kenji"); field = "place"; closeSheet(); }],
   ["体験・サービス", "持つ＝受ける券。枠の数だけ。当日は券のQRで。", () => { me = AS("kenji"); detail(cardBy("パンの焼き方を教えます").id); }],
   ["裏のQRの意味を選べる", "カードを開く・投げ銭・持つ・元のデータ（データのカード）。外のリンクにはできません。", () => { me = AS("kenji"); MK.mode = "music"; make(); }],
+  ["お気に入り（☆）", "カードの右上の☆。項目の「お気に入り」に集まり、新しい会話などは鈴に届きます。あなただけに見えます。", () => { me = AS("kenji"); field = "fav"; closeSheet(); }],
+  ["相手への電話・会話は、相手のカードの中", "お互いに友達なら、相手のプロフィールカードの右下に受話器と吹き出し。", () => { me = AS("kenji"); personCard(AS("farmer")); }],
   ["常連・会員・仲間になる", "お店・会社や団体・プロジェクト・場所は、長押しで常連・会員・仲間・見守る人に（無料・いつでもやめられる）。新しくつながったカードは鈴のお知らせへ。", () => { me = AS("kenji"); newsList(); }],
-  ["知らせは小さな赤い印", "残高の下の鈴（お知らせ）・吹き出し（会話）・受話器（電話）。数は出しません。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
+  ["知らせは小さな赤い印", "残高の下に、受話器（電話）・吹き出し（会話）・鈴（お知らせ）。小さく控えめに。数は出しません。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
   ["電話：不在着信と、かけられる人", "お互いに友達の人とだけ（見本・つながない）。", () => { me = AS("kenji"); phoneList(); }],
-  ["項目は横に滑らせて選ぶ", "アイコンはまとめず、自分のカードの中で横に滑ります。＋は右はしに固定。", () => { me = AS("kenji"); field = "shop"; closeSheet(); }],
+  ["項目は横に滑らせて選ぶ", "アイコンを指で横に滑らせて選びます（一覧を左右にはらって切り替えるのはやめました）。選んだアイコンは緑に白、名前と枚数はすぐ下に。", () => { me = AS("kenji"); field = "shop"; closeSheet(); }],
   ["お店・会社や団体", "自分のカードをつなげて並べます（つなげるのは作った人だけ）。プロジェクトと場所はだれでも。", () => { me = AS("kenji"); detail(cardBy("Bakery_Haru").id); }],
   ["どのカードにも画像", "音楽や文章にも、カードの画像をつけられます。", () => { me = AS("kenji"); MK.mode = "music"; make(); }],
-  ["左右・上下とも、指の勢いのまま滑る", "カードは勢いよくめくると何枚も進みます。一覧は指について横に動き、強くはらうと2つ先の項目へ。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
+  ["指の勢いのまま滑る", "カードは勢いよくめくると何枚も進みます。項目のアイコンも横に滑ります。右へはらうと戻る。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["名前から、その人のカードへ", "作った人・持っている人・会話を書いた人・関わった人。どの名前を押しても同じカードが開きます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); talkSheet(cardBy("夜明けの田んぼ").id); }],
   ["カードの会話", "カードの右上の吹き出しから。だれでも読めて、参加している人が書けます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); }],
   ["プロジェクトを育てる", "自分のカードをつなげ、会話で進めます。状態・求めているもの・関わった人。", () => { me = AS("haru"); detail(cardBy("みんなの種の地図").id); }],
@@ -1105,6 +1119,7 @@ document.addEventListener("click", e => {
   if ((b = q(".jc2.on")) && !q(".mark")) { b.classList.remove("on"); return; }
   if ((b = q("[data-cplay]"))) return cplay(b.dataset.cplay);
   if ((b = q("[data-rec]"))) return recSheet(b.dataset.rec);
+  if ((b = q("[data-fav]"))) { const id = b.dataset.fav, f = favOf(); if (f[id]) delete f[id]; else f[id] = clock; refreshPage(id); return toast(f[id] ? "お気に入りに入れました（あなただけに見えます）" : "お気に入りから外しました"); }
   if ((b = q("[data-talk]"))) return talkSheet(b.dataset.talk);
   if ((b = q("[data-openapp]"))) { const m = MEDIA[b.dataset.openapp] || {}; return toast(`見本：${m.url || "アプリ"} を開きます。本物では、持っていることをアプリが署名で確かめてから開きます`); }
   if ((b = q("[data-orig]"))) return toast("元のデータを受け取りました（見本。本物では、作った人の置き場所から鍵を開けて受け取ります）");
@@ -1168,34 +1183,15 @@ document.addEventListener("pointerdown", e => { const b = e.target.closest("[dat
 document.addEventListener("contextmenu", e => { if (e.target.closest("[data-lp]")) e.preventDefault(); });
 document.addEventListener("keydown", e => { const b = e.target.closest && e.target.closest("[data-lp]"); if (b && (e.key === "Enter" || e.key === " ") && !e.repeat) { e.preventDefault(); lpStart(b); } });
 document.addEventListener("keyup", e => { if (e.target.closest && e.target.closest("[data-lp]")) lpCancel(); });
-/* 右へスワイプで戻る（ふつうのアプリと同じ）。一覧は指について横に動き、項目を切り替える。上下のめくりとは分ける */
+/* 右へスワイプで戻る（ふつうのアプリと同じ）。一覧の項目は、自分のカードの中のアイコンを横に滑らせて選ぶ（一覧そのものは横に動かさない） */
 let sw = null;
-const homeList = () => $("sheet").hidden && $("over").hidden ? document.querySelector("#home .list") : null;
-document.addEventListener("touchstart", e => { if (e.touches.length === 1) sw = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), h: null}; }, {passive: true});
-document.addEventListener("touchmove", e => {
-  if (!sw || lpT) return; const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
-  if (sw.h == null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) sw.h = Math.abs(dx) > Math.abs(dy) * 1.3;
-  const L = homeList(); if (sw.h && L) { L.classList.remove("slide"); L.style.transform = `translateX(${dx}px)`; L.style.opacity = String(1 - Math.min(.5, Math.abs(dx) / innerWidth)); }
-}, {passive: true});
-function slideTo(j, dir) {
-  const L = homeList(); field = FIELDS[j][0]; toast(FIELDS[j][1]);
-  if (!L) return home();
-  L.classList.add("slide"); L.style.transform = `translateX(${dir * innerWidth}px)`; L.style.opacity = "0";
-  setTimeout(() => { home(); const N = homeList(); if (!N) return; N.style.transform = `translateX(${-dir * innerWidth * .6}px)`; N.style.opacity = "0";
-    requestAnimationFrame(() => requestAnimationFrame(() => { N.classList.add("slide"); N.style.transform = ""; N.style.opacity = ""; })); }, 180);
-}
+const inScroller = el => !!(el && el.closest && el.closest(".menu, .mk-k, .talk, .map"));
+document.addEventListener("touchstart", e => { sw = e.touches.length === 1 && !inScroller(e.target) ? {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now()} : null; }, {passive: true});
 document.addEventListener("touchend", e => {
-  if (!sw || lpT) { sw = null; return; } const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Math.max(1, Date.now() - sw.t), h = sw.h != null ? sw.h : Math.abs(dx) > Math.abs(dy) * 1.3; sw = null;
-  const L = homeList();
-  const back = () => { if (L) { L.classList.add("slide"); L.style.transform = ""; L.style.opacity = ""; } };
-  if (!h || Math.abs(dx) < 60 || Math.abs(dy) > 80) return back();
-  if (!$("over").hidden) { if (dx > 0) closeOver(); return; }
-  if (!$("sheet").hidden) { if (dx > 0) { const bk = $("sheet").querySelector(".back"); if (bk) bk.click(); } return; }
-  // 一覧：左へはらうと右どなり、右へはらうと左どなり。速く大きくはらうと2つ先
-  const v = Math.abs(dx) / dt, n = v > 1.4 && Math.abs(dx) > innerWidth * .5 ? 2 : 1;
-  const i = FIELDS.findIndex(f => f[0] === field), j = Math.max(0, Math.min(FIELDS.length - 1, i + (dx < 0 ? n : -n)));
-  if (j === i) return back();
-  slideTo(j, dx < 0 ? -1 : 1);
+  if (!sw || lpT) { sw = null; return; } const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
+  if (dx < 80 || Math.abs(dy) > Math.abs(dx) * .6 || dt > 700) return;
+  if (!$("over").hidden) return closeOver();
+  if (!$("sheet").hidden) { const bk = $("sheet").querySelector(".back"); if (bk) bk.click(); }
 }, {passive: true});
 document.addEventListener("change", e => {
   if (e.target.id !== "p-pic" || !e.target.files[0]) return;

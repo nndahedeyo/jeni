@@ -76,14 +76,14 @@ const K = c => c.repeat(64);
     await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(40, 400, "touchstart"); s(260, 410, "touchend"); });
     await p.waitForTimeout(300);
     check(tag + " 横にスワイプすると一覧へ戻る", await p.evaluate(() => document.getElementById("sheet").hidden));
-    // 一覧：左へスワイプすると右どなりの項目（現物）
-    await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(300, 600, "touchstart"); s(250, 602, "touchmove"); s(150, 610, "touchend"); });
-    await p.waitForTimeout(500);
-    check(tag + " 一覧で左へスワイプすると「現物」", await p.$eval('[data-f="rwa"]', e => e.getAttribute("aria-pressed") === "true"));
-    await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(310, 600, "touchstart"); s(250, 602, "touchmove"); s(10, 610, "touchend"); });
-    await p.waitForTimeout(500);
-    check(tag + " 強くはらうと2つ先（現物→体験・サービス）", await p.$eval('[data-f="service"]', e => e.getAttribute("aria-pressed") === "true") && await p.evaluate(() => getComputedStyle(document.querySelector("#home .list")).opacity === "1"));
-    await p.click('[data-f="all"]');
+    // 一覧を左右にはらっても項目は変わらない（項目はアイコンを横に滑らせて選ぶ）。アイコンの並びの上でのはらいは、並びが滑るだけ
+    await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.querySelector("#home .list"), clientX: x, clientY: y}); document.querySelector("#home .list").dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(300, 600, "touchstart"); s(60, 610, "touchend"); });
+    await p.waitForTimeout(300);
+    check(tag + " 一覧を左右にはらっても項目は変わらない", await p.$eval('[data-f="all"]', e => e.getAttribute("aria-pressed") === "true"));
+    await p.evaluate(() => { const m = document.querySelector(".menu"); const s = (x, y, type) => { const t = new Touch({identifier: 1, target: m, clientX: x, clientY: y}); m.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(60, 300, "touchstart"); s(300, 302, "touchend"); });
+    await p.waitForTimeout(200);
+    check(tag + " アイコンの並びの上で右へはらっても、ほかの画面は動かない", await p.$eval('[data-f="all"]', e => e.getAttribute("aria-pressed") === "true") && await p.evaluate(() => document.getElementById("sheet").hidden));
+    check(tag + " 選んでいるアイコンがはっきり（緑の地に白）・名前と枚数はすぐ下", await p.evaluate(() => getComputedStyle(document.querySelector('.menu [aria-pressed="true"]')).color === "rgb(255, 255, 255)") && /すべて・\d+枚/.test(await p.textContent(".me .mcap")) && !(await p.$(".cap")));
     // その場で売る（Kenji が売り、Farmer_S が買う）→ 貝が降る
     await p.click("[data-make]"); await p.click('.mk-g [data-mk="sale"]'); await p.click('[data-sample="media/bread.jpg"]');
     await p.fill("#m-title", "焼きたてのパン"); await p.fill("#m-price", "120"); await p.click("[data-create]"); await p.waitForTimeout(300);
@@ -129,7 +129,7 @@ const K = c => c.repeat(64);
     await p.click("[data-overclose]");
     // 人のカード：お互いに友達なら話せる・通話（見本）
     await p.click(`#pg-${paddy2} [data-person]`); await p.waitForTimeout(200);
-    check(tag + " お互いに友達なら、プロフィールカードのすぐ下に「話す」「通話」", !!(await p.$("#sheet .acts2 [data-chat]")) && !!(await p.$("#sheet .acts2 [data-call]")));
+    check(tag + " お互いに友達なら、相手のカードの中（右下）に受話器と吹き出し", !!(await p.$("#sheet .jc2 .pcomm [data-chat]")) && !!(await p.$("#sheet .jc2 .pcomm [data-call]")));
     await p.click("[data-chat]"); await p.fill("#c-text", "土曜はよろしく"); await p.click("[data-send]"); await p.waitForTimeout(150);
     check(tag + " 2人の会話を送れる", (await p.textContent("#over")).includes("土曜はよろしく"));
     if (SHOT) await p.screenshot({path: `${SHOT}/chat-${w}.png`});
@@ -146,7 +146,7 @@ const K = c => c.repeat(64);
     check(tag + " 会話の名前から、その人のカード", await p.evaluate(() => document.getElementById("over").hidden && /プロフィール/.test(document.getElementById("sheet").textContent)));
     await p.click("#sheet [data-close]");
     // 自分のプロフィールカードから「話す」：お互いに友達の人の一覧 → 会話・通話
-    check(tag + " 残高の下に吹き出しと受話器", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), c = document.querySelector('[data-fx="chats"]').getBoundingClientRect(), t = document.querySelector('[data-fx="phones"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && Math.abs(c.top - t.top) < 2 && t.left > c.left; }));
+    check(tag + " 残高の下に、電話・会話・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="phones"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "phones,chats,news" && r.width <= 30; }));
     check(tag + " 不在着信と新しい会話は、数ではなく小さな赤い印", !!(await p.$('[data-fx="phones"] b')) && !/\d/.test(await p.textContent(".comm")));
     await p.click('[data-fx="chats"]'); await p.waitForTimeout(200);
     check(tag + " 吹き出しから、話せる人の一覧（最後のひとことつき）", /Farmer_S/.test(await p.textContent("#sheet")) && /土曜はよろしく/.test(await p.textContent("#sheet")) && !/Bakery_Haru/.test(await p.textContent("#sheet")));
@@ -244,10 +244,25 @@ const K = c => c.repeat(64);
     await p.click('[data-f="music"]');
     check(tag + " 音楽の項目", /雨の作業小屋/.test(await p.textContent("#home .list")) && !/夜明けの田んぼ/.test(await p.textContent("#home .list")));
     check(tag + " 一覧の外に切り替えの帯を出さない", !(await p.$(".wsub")));
+    // お気に入り：☆で入れる・外す。項目「お気に入り」に集まる。記録には出ない
+    await p.click('[data-f="fav"]');
+    check(tag + " お気に入りの項目（見本は Ambient Waves）・あなただけに見える", /Ambient Waves/.test(await p.textContent("#home .list")) && /あなただけ/.test(await p.textContent(".me .mcap")));
+    const rainF = await id("雨の作業小屋"), evN = await p.evaluate(() => __jt.S.ok ? 0 : 0);
+    await p.evaluate(id => __jt.detail(id), rainF); await p.waitForTimeout(150);
+    const evBefore = await p.evaluate(() => document.querySelectorAll("*").length >= 0 && window.__jt.S && Object.keys(__jt.S.cards).length);
+    await p.click(`#pg-${rainF} [data-fav]`); await p.waitForTimeout(150);
+    check(tag + " ☆を押すとお気に入りに（しるしが金色）", await p.$eval(`#pg-${rainF} [data-fav]`, e => e.getAttribute("aria-pressed") === "true"));
+    await p.click("#sheet [data-close]"); await p.click('[data-f="fav"]');
+    check(tag + " お気に入りの項目に入る", /雨の作業小屋/.test(await p.textContent("#home .list")));
+    await p.evaluate(id => __jt.detail(id), rainF); await p.click(`#pg-${rainF} [data-fav]`); await p.waitForTimeout(150); await p.click("#sheet [data-close]");
+    check(tag + " もう一度押すと外れる", !/雨の作業小屋/.test(await p.textContent("#home .list")));
+    void evN; void evBefore;
+    await p.click('[data-f="all"]');
     // 常連・会員：お知らせ（鈴）に、常連のお店に新しくつながったカード
     check(tag + " 常連のお店に新しいカード → 鈴に赤い印", !!(await p.$('[data-fx="news"] b')));
     await p.click('[data-fx="news"]'); await p.waitForTimeout(150);
     check(tag + " お知らせ：Bakery_Haru に「パンの焼き方を教えます」", /Bakery_Haru に「パンの焼き方を教えます」/.test(await p.textContent("#sheet")));
+    check(tag + " お知らせ：お気に入りのカードの新しい会話", /Ambient Waves の会話/.test(await p.textContent("#sheet")) && /続きの曲/.test(await p.textContent("#sheet")));
     await p.click("#sheet [data-close]");
     check(tag + " 見たあとは鈴の印が消える", !(await p.$('[data-fx="news"] b')));
     const shop = await id("Bakery_Haru");
@@ -266,7 +281,7 @@ const K = c => c.repeat(64);
     check(tag + " プロジェクトの項目", (await p.textContent("#home .list")).includes("みんなの種の地図") && !(await p.textContent("#home .list")).includes("在来種の地図（アプリ）"));
     await p.click('[data-f="app"]');
     check(tag + " アプリの項目", (await p.textContent("#home .list")).includes("在来種の地図（アプリ）") && !(await p.textContent("#home .list")).includes("みんなの種の地図"));
-    check(tag + " 項目は1行で横に滑る・＋は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .make").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 14 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
+    check(tag + " 項目は1行で横に滑る・＋は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .make").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 15 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
     check(tag + " 選んだ項目が見える位置まで滑っている", await p.evaluate(() => { const b = document.querySelector('.menu [aria-pressed="true"]').getBoundingClientRect(), m = document.querySelector(".menu").getBoundingClientRect(); return b.left >= m.left - 1 && b.right <= m.right + 1; }));
     if (SHOT) await p.screenshot({path: `${SHOT}/home2-${w}.png`});
     await p.click('[data-f="all"]');
@@ -280,7 +295,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/定員/, /在来種の畑/, /枠/, /裏のQRを読むと/, /お知らせ/, /畑の収穫体験/, /不在着信/, /Bakery_Haru/, /お店の品/, /何を作る/, /Ambient Waves/, /冬至のころ/, /夜明けの田んぼ/, /みんなの種の地図/, /アプリを開く/, /雨の作業小屋/, /天然酵母/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
+    const want = [/定員/, /在来種の畑/, /枠/, /裏のQRを読むと/, /Ambient Waves/, /電話・会話/, /お知らせ/, /畑の収穫体験/, /不在着信/, /Bakery_Haru/, /お店の品/, /何を作る/, /Ambient Waves/, /冬至のころ/, /夜明けの田んぼ/, /みんなの種の地図/, /アプリを開く/, /雨の作業小屋/, /天然酵母/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
