@@ -24,11 +24,11 @@
     redeemMax: 600,     // 現物を引き換える QR が使える長さ（秒）の上限
     commentMax: 500,
   };
-  const KINDS = ["rwa", "event", "service", "music", "video", "picture", "text", "app", "shop", "org", "project", "place", "other"];
-  // つなぐカード：ほかのカードを束ねる。プロジェクトと場所はだれでも自分のカードをつなげる。お店・会社や団体は、作った人だけが自分のカードをつなぐ
-  const BUNDLE = ["project", "shop", "org", "place"], OPEN_BUNDLE = ["project", "place"];
+  const KINDS = ["rwa", "event", "service", "music", "video", "picture", "text", "app", "shop", "org", "project", "other"];
+  // つなぐカード：ほかのカードを束ねる。プロジェクトはだれでも自分のカードをつなげる。お店・会社や団体は、作った人だけが自分のカードをつなぐ
+  const BUNDLE = ["project", "shop", "org"], OPEN_BUNDLE = ["project"];
   const COUNTED = ["rwa", "event", "service"];   // 数があるもの（持った人に1回）。イベントの定員・サービスの枠もいる
-  const AT = ["rwa", "event", "service", "shop", "place"];   // 日時・場所・地図の点を持てるもの
+  const AT = ["rwa", "event", "service", "shop"];   // 日時・場所・地図の点（受け取る場所・会場・お店）を持てるもの
   // カードの裏の QR を読んだときに開くもの。作った人が選べるのは jeni の中の決まった画面だけ（外のリンクにはしない：にせの画面へ誘う悪用を防ぐ）
   const QR = ["open", "tip", "hold", "orig"];   // app：持つと使えるアプリ（持っているかは、アプリの側が署名で確かめる）
   const isHex = (s, n) => typeof s === "string" && new RegExp(`^[0-9a-f]{${n}}$`).test(s);

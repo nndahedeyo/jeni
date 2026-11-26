@@ -245,13 +245,11 @@ test("お店・会社や団体：つなげるのは作った人の自分のカ�
   assert.deepEqual(S.cards[shop.id].items.map(x => x.card), [a1.id]); assert.deepEqual(S.cards[org.id].items.map(x => x.card), [shop.id]);
   assert.equal(S.cards[shop.id].place, "東京");
 });
-test("サービスは枠がいる。場所はだれでも自分のカードをつなげる。地図の点はおかしな値をはねる", () => {
+test("サービスは枠がいる。地図の点はおかしな値をはねる。場所（place）というカードはない", () => {
   const sv = ev(A, 10, {t: "card", kind: "service", title: "刃物とぎ", price: 20}), sv2 = ev(A, 11, {t: "card", kind: "service", title: "刃物とぎ", price: 20, supply: 3, geo: [35.6, 140.1]});
-  const bad = ev(A, 12, {t: "card", kind: "place", title: "へん", price: 0, geo: [200, 1]}), pl = ev(A, 13, {t: "card", kind: "place", title: "在来種の畑", price: 0, geo: [35.45, 140.0]});
-  const b1 = ev(B, 14, {t: "card", kind: "picture", title: "B", price: 0});
-  const S = reduce([...base(), sv, sv2, bad, pl, b1, ev(B, 15, {t: "attach", project: pl.id, card: b1.id})], 20, opt);
-  assert.ok(!S.cards[sv.id]); assert.deepEqual(S.cards[sv2.id].geo, [35.6, 140.1]); assert.ok(!S.cards[bad.id]);
-  assert.deepEqual(S.cards[pl.id].items.map(x => x.card), [b1.id]);
+  const bad = ev(A, 12, {t: "card", kind: "shop", title: "へん", price: 0, geo: [200, 1]}), pl = ev(A, 13, {t: "card", kind: "place", title: "畑", price: 0});
+  const S = reduce([...base(), sv, sv2, bad, pl], 20, opt);
+  assert.ok(!S.cards[sv.id]); assert.deepEqual(S.cards[sv2.id].geo, [35.6, 140.1]); assert.ok(!S.cards[bad.id]); assert.ok(!S.cards[pl.id]);
 });
 test("QR の意味：決まった画面だけ選べる。元のデータはデータのカードだけ。外のリンクは選べない", () => {
   const a = ev(A, 10, {t: "card", kind: "music", title: "音", price: 5, qr: "orig"}), b = ev(A, 11, {t: "card", kind: "rwa", title: "物", price: 5, supply: 2, qr: "orig"});
