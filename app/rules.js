@@ -128,6 +128,7 @@
           price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null, issued: 0, talk: [], items: [], flags: [], hidden: false};
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
+        if (c.kind === "project") { card.want = str(c.want, 200); card.state = "doing"; }
         if (c.lock !== undefined) {
           if (!isHex(c.lock, 64) || !int(c.until, t, t + R.saleMax) || supply !== 1) continue;
           card.lock = c.lock; card.until = c.until; card.handover = true;
@@ -144,6 +145,9 @@
         else { const i = pj.items.findIndex(x => x.card === it.id); if (i < 0 || (pj.by !== e.pubkey && pj.items[i].by !== e.pubkey)) continue; pj.items.splice(i, 1); }
         ok(e, c.t); continue;
       }
+
+      // プロジェクトの状態（準備中・進行中・できた）は、作った人だけが変えられる
+      if (c.t === "pjstate") { const pj = S.cards[c.project]; if (pj && pj.kind === "project" && pj.by === e.pubkey && ["prep", "doing", "done"].includes(c.state)) pj.state = c.state; continue; }
 
       const card = S.cards[c.card];
       if (!card) continue;

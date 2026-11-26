@@ -223,3 +223,9 @@ test("プロジェクト：自分のカードだけをつなげる。外せる�
     ev(C, 15, {t: "attach", project: pj.id, card: mineC.id}), ev(C, 16, {t: "detach", project: pj.id, card: mineB.id}), ev(A, 17, {t: "detach", project: pj.id, card: mineC.id})], 30, opt);
   assert.deepEqual(S.cards[pj.id].items.map(x => x.card), [mineB.id]);
 });
+
+test("プロジェクトの「求めているもの」と状態：状態を変えられるのは作った人だけ", () => {
+  const pj = ev(A, 10, {t: "card", kind: "project", title: "地図", price: 0, want: "写真"});
+  const S = reduce([...base(), pj, ev(B, 11, {t: "pjstate", project: pj.id, state: "done"}), ev(A, 12, {t: "pjstate", project: pj.id, state: "prep"}), ev(A, 13, {t: "pjstate", project: pj.id, state: "へん"})], 20, opt);
+  assert.equal(S.cards[pj.id].want, "写真"); assert.equal(S.cards[pj.id].state, "prep");
+});

@@ -157,6 +157,19 @@ const K = c => c.repeat(64);
     for (const who of ["a", "c"]) { await p.selectOption("#who", K(who)); await p.evaluate(id => __jt.detail(id), soil2); await p.click(`#pg-${soil2} [data-rec]`); await p.click("[data-flagcard]"); await p.waitForTimeout(150); await p.click("[data-overclose]"); await p.click("#sheet [data-close]"); }
     check(tag + " 実績のある2人の知らせでカードが隠れる", await p.evaluate(id => __jt.S.cards[id].hidden, soil2) && !(await p.textContent("#home .list")).includes("土を耕す"));
     await p.selectOption("#who", K("a"));
+    // 友達の帯（ホーム）・プロジェクトの項目・元のデータ
+    await p.selectOption("#who", K("a")); await p.click('[data-f="all"]');
+    check(tag + " ホームに友達の帯（押すとその人のカード）", !!(await p.$("#home .friends [data-person]")));
+    if (SHOT) await p.screenshot({path: `${SHOT}/home2-${w}.png`});
+    const pj2 = await id("みんなの種の地図");
+    await p.evaluate(id => __jt.detail(id), pj2); await p.waitForTimeout(200);
+    check(tag + " プロジェクトに状態・求めているもの・関わった人", /進行中/.test(await p.textContent(`#pg-${pj2}`)) && /在来種の写真/.test(await p.textContent(`#pg-${pj2}`)) && /関わった人/.test(await p.textContent(`#pg-${pj2}`)));
+    if (SHOT) await p.screenshot({path: `${SHOT}/project2-${w}.png`, fullPage: false});
+    const rain2 = await id("雨の作業小屋");
+    await p.evaluate(id => __jt.detail(id), rain2); await p.waitForTimeout(200);
+    check(tag + " 持っているデジタルのカードに「元のデータを受け取る」", !!(await p.$(`#pg-${rain2} [data-orig]`)));
+    if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
+    await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
     const want = [/会話/, /友達|話す/, /みんなの種の地図/, /天然酵母/, /記録/, /Ambient|雨の作業小屋/, /畑の一日/, /長押しで持つ|持っている/, /小さな道ができました/, /特製スパイスカレー/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
