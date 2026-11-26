@@ -24,7 +24,7 @@
     redeemMax: 600,     // 現物を引き換える QR が使える長さ（秒）の上限
     commentMax: 500,
   };
-  const KINDS = ["rwa", "music", "video", "picture", "text", "project", "other"];
+  const KINDS = ["rwa", "music", "video", "picture", "text", "project", "app", "other"];   // app：持つと使えるアプリ（持っているかは、アプリの側が署名で確かめる）
   const isHex = (s, n) => typeof s === "string" && new RegExp(`^[0-9a-f]{${n}}$`).test(s);
   const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";

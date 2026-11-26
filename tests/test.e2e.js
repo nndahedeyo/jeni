@@ -82,7 +82,7 @@ const K = c => c.repeat(64);
     check(tag + " 一覧で左へスワイプすると「現物」", await p.$eval('[data-f="rwa"]', e => e.getAttribute("aria-pressed") === "true"));
     await p.click('[data-f="all"]');
     // その場で売る（Kenji が売り、Farmer_S が買う）→ 貝が降る
-    await p.click("[data-make]"); await p.click('[data-mode="sale"]'); await p.click('[data-sample="media/bread.jpg"]');
+    await p.click("[data-make]"); await p.click('[data-mk="sale"]'); await p.click('[data-sample="media/bread.jpg"]');
     await p.fill("#m-title", "焼きたてのパン"); await p.fill("#m-price", "120"); await p.click("[data-create]"); await p.waitForTimeout(300);
     const kb = await bal();
     await p.click(`[data-buyas="${K("b")}"]`); await p.click("[data-pay]"); await p.waitForTimeout(500);
@@ -149,7 +149,7 @@ const K = c => c.repeat(64);
     await p.selectOption("#who", K("c"));
     const pj = await id("みんなの種の地図");
     await p.evaluate(id => __jt.detail(id), pj); await p.click(`#pg-${pj} [data-attachask]`); await p.click("[data-attach]"); await p.waitForTimeout(200);
-    check(tag + " プロジェクトに自分のカードをつなげる", await p.evaluate(id => __jt.S.cards[id].items.length, pj) === 3);
+    check(tag + " プロジェクトに自分のカードをつなげる", await p.evaluate(id => __jt.S.cards[id].items.length, pj) === 4);
     if (SHOT) await p.screenshot({path: `${SHOT}/project-${w}.png`});
     await p.click("#sheet [data-close]");
     // 危ないカード：実績のある2人で隠れる
@@ -157,10 +157,31 @@ const K = c => c.repeat(64);
     for (const who of ["a", "c"]) { await p.selectOption("#who", K(who)); await p.evaluate(id => __jt.detail(id), soil2); await p.click(`#pg-${soil2} [data-rec]`); await p.click("[data-flagcard]"); await p.waitForTimeout(150); await p.click("[data-overclose]"); await p.click("#sheet [data-close]"); }
     check(tag + " 実績のある2人の知らせでカードが隠れる", await p.evaluate(id => __jt.S.cards[id].hidden, soil2) && !(await p.textContent("#home .list")).includes("土を耕す"));
     await p.selectOption("#who", K("a"));
-    // 友達の帯（ホーム）・プロジェクトの項目・元のデータ
+    // 作る：まず何をカードにするか選び、要る欄だけ出る
     await p.selectOption("#who", K("a")); await p.click('[data-f="all"]');
-    check(tag + " ホームに友達の帯（押すとその人のカード）", !!(await p.$("#home .friends [data-person]")));
+    await p.click("[data-make]"); await p.waitForTimeout(150);
+    check(tag + " 作る：はじめは何をカードにするかだけ", (await p.$$("[data-mk]")).length >= 6 && !(await p.$("#m-title")));
+    if (SHOT) await p.screenshot({path: `${SHOT}/make1-${w}.png`});
+    await p.click('[data-mk="text"]'); await p.waitForTimeout(150);
+    check(tag + " 文章のカード：写真・数・URL の欄は出ない", !!(await p.$("#m-body")) && !(await p.$("#m-photo")) && !(await p.$("#m-supply")) && !(await p.$("#m-url")));
+    await p.click('[data-mk="make"]'); await p.click('[data-mk="app"]'); await p.waitForTimeout(150);
+    await p.fill("#m-title", "苗の記録帳"); await p.fill("#m-url", "http://だめ"); await p.click("[data-create]"); await p.waitForTimeout(150);
+    check(tag + " アプリのURLは https:// でないと出せない", !(await p.evaluate(() => Object.values(__jt.S.cards).some(c => c.title === "苗の記録帳"))));
+    await p.fill("#m-url", "https://example.com/nae"); await p.fill("#m-price", "20"); await p.click("[data-create]"); await p.waitForTimeout(200);
+    check(tag + " アプリのカードを出せる", await p.evaluate(() => Object.values(__jt.S.cards).some(c => c.title === "苗の記録帳" && c.kind === "app")));
+    if (SHOT) await p.screenshot({path: `${SHOT}/make2-${w}.png`});
+    await p.click("#sheet [data-close]");
+    // アプリのカード：持っている人は「アプリを開く」
+    const app = await id("在来種の地図（アプリ）");
+    await p.evaluate(id => __jt.detail(id), app); await p.waitForTimeout(200);
+    check(tag + " 持っているアプリのカードに「アプリを開く」", !!(await p.$(`#pg-${app} [data-openapp]`)));
+    if (SHOT) await p.screenshot({path: `${SHOT}/app-${w}.png`});
+    check(tag + " 会話のしるしはカードの中", !!(await p.$(`#pg-${app} .jc2 [data-talk]`)));
+    await p.click("#sheet [data-close]");
+    await p.click('[data-f="project"]');
+    check(tag + " プロジェクト・アプリの項目", (await p.textContent("#home .list")).includes("みんなの種の地図") && (await p.textContent("#home .list")).includes("在来種の地図（アプリ）"));
     if (SHOT) await p.screenshot({path: `${SHOT}/home2-${w}.png`});
+    await p.click('[data-f="all"]');
     const pj2 = await id("みんなの種の地図");
     await p.evaluate(id => __jt.detail(id), pj2); await p.waitForTimeout(200);
     check(tag + " プロジェクトに状態・求めているもの・関わった人", /進行中/.test(await p.textContent(`#pg-${pj2}`)) && /在来種の写真/.test(await p.textContent(`#pg-${pj2}`)) && /関わった人/.test(await p.textContent(`#pg-${pj2}`)));
@@ -171,7 +192,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/会話/, /友達|話す/, /みんなの種の地図/, /天然酵母/, /記録/, /Ambient|雨の作業小屋/, /畑の一日/, /長押しで持つ|持っている/, /小さな道ができました/, /特製スパイスカレー/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
+    const want = [/何をカードにする/, /アプリを開く/, /会話/, /友達|話す/, /みんなの種の地図/, /天然酵母/, /記録/, /Ambient|雨の作業小屋/, /畑の一日/, /長押しで持つ|持っている/, /小さな道ができました/, /特製スパイスカレー/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
