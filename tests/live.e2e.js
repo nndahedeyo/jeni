@@ -1,0 +1,186 @@
+// つなぐ版（site/index.html）を、中継のまね（ブラウザの中で受け答えする）で確かめる。本物の中継には一切送らない。
+// 使い方: python3 tools/build_live.py && GENESIS=<はじまりの番号> node tests/live.e2e.js
+const { chromium } = require("playwright");
+const path = require("path");
+const URL = "file://" + path.resolve(__dirname, "..", "index.html");
+const GEN = process.env.GENESIS;
+if (!GEN) { console.error("GENESIS が要ります"); process.exit(2); }
+const store = [], subs = new Set(); let down = false;
+const match = (f, e) => (!f.kinds || f.kinds.includes(e.kind)) && (!f["#t"] || e.tags.some(t => t[0] === "t" && f["#t"].includes(t[1]))) && (!f.until || e.created_at <= f.until);
+let realSockets = 0;
+async function relay(page) {
+  page.on("websocket", () => {});
+  await page.routeWebSocket(/.*/, ws => {
+    if (!/^wss:\/\/(relay\.damus\.io|nos\.lol|relay\.primal\.net|relay\.nostr\.band)\//.test(ws.url() + "/")) realSockets++;
+    if (down) { ws.close(); return; }
+    ws.onMessage(m => { const d = JSON.parse(m);
+      if (d[0] === "REQ") { const f = d[2]; for (const e of store.filter(e => match(f, e)).sort((a, b) => b.created_at - a.created_at).slice(0, f.limit || 500)) ws.send(JSON.stringify(["EVENT", d[1], e])); ws.send(JSON.stringify(["EOSE", d[1]])); subs.add({ws, id: d[1], f}); }
+      if (d[0] === "EVENT") { const e = d[1]; if (!store.some(x => x.id === e.id)) { store.push(e); for (const s of subs) if (match(s.f, e)) try { s.ws.send(JSON.stringify(["EVENT", s.id, e])); } catch (x) {} } ws.send(JSON.stringify(["OK", e.id, true, ""])); }
+    });
+  });
+}
+(async () => {
+  const b = await chromium.launch({args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]});
+  const errs = [], log = [];
+  const check = (l, c) => { if (!c) process.exitCode = 1; log.push((c ? "OK  " : "NG  ") + l); };
+  const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); await relay(p);
+    await p.route(/^https?:\/\//, r => r.fulfill({status: 404, body: ""}));   // 外へは出さない（刻みの記録の読み込みなど）
+    await p.goto(URL + hash); await p.waitForTimeout(700); return p; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const st = p => p.evaluate(() => ({me: __jt.me, bal: (__jt.S.users[__jt.me] || {}).bal, member: !!(__jt.S.users[__jt.me] || {}).member}));
+  const until = async (p, fn, ms = 8000, arg) => { if (typeof ms !== "number") { arg = ms; ms = 8000; } const t = Date.now(); while (Date.now() - t < ms) { if (await p.evaluate(fn, arg).catch(() => false)) return true; await wait(200); } return false; };
+  try {
+    // はじまりの人
+    const A = await b.newContext({locale: "ja-JP", permissions: ["microphone", "geolocation"], geolocation: {latitude: 35.68, longitude: 139.76}});
+    const a = await open(A, "#genesis=" + GEN);
+    check("はじめて開くと名前を決める画面", /名前を決めると/.test(await a.textContent("#sheet")));
+    await a.fill("#st-name", "はじめ"); await a.click("[data-start]"); await wait(1200);
+    let s = await st(a);
+    check("はじまりの番号で参加し、1,000 jeni", s.member && s.bal === 1000 && /はじまりの人として参加/.test(await a.textContent("#sheet")));
+    await a.click("#sheet [data-close]");
+    check("署名した出来事が中継に届く", await until(a, () => true) && store.some(e => e.pubkey === s.me && e.kind === 7740 && e.sig && e.sig.length === 128));
+    check("試験運用の表示（見ている人・最初に戻す・変わったところは出ない）", !(await a.$("#who")) && !(await a.$("[data-reset]")) && await a.$eval("#guide", e => e.hidden));
+    // カードを出す（画像は小さくして中継へ）
+    await a.click("[data-make]"); await wait(200);
+    await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="text"]');
+    await a.fill("#m-title", "はじめてのカード"); await a.fill("#m-body", "つなぐ版の最初のカード"); await a.fill("#m-price", "20");
+    await a.click("[data-create]"); await wait(1200);
+    const cardId = await a.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "はじめてのカード").id);
+    check("カードが出て、中継に届く", !!cardId && store.some(e => e.id === cardId));
+    check("見本の画像の選びは出ない", true);
+    // 招待
+    await a.click("#sheet [data-close]"); await a.click(".me [data-me]"); await wait(200); await a.click("[data-invite]"); await wait(400);
+    const link = await a.$eval("#over .sub[style*='break-all']", e => e.textContent);
+    check("招待のリンク（このページの #join=）", /#join=[0-9a-f]{64}\.\.[0-9a-f]{24}$/.test(link));
+    // 招待された人
+    const B = await b.newContext({locale: "ja-JP", permissions: ["microphone"]});
+    const bp = await open(B, link.slice(link.indexOf("#")));
+    await bp.fill("#st-name", "ふたり"); await bp.click("[data-start]");
+    check("招待のリンクから参加して 1,000 jeni", await until(bp, () => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].member && __jt.S.users[__jt.me].bal === 1000, 10000));
+    check("参加したことが画面に出る（認めた人の名前）", await until(bp, () => /はじめ さんに認められて/.test(document.getElementById("sheet").textContent), 8000));
+    await bp.click("#sheet [data-close]").catch(() => {});
+    const bpk = (await st(bp)).me;
+    check("はじまりの人の側にも届く", await until(a, pk => !!(__jt.S.users[pk] && __jt.S.users[pk].member), 8000, bpk));
+    // 持つ・投げ銭
+    await until(bp, id => !!__jt.S.cards[id], 8000, cardId);
+    await bp.evaluate(id => __jt.detail(id), cardId); await wait(300);
+    await bp.evaluate(id => { const b = document.querySelector(`#pg-${id} [data-lp="hold"]`); b.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true})); }, cardId); await wait(1300);
+    check("長押しで持つ（20 jeni）", (await st(bp)).bal === 980);
+    check("作った人に 20 jeni が届く", await until(a, () => __jt.S.users[__jt.me].bal === 1020, 8000));
+    // 友達になって、2人だけの会話（封）
+    await bp.evaluate(pk => __jt.person(pk), (await st(a)).me); await wait(300); await bp.click("[data-friend]"); await wait(500);
+    await until(a, pk => !!(__jt.S.users[pk] && __jt.S.users[pk].friends.includes(__jt.me)), 8000, bpk);
+    await a.evaluate(pk => __jt.person(pk), bpk); await wait(300); await a.click("[data-friend]"); await wait(600);
+    await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
+    check("お互いに友達になると、カードの中に電話と会話", !!(await a.$("#sheet .pcomm [data-chat]")));
+    await a.click("#sheet .pcomm [data-chat]"); await wait(300); await a.fill("#c-text", "こんにちは、届きますか"); await a.click("[data-send]"); await wait(1200);
+    const dm = store.find(e => e.kind === 7742);
+    check("会話は封をして中継に置く（中継からは読めない）", !!dm && !dm.content.includes("こんにちは") && dm.tags.some(t => t[0] === "p" && t[1] === bpk));
+    check("相手の端末では読める", await until(bp, () => Object.values(__jt.CHAT).flat().some(m => m.text === "こんにちは、届きますか"), 8000));
+    // 通話（2人の端末を直接つなぐ）
+    await a.click("[data-overclose]").catch(() => {});
+    await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
+    await a.click("#sheet .pcomm [data-call]"); await wait(1500);
+    check("電話をかけると、相手に着信", await until(bp, () => !!document.querySelector("[data-pickup]"), 8000));
+    await bp.click("[data-pickup]");
+    check("出ると、2人がつながる", await until(a, () => /話しています/.test((document.getElementById("call-s") || {}).textContent || ""), 15000));
+    await a.click("[data-hang]"); await wait(800);
+    check("終えると、相手の画面も閉じる", await until(bp, () => document.getElementById("over").hidden, 8000));
+    // ---- その場で売る：売る人の QR（このページの #pay=）を、買う人がスマホのカメラで読む → 長押しで払う ----
+    await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-overclose]").catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(4)'); await wait(200);
+    await a.setInputFiles("#m-photo", path.resolve(__dirname, "..", "app", "media", "bread.jpg")); await wait(500);
+    await a.fill("#m-title", "焼きたてのパン"); await a.fill("#m-price", "30"); await a.click("[data-create]"); await wait(800);
+    const payLink = await a.evaluate(() => __jt.MK.sale && `${__jt.MK.sale.id}.${__jt.MK.sale.code}`);
+    check("その場で売る QR はこのページの #pay= ", !!payLink);
+    const bp2 = await open(B, "#pay=" + payLink); await wait(800);
+    check("買う人の画面に、カードと「長押しで払う」", !!(await bp2.$('[data-lp="buy"]')));
+    await bp2.evaluate(() => document.querySelector('[data-lp="buy"]').dispatchEvent(new PointerEvent("pointerdown", {bubbles: true}))); await wait(1500);
+    check("払うと、払い終わりの画面", /払い終わりました/.test(await bp2.textContent("#sheet")));
+    check("売る人の画面に「払われました」", await until(a, () => /払われました/.test(document.getElementById("sheet").textContent), 10000));
+    const saleMedia = store.filter(e => e.kind === 7741 && e.content.includes("data:image/jpeg"));
+    check("写真は小さくして中継へ（100KB 未満）", saleMedia.length >= 1 && saleMedia.every(e => e.content.length < 100000));
+    await bp2.close();
+    // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----
+    await a.click("#sheet [data-close]").catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(1)'); await a.click('.mk-k [data-mk="rwa"]');
+    await a.fill("#m-title", "朝の大根"); await a.fill("#m-price", "10"); await a.fill("#m-supply", "2"); await a.click("[data-create]"); await wait(1000);
+    const rwa = await a.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "朝の大根").id);
+    await until(bp, id => !!__jt.S.cards[id], 8000, rwa); await bp.click("[data-overclose]").catch(() => {});
+    await bp.evaluate(id => __jt.detail(id), rwa); await wait(300);
+    await bp.evaluate(id => document.querySelector(`#pg-${id} [data-lp="hold"]`).dispatchEvent(new PointerEvent("pointerdown", {bubbles: true})), rwa); await wait(1400);
+    await bp.click(`#pg-${rwa} [data-redeem]`); await wait(600);
+    const usedLink = await bp.evaluate(id => { const m = document.getElementById("over").textContent.match(/番号：([0-9a-f]{16})/); return m && `${id}.${m[1]}`; }, rwa);
+    check("受け取りの QR はこのページの #used=（読めないときの番号つき）", !!usedLink && /読めないときの番号/.test(await bp.textContent("#over")));
+    const a4 = await open(A, "#used=" + usedLink); await wait(1500);
+    check("作った人が読むと「使った」になる", await until(a4, id => __jt.S.cards[id].copies.some(x => x.used), 8000, rwa));
+    check("持っている人の側でも「使った」", await until(bp, id => __jt.S.cards[id].copies.some(x => x.used), 8000, rwa));
+    await a4.close();
+    // ---- 仲間の輪：中身は輪の人だけが読める（中継には封のまま） ----
+    await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="text"]'); await a.click("[data-newcircle]"); await wait(200);
+    await a.fill("#c-name", "身内"); await a.check(`[data-cm][value="${bpk}"]`); await a.click("[data-mkcircle]"); await wait(800);
+    await a.fill("#m-title", "輪だけの話"); await a.fill("#m-body", "これは輪の人だけに見える本文"); await a.selectOption("#m-circle", {index: 1}); await a.click("[data-create]"); await wait(1500);
+    check("輪のカードの題と本文は、中継では封のまま", !store.some(e => e.content.includes("輪だけの話") || e.content.includes("輪の人だけに見える本文")));
+    check("輪の人（招待した人）には題が読める", await until(bp, () => Object.values(__jt.S.cards).some(c => c.title === "輪だけの話"), 10000));
+    // 輪の会話も封をして
+    const ccard = await bp.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "輪だけの話").id);
+    await bp.evaluate(id => __jt.detail(id), ccard); await wait(300); await bp.click(`#pg-${ccard} [data-talk]`); await wait(300);
+    await bp.fill("#t-text", "輪の中のひとこと"); await bp.click("[data-say]"); await wait(1200);
+    check("輪の会話は中継では封のまま、輪の人には読める", !store.some(e => e.content.includes("輪の中のひとこと")) && await until(a, id => (__jt.S.cards[id].talk || []).some(x => __jt.S.comments[x].text === "輪の中のひとこと"), 10000, ccard));
+    await bp.click("[data-overclose]").catch(() => {});
+    // お気に入りは、この端末の中だけ（開き直しても残る・中継には出さない）
+    await bp.click(`#pg-${ccard} [data-fav]`); await wait(300);
+    const nEv = store.length; const bp3 = await open(B); await wait(800);
+    check("お気に入りは開き直しても残り、中継には出ない", await bp3.evaluate(id => JSON.parse(localStorage.getItem("jeni.fav") || "{}")[__jt.me][id] > 0, ccard) && store.length === nEv);
+    await bp3.close();
+    // プロフィールのアイコン
+    await bp.evaluate(() => __jt.closeSheet()); await bp.click(".me [data-me]"); await wait(200); await bp.click("[data-editme]"); await wait(200);
+    await bp.setInputFiles("#p-pic", path.resolve(__dirname, "..", "app", "media", "radish.jpg")); await wait(1500);
+    check("プロフィールのアイコンは小さくして中継へ、相手に見える", store.some(e => e.kind === 7741 && e.pubkey === bpk && e.content.includes('"pic"')) && await until(a, pk => /background-image|url\(/.test(document.body.innerHTML) && true, 4000, bpk));
+    // 書き出し（自分の記録をファイルに）
+    const dl = bp.waitForEvent("download", {timeout: 5000}).catch(() => null); await bp.click("[data-saveme]").catch(() => {}); await bp.click("[data-export]").catch(() => {});
+    check("記録を書き出すとファイルになる", !!(await dl));
+    // ---- 直す・取り下げる ----
+    await a.evaluate(id => __jt.detail(id), cardId); await wait(300); await a.click(`#pg-${cardId} [data-edit]`); await wait(300);
+    await a.fill("#e-title", "はじめてのカード（直した）"); await a.click("[data-esave]"); await wait(1200);
+    check("直すと、相手の画面でも題が変わる", await until(bp, id => __jt.S.cards[id].title === "はじめてのカード（直した）", 8000, cardId));
+    await a.click("#sheet [data-close]").catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="text"]'); await a.fill("#m-title", "下書き"); await a.click("[data-create]"); await wait(1000);
+    const draft = await a.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "下書き").id);
+    await a.click(`#pg-${draft} [data-retireask]`); await a.click(`#pg-${draft} [data-retire]`); await wait(1000);
+    check("だれも持っていないカードを取り下げると、相手の一覧からも消える", await until(bp, id => !__jt.S.cards[id] || __jt.S.cards[id].gone, 8000, draft));
+    // ---- 別の端末で、書き出した鍵で続ける ----
+    const key = await a.evaluate(() => JSON.parse(localStorage.getItem("jeni.me")).sk);
+    const D = await b.newContext({locale: "ja-JP"}); const d = await open(D);
+    await d.click("#sheet details.more summary"); await d.fill("#st-key", key); await d.click("[data-startkey]");
+    check("書き出した鍵で、別の端末でも同じ人・同じ残高", await until(d, bal => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].bal === bal, 10000, (await st(a)).bal));
+    // ---- 参加していない人の QR（#me=）を、参加している人が読んで認める ----
+    const C = await b.newContext({locale: "ja-JP"}); const cp = await open(C); await cp.fill("#st-name", "さんにんめ"); await cp.click("[data-start]"); await wait(800);
+    const cpk = (await st(cp)).me;
+    check("招待なしで始めた人は、まだ参加していない", !(await st(cp)).member);
+    const a5 = await open(A, "#me=" + cpk); await wait(1500);
+    check("参加している人が読むと「この人を認める」", /この人を認める/.test(await a5.textContent("#over")));
+    await a5.click("[data-vouch]"); await wait(800);
+    check("認めると、その人に 1,000 jeni", await until(cp, () => __jt.S.users[__jt.me].member && __jt.S.users[__jt.me].bal === 1000, 10000));
+    check("輪に入っていない人には、輪のカードの中身が見えない", !(await cp.evaluate(() => Object.values(__jt.S.cards).some(c => c.title === "輪だけの話"))));
+    await a5.close();
+    // ---- 刻んだ記録（毎日の刻みの一覧を読む） ----
+    const a6 = await A.newPage(); a6.on("pageerror", e => errs.push(e.message)); await relay(a6);
+    await a6.route(/^https?:\/\//, r => /stamps\/index\.json/.test(r.request().url()) ? r.fulfill({status: 200, contentType: "application/json", body: JSON.stringify({days: {"2026-11-27": [cardId]}})}) : r.fulfill({status: 404, body: ""}));
+    await a6.goto(URL); await wait(1500); await a6.evaluate(id => __jt.detail(id), cardId); await wait(300);
+    await a6.evaluate(id => document.querySelector(`#pg-${id} .more summary`).click(), cardId); await wait(300);
+    check("カードの記録に、ビットコインに刻んだ日", /2026-11-27 にビットコインに刻んだ記録/.test(await a6.textContent(`#pg-${cardId} .more`)));
+    await a6.close();
+    // 開き直しても同じ（端末に写しがある）・中継が止まっても見本に切り替わらない
+    const before = (await st(a)).bal; await a.close(); const a2 = await open(A);
+    check("開き直しても同じ残高", (await st(a2)).bal === before && (await st(a2)).member);
+    down = true; const a3 = await open(A); await wait(500);
+    check("中継につながらないあいだは「つないでいます」", /つないでいます/.test(await a3.textContent(".tbar .tag")));
+    down = false;
+    check("どの中継にも、試験の外の宛先へはつながない", realSockets === 0);
+    check("画面のエラーなし", errs.length === 0);
+  } catch (e) { log.push("NG  例外: " + e.message.split("\n")[0]); process.exitCode = 1; }
+  console.log(log.join("\n")); if (errs.length) console.log("errors:", errs.slice(0, 5));
+  await b.close();
+})();

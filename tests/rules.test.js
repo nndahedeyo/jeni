@@ -311,3 +311,10 @@ test("カードを作れるのは参加している人だけ。直す前の題�
   const S = reduce([...base(), a, b, ev(A, 12, {t: "edit", card: b.id, title: "つぎ"})], 20, opt);
   assert.ok(!S.cards[a.id]); assert.deepEqual(S.cards[b.id].history.map(h => h.title), ["はじめ"]); assert.equal(S.cards[b.id].title, "つぎ");
 });
+test("はじまりの人：番号を知っている最初の1人だけが、認められずに参加できる", () => {
+  const { sha256hex } = require("../app/rules.js");
+  const D = "d".repeat(64), E = "e".repeat(64), g = {genesis: sha256hex("はじまり")};
+  const S = reduce([ev(D, 1, {t: "genesis", code: "ちがう"}), ev(D, 2, {t: "genesis", code: "はじまり"}), ev(E, 3, {t: "genesis", code: "はじまり"})], 10, g);
+  assert.ok(S.users[D].member); assert.equal(S.users[D].bal, 1000); assert.ok(!S.users[E].member); assert.equal(S.genesis, D);
+  assert.ok(!reduce([ev(D, 2, {t: "genesis", code: "はじまり"})], 10, {}).users[D].member);
+});

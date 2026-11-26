@@ -63,7 +63,7 @@
     const founders = new Set(opt.founders || R.founders);
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
-    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: []};
+    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: [], genesis: null};
     const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: [], invites: []});
     // 実績：持った・持たれた・譲った・譲られたことが1回でもある人（知らせを出せるのはこの人たち）
     const trusted = pk => S.users[pk] && S.users[pk].member && S.users[pk].deals >= 1;
@@ -83,6 +83,11 @@
       const me = U(e.pubkey), t = e.created_at;
       // 最初の人たちは、何か出来事を出した時点で参加
       if (!me.member && founders.has(e.pubkey)) join(e.pubkey, t, null);
+      // はじまりの人（つなぐ版）：始める人だけが知っている番号（の要約が決まりに書いてある）を最初に出した1人が参加する。だれにも認められずに参加できるのはこの1人だけ
+      if (c.t === "genesis") {
+        if (!opt.genesis || S.genesis || me.member || typeof c.code !== "string" || sha256hex(c.code) !== opt.genesis) continue;
+        S.genesis = e.pubkey; join(e.pubkey, t, null); ok(e, "genesis"); continue;
+      }
 
       if (c.t === "profile") { me.name = str(c.name, 40); me.line = str(c.line, 60); continue; }
 

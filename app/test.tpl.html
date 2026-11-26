@@ -375,6 +375,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 const {reduce, sha256hex, R: RULE, COUNTED, AT, merkleRoot, merkleProof, merkleCheck} = JeniRules;
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const LIVE = !!window.JENI_LIVE;   // つなぐ版（本物の中継につなぐ）かどうか
 const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 const COIN = `/*COIN*/`;
 const coin = (cls = "") => COIN.replace("<svg ", `<svg class="coin ${cls}" aria-hidden="true" `);
@@ -393,7 +394,7 @@ const P = {
   yuzu: {pk: "e".repeat(64), name: "ゆず", line: "これから参加する人"},
 };
 const byPk = Object.fromEntries(Object.values(P).map(p => [p.pk, p]));
-const nameOf = pk => (S.users[pk] && S.users[pk].name) || (byPk[pk] && byPk[pk].name) || pk.slice(0, 6);
+const nameOf = pk => !pk ? "" : (S.users[pk] && S.users[pk].name) || (byPk[pk] && byPk[pk].name) || pk.slice(0, 6);
 const FOUNDERS = [P.kenji.pk];
 const MEDIA = {};   // カードの中身（写真・音・本文）。本物では、輪のカードは鍵で封をしてから置く
 let EV = [], seq = 0, clock = 0, S = null, me = P.kenji.pk;
@@ -401,6 +402,10 @@ const CHAT = {}; const pairKey = (a, b) => [a, b].sort().join(":");
 const READ = {}, CALLS = [], CSEEN = {}, FAV = {}, ANCHORS = [];   // ANCHORS：ビットコインに刻んだ記録の要約（見本）   // FAV：お気に入り（人ごと・その人にしか見えない）
 const favOf = () => FAV[me] || (FAV[me] = {}), isFav = id => !!favOf()[id];   // 読んだところ・通話の記録・電話の知らせを見たところ（見本の画面の中だけ）
 function emit(who, c) {
+  if (LIVE) {
+    if (!LV.me) { toast("はじめに名前を決めてください"); return {id: ""}; }
+    const e = LV.publish(LV.K.rule, {v: RULE.version, ...c}); liveRecompute(); return e;
+  }
   clock += 30;
   const e = {id: String(++seq).padStart(6, "0"), pubkey: who, created_at: clock, kind: 7720, content: JSON.stringify({v: RULE.version, ...c})};
   EV.push(e); S = reduce(EV, clock, {founders: FOUNDERS}); return e;
@@ -533,11 +538,11 @@ function visibleCards(all = false) {
 }
 visibleCards.all = () => visibleCards(true);
 function home() {
-  const u = U(), p = byPk[me], list = visibleCards(), m0 = document.querySelector("#home .menu"), mx = m0 ? m0.scrollLeft : 0;
+  const u = U(), p = byPk[me] || {}, list = visibleCards(), m0 = document.querySelector("#home .menu"), mx = m0 ? m0.scrollLeft : 0;
   $("home").innerHTML = `
-    <div class="tbar"><span class="tag" title="ここでの出来事はこの端末の中だけで、どこにも送りません">テスト版（どこにも送らない）</span>
+    ${LIVE ? `<div class="tbar"><span class="tag" title="出来事は署名して、複数の中継に置きます">試験運用</span><button type="button" class="reset" data-scan>QRを読む</button></div>` : `<div class="tbar"><span class="tag" title="ここでの出来事はこの端末の中だけで、どこにも送りません">テスト版（どこにも送らない）</span>
       <label>見ている人 <select id="who">${Object.values(P).map(x => `<option value="${x.pk}" ${x.pk === me ? "selected" : ""}>${esc(x.name)}${S.users[x.pk] && S.users[x.pk].member ? "" : "（まだ参加していない）"}</option>`).join("")}</select></label>
-      <button type="button" class="reset" data-reset>最初に戻す</button></div>
+      <button type="button" class="reset" data-reset>最初に戻す</button></div>`}
     <section class="me" aria-label="プロフィール">
       <div class="me-top"><div class="av" ${PICS[me] ? `style="background:url('${PICS[me]}') center/cover"` : ""}>${PICS[me] ? "" : esc(nameOf(me).slice(0, 1))}</div>
         <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc((S.users[me] && S.users[me].line) || p.line) : "まだ参加していません"}</div></div>
@@ -547,7 +552,7 @@ function home() {
       <div class="menu-w"><nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav><button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></div>
       <div class="mcap" aria-live="polite">${FIELDS.find(f => f[0] === field)[1]}${MOD.mine ? "・持っている" : ""}${MOD.fav ? "・お気に入り" : ""}${MOD.near ? "・近い順" : ""}・${list.length}枚${field === "circle" ? "・輪の人だけ" : ""}</div>
     </section>
-    ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
+    ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。${LIVE ? "招待のリンクを開くか、" : ""}<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
     <main class="list">${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
       ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
@@ -572,7 +577,7 @@ function cardHtml(c, held) {
       ${c.kind === "music" && m.src ? `<div class="cbar"><i id="cbar-${c.id}"></i></div>` : ""}
       <button type="button" class="mark" data-flip aria-label="このカードの裏（QR）">${gmark(100, {line: true, halo: true})}</button></div>`;
   const back = `<div class="face back" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
-      <div class="qr">${qrSvg(`jeni:card:${c.id}`)}</div>
+      <div class="qr">${qrSvg(`${BASE}#card=${c.id}`)}</div>
       <div class="bk"><div class="no">jeni No.${cardNo(c.id)}</div><div class="bt">${esc(c.title || "その場のカード")}</div><div class="how">読むと、このカードが開きます</div>
         <dl><dt>作った人</dt><dd>${esc(nameOf(c.by))}</dd><dt>署名</dt><dd>${c.by.slice(0, 4)}…${c.id.slice(-4)}</dd></dl></div></div>`;
   return `<div class="jc2${held ? " held" : ""}"><div class="in">${front}${back}</div></div>`;
@@ -612,14 +617,15 @@ const VIS = {show: "みんなに見せる", hide: "画面に出さない", lock:
 const VISD = {show: "持っている人に名前が出ます", hide: "アプリには出ません（記録を調べれば分かります）", lock: "どのカードかは本人と作った人だけ。投げ銭の分け前はなし"};
 const PREF = {};   // 人ごとの「見せ方」の決まり（プロフィールで変える）
 const PICS = {}, BGS = {};   // 人ごとのプロフィールアイコンと、プロフィールカードの背景（見本の画面の中だけ）
-const prefVis = c => { const v = PREF[me] || "show"; return v === "lock" && c.supply != null ? "show" : v; };
+const prefVis = c => { const v = PREF[me] || "show"; return v === "lock" && (c.supply != null || LIVE) ? (LIVE ? "hide" : "show") : v; };
 function flowLine(c) {
   const by = esc(nameOf(c.by)), lim = c.supply != null;
   if (lim && !c.left) return `譲り受けると ${c.price} jeni → 手放した人へ・いま${c.queue.length}人が順番待ち`;
   if (KEEP[c.kind]) return `${KEEP[c.kind][1]}と、新しくつながったカードの知らせが届きます。無料で、いつでもやめられます・投げ銭は全額 ${by} さんへ`;
   const share = c.copies.some(x => !x.used && x.vis !== "lock");
-  if (c.kind === "app") return `持つと ${c.price} jeni → ${by} さんへ・持っているあいだ、このアプリを使えます`;
-  return `持つと ${c.price} jeni → ${by} さんへ・投げ銭は${lim || !share ? `全額 ${by} さんへ` : "半分ずつ作った人と持っている人へ"}`;
+  const pay = c.price ? `持つと ${c.price} jeni → ${by} さんへ` : "無料で持てます（1人1枚）";
+  if (c.kind === "app") return `${pay}・持っているあいだ、このアプリを使えます`;
+  return `${pay}・投げ銭は${lim || !share ? `全額 ${by} さんへ` : "半分ずつ作った人と持っている人へ"}`;
 }
 // 長押しで決める（押しているあいだ、ボタンが満ちていく）
 // プロフィールアイコン：カードと同じ角の丸みと質感の、角丸の四角。名前の前に置く（将来、ここを押して送る相手を選べるように）
@@ -682,7 +688,7 @@ function editSheet(id) {
   const at = AT.includes(c.kind), body = true;
   openOver(`<h2 class="rh">直す</h2><p class="sub">値段・数・種類は直せません（持った人との約束なので）。直したことは記録に残ります。</p>
     <label class="ph-pick${ED.img ? " has" : ""}" ${ED.img ? `style="--img:url('${ED.img}')"` : ""}><input type="file" id="e-photo" accept="image/*"><span>${ED.img ? "画像を変える" : "カードの画像（なくてもよい）"}</span></label>
-    <div class="chips"><span class="sub">見本：</span>${[["media/bread.jpg", "パン"], ["media/radish.jpg", "大根"], ["media/paddy.jpg", "田んぼ"]].map(([u, l]) => `<button type="button" data-esample="${u}">${l}</button>`).join("")}</div>
+    ${sampleChips(c.kind, "data-esample")}
     <label class="fl">題<input id="e-title" maxlength="80" value="${esc(c.title)}"></label>
     ${body ? `<label class="fl">${{text: "本文", app: "どんなアプリか", project: "何をめざすか"}[c.kind] || "説明"}<textarea id="e-body" maxlength="2000">${esc(c.body || "")}</textarea></label>` : ""}
     ${c.kind === "project" ? `<label class="fl">求めているもの<input id="e-want" maxlength="200" value="${esc(c.want || "")}"></label>` : ""}
@@ -734,8 +740,9 @@ function recBody(id) {
   if (c.circle) rec.push(["見える人", `${esc(S.circles[c.circle].name)}（${S.circles[c.circle].members.length}人）`]);
   if (c.refunds) rec.push(["返した", c.refunds + "回"]);
   if (c.history && c.history.length) rec.push(["直す前", c.history.map(h => `「${esc(h.title)}」`).join("→") + ` → 「${esc(c.title)}」`]);
-  const pf = proofOfEvent(c.id);
-  rec.push(["刻んだ記録", pf && pf.ok ? `ビットコインに刻んだ ${pf.a.day}日目の要約に入っています（証明 ${pf.n}段）` : "次の要約で刻まれます"]);
+  if (LIVE) { const d = liveProof(c.id); rec.push(["刻んだ記録", d ? `${d} にビットコインに刻んだ記録に入っています（証明：github.com/nndahedeyo/jeni の stamps/${d}.txt.ots）` : "次の刻み（1日1回）で刻まれます"]); }
+  else { const pf = proofOfEvent(c.id);
+  rec.push(["刻んだ記録", pf && pf.ok ? `ビットコインに刻んだ ${pf.a.day}日目の要約に入っています（証明 ${pf.n}段）` : "次の要約で刻まれます"]); }
   const acts = my.length && !KEEP[c.kind] ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
   const u2 = S.users[me] || {}, canFlag = u2.member && u2.deals >= 1 && c.by !== me && !c.flags.includes(me);
   return `${acts}
@@ -829,13 +836,18 @@ function phoneList() {
 }
 function chatSheet(pk) {
   const k = pairKey(me, pk), msgs = CHAT[k] || []; READ[me + ":" + pk] = clock;
-  openOver(`<h2 class="rh">${esc(nameOf(pk))} さんと</h2><p class="sub" style="font-size:11px">${icon("lock")} 2人の鍵で封をして置きます。ほかの人には読めません（この見本の画面では、どこにも送りません）。</p>
+  openOver(`<h2 class="rh">${esc(nameOf(pk))} さんと</h2><p class="sub" style="font-size:11px">${icon("lock")} 2人の鍵で封をして置きます。ほかの人には読めません${LIVE ? "" : "（この見本の画面では、どこにも送りません）"}。</p>
     <div class="talk chat">${msgs.map(m => `<div class="bub${m.by === me ? " me" : ""}">${esc(m.text)}</div>`).join("") || `<p class="sub">まだ話していません</p>`}</div>
     <div class="say"><textarea id="c-text" maxlength="1000" placeholder="メッセージ"></textarea><button type="button" class="pill go" data-send="${pk}">送る</button></div>`);
   const t = $("over").querySelector(".talk"); if (t) t.scrollTop = t.scrollHeight;
 }
 let callT = null;
 function callSheet(pk) {
+  if (LIVE) {
+    openOver(`<div class="call"><div class="pav2">${esc(nameOf(pk).slice(0, 1))}</div><b>${esc(nameOf(pk))}</b><span class="sub" id="call-s">呼び出しています…</span>
+      <button type="button" class="pill warn" data-hang="${pk}">終える</button></div>`);
+    rtcStart(pk).then(ok => { if (!ok) closeOver(); }); return;
+  }
   const start = Date.now(); CALLS.push({from: me, to: pk, at: clock});
   openOver(`<div class="call"><div class="pav2">${esc(nameOf(pk).slice(0, 1))}</div><b>${esc(nameOf(pk))}</b><span class="sub" id="call-s">呼び出しています…（見本・つながない）</span>
     <button type="button" class="pill warn" data-hang="${pk}">終える</button></div>`);
@@ -851,8 +863,8 @@ function redeemSheet(id) {
   RD = {id, code, holder: me};
   const evt = c.kind === "event" || c.kind === "service";
   openOver(`<h2 class="rh">${evt ? "入る" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
-    <div class="qrbox"><div class="qrwrap">${qrSvg(`jeni:redeem:${id}:${code}`, "q")}</div><b>${esc(c.title)}</b></div>
-    <button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（${evt ? "受付" : "お店"}）として読む</button>`);
+    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#used=${id}.${code}`, "q")}</div><b>${esc(c.title)}</b></div>
+    ${LIVE ? `<p class="sub" style="text-align:center;font-size:12px">読めないときの番号：<b style="letter-spacing:.08em">${code}</b></p>` : `<button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（${evt ? "受付" : "お店"}）として読む</button>`}`);
 }
 function attachAsk(pid) {
   const pj = S.cards[pid], own = Object.values(S.cards).filter(c => c.by === me && c.id !== pid && !c.hidden && !pj.items.some(x => x.card === c.id));
@@ -883,7 +895,7 @@ function cplay(id) {
 
 /* ---- わたしのカード（プロフィール）：裏の QR は「わたし」への入口。名前・ひとこと・写真・見せ方をここで変える ---- */
 function meCard(edit = false) {
-  const u = U(), p = byPk[me], line = (S.users[me] && S.users[me].line) || p.line;
+  const u = U(), p = byPk[me] || {}, line = (S.users[me] && S.users[me].line) || p.line || "";
   const vouchers = Object.values(S.users).filter(x => x.member && x.vouched.length < RULE.vouchMax && x.pk !== me);
   const av = PICS[me] ? `<div class="pav" style="background-image:url('${PICS[me]}')"></div>` : `<div class="pav">${esc(nameOf(me).slice(0, 1))}</div>`;
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
@@ -894,7 +906,7 @@ function meCard(edit = false) {
         <div class="txt"><div class="k">${u.member ? esc(line) : "まだ参加していません"}</div><div class="t">${esc(nameOf(me))}</div><div class="by">${u.member ? `認めた人 ${u.vouched.length} / ${RULE.vouchMax}` : "裏のQRを読んでもらうと参加できます"}</div></div>
         <button type="button" class="mark" data-flip aria-label="裏返す（QR）">${gmark(100, {line: true, halo: true})}</button></div>
       <div class="face back wback" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
-        <div class="qr">${qrSvg(`jeni:me:${me}`)}</div>
+        <div class="qr">${qrSvg(`${BASE}#me=${me}`)}</div>
         <div class="bk"><div class="no">jeni プロフィール</div><div class="bt">${esc(nameOf(me))}</div>
           <div class="how">${u.member ? "読んだ人は、あなたを友達にできます" : "参加している人にこのQRを読んでもらうと、参加できます"}</div>
           <div class="wal" aria-label="ウォレット（開発中）"><div class="wh">${icon("wallet")}ウォレット<span>開発中</span></div><div class="wb"><button type="button" disabled>${icon("down")}受け取る</button><button type="button" disabled>${icon("up")}送る</button></div></div></div></div>
@@ -903,8 +915,10 @@ function meCard(edit = false) {
     ${u.member && !edit ? `<div class="row2"><button type="button" class="big ghost" data-editme>編集する</button><button type="button" class="big ghost" data-invite ${u.vouched.length + u.invites.filter(x => !x.used && x.until >= clock).length >= RULE.vouchMax ? "disabled" : ""}>招待する（あと${Math.max(0, RULE.vouchMax - u.vouched.length - u.invites.filter(x => !x.used && x.until >= clock).length)}人）</button></div>` : ""}
     ${u.member ? `<section class="box"><h3>記録の控え</h3>
       <div class="who-row"><span>あなたの記録 ${EV.filter(e => e.pubkey === me).length}件・写真など ${Object.values(S.cards).filter(c => c.by === me && MEDIA[c.id] && (MEDIA[c.id].img || MEDIA[c.id].src)).length}件</span><button type="button" class="pill" data-export>書き出す</button></div>
-      <div class="who-row"><span>刻んだ要約 ${ANCHORS.length}日分${ANCHORS.length ? `（最後：${ANCHORS[ANCHORS.length - 1].root.slice(0, 8)}…・${ANCHORS[ANCHORS.length - 1].ids.length}件）` : ""}</span><button type="button" class="pill" data-anchor>いま刻む（見本）</button></div>
-      <p class="sub" style="font-size:11px;margin:4px 0 0">書き出すと、記録と写真などを端末に保存できます（無料の置き場が消しても、自分で戻せるように）。要約は1日1回、その日までの記録をまとめた1つの数字をビットコインに刻みます（費用なし）。どのカードも、刻んだ要約に入っていることを短い証明で示せるので、日付をさかのぼった書き換えができません。</p></section>
+      ${LIVE ? `<div class="who-row"><span>ビットコインに刻んだ日 ${STAMPS ? Object.keys(STAMPS).length + "日分" : "（読み込み中・まだなし）"}</span></div>` : `<div class="who-row"><span>刻んだ要約 ${ANCHORS.length}日分${ANCHORS.length ? `（最後：${ANCHORS[ANCHORS.length - 1].root.slice(0, 8)}…・${ANCHORS[ANCHORS.length - 1].ids.length}件）` : ""}</span><button type="button" class="pill" data-anchor>いま刻む（見本）</button></div>`}
+      <p class="sub" style="font-size:11px;margin:4px 0 0">書き出すと、記録と写真などを端末に保存できます（無料の置き場が消しても、自分で戻せるように）。${LIVE ? "記録は毎日1回、GitHub の決まった仕事が中継から集め、OpenTimestamps を通してビットコインに刻みます（費用なし・だれでも確かめられます）。" : "要約は1日1回、その日までの記録をまとめた1つの数字をビットコインに刻みます（費用なし）。"}どのカードも、刻んだ記録に入っていることを示せるので、日付をさかのぼった書き換えができません。</p></section>
+    ${LIVE ? `<section class="box"><h3>${icon("lock")} あなたの鍵</h3><p class="sub" style="margin:0;font-size:12px;line-height:1.7">鍵はこの端末の中だけにあります。端末をなくしたり、ブラウザの記録を消したりすると戻せません。書き出して、紙やパスワード管理アプリなど、人に見られない所に保管してください。jeni の人が鍵をたずねることはありません。</p>
+      <div class="row2"><button type="button" class="pill" data-keyexp>鍵を書き出す</button><button type="button" class="pill" data-scan>QRを読む</button></div><div id="keybox"></div></section>` : ""}
     ${(() => { const cs = Object.values(S.circles).filter(ci => ci.members.includes(me)); return cs.length ? `<section class="box"><h3>入っている仲間の輪</h3>${cs.map(ci => `<div class="who-row"><span>${esc(ci.name)}（${ci.members.length}人）${ci.by === me ? "・作った輪" : ""}</span>${ci.by === me ? "" : `<button type="button" class="pill" data-cleave="${ci.id}">抜ける</button>`}</div>${ci.by === me ? ci.members.filter(x => x !== me).map(x => `<div class="who-row" style="padding-left:12px">${whoTag(x)}<button type="button" class="link" data-cremove="${ci.id}:${x}">外す</button></div>`).join("") : ""}`).join("")}</section>` : ""; })()}
     <section class="box"><h3>${icon("wallet")} ウォレット（開発中）</h3>
       <p class="sub" style="margin:0;font-size:12px;line-height:1.8">カードの裏に、ウォレットの場所を用意しています。ウォレットで扱うのは暗号資産で、jeni は扱いません（jeni は残高のところだけで動き、円や暗号資産とは交換できません）。いずれ、ここで暗号資産を受け取るQRを出したり、プロフィールアイコンを押した相手に送ったりできるようにする予定です。安全を最優先に作るため、いまは開発中です。<br>一緒に作ってくれる開発者を募集しています：<b>github.com/nndahedeyo/jeni</b></p>
@@ -912,9 +926,9 @@ function meCard(edit = false) {
     ${u.member && edit ? `<section class="box form"><label class="fl">名前<input id="p-name" maxlength="40" value="${esc(nameOf(me))}"></label>
       <label class="fl">ひとこと<input id="p-line" maxlength="60" value="${esc(line)}"></label>
       <div class="row2"><label class="fl">プロフィールアイコン<input id="p-pic" type="file" accept="image/*"></label><label class="fl">カードの背景<input id="p-bg" type="file" accept="image/*"></label></div>
-      <label class="fl">カードを持ったときの見せ方<select id="p-vis">${["show", "hide", "lock"].map(v => `<option value="${v}" ${(PREF[me] || "show") === v ? "selected" : ""}>${VIS[v]}（${VISD[v]}）</option>`).join("")}</select></label>
+      <label class="fl">カードを持ったときの見せ方<select id="p-vis">${(LIVE ? ["show", "hide"] : ["show", "hide", "lock"]).map(v => `<option value="${v}" ${(PREF[me] || "show") === v ? "selected" : ""}>${VIS[v]}（${VISD[v]}）</option>`).join("")}</select></label>
       <button type="button" class="big" data-saveme>保存する</button></section>` : ""}
-    ${u.member ? "" : `<section class="box"><h3>見本：参加している人に読んでもらう</h3>${vouchers.map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（あと${RULE.vouchMax - x.vouched.length}人認めてあげられる）</span><button type="button" class="pill go" data-vouchby="${x.pk}">読んでもらう</button></div>`).join("") || `<div class="who-row"><span>認められる人がいません</span></div>`}</section>`}`);
+    ${u.member ? "" : LIVE ? `<section class="box"><h3>参加するには</h3><p class="sub" style="margin:0">招待のリンクを開くか、参加している人に、このカードの裏のQRを読んでもらいます。</p></section>` : `<section class="box"><h3>見本：参加している人に読んでもらう</h3>${vouchers.map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（あと${RULE.vouchMax - x.vouched.length}人認めてあげられる）</span><button type="button" class="pill go" data-vouchby="${x.pk}">読んでもらう</button></div>`).join("") || `<div class="who-row"><span>認められる人がいません</span></div>`}</section>`}`);
 }
 // 招待：一度きりの番号を作り、その要約だけを記録に出す。番号はリンクと QR にだけ入る（身内に LINE などで送る）
 const INV = {};
@@ -923,15 +937,15 @@ function inviteSheet() {
   const e = emit(me, {t: "invite", lock: sha256hex(code), until: clock + 7 * 86400});
   if (!U().invites.some(x => x.id === e.id)) return toast("招待できません（1人が認められるのは" + RULE.vouchMax + "人まで）");
   INV[e.id] = code;
-  const link = `https://nndahedeyo.github.io/jeni/#join=${e.id}.${me.slice(0, 8)}.${code}`;
+  const link = `${BASE}#join=${e.id}..${code}`;
   openOver(`<h2 class="rh">招待する</h2><p class="sub">このリンクかQRを、身内に送ってください（7日間・1人だけ）。開いた人の端末で、その人の鍵が作られ、参加できます。リンクを知った人ならだれでも使えるので、ほかの所には貼らないでください。</p>
     <div class="qrbox">${qrSvg(link)}</div><p class="sub" style="word-break:break-all;font-size:11px">${esc(link)}</p>
     <button type="button" class="pill" data-copy="${esc(link)}">リンクをコピー</button>
-    <button type="button" class="link" data-joinas="${e.id}">見本：まだ参加していない「ゆず」として開く</button>`);
+    ${LIVE ? "" : `<button type="button" class="link" data-joinas="${e.id}">見本：まだ参加していない「ゆず」として開く</button>`}`);
 }
 function joined() {
   openSheet(`<div class="done">${coin()}<h2 class="rh">${RULE.start.toLocaleString("ja-JP")} jeni が届きました</h2>
-    <p class="sub">${esc(nameOf(S.users[me].vouchedBy))} さんに認められて、参加しました。<br>jeni が新しく生まれるのは、このときだけです。</p></div>
+    <p class="sub">${S.users[me].vouchedBy ? `${esc(nameOf(S.users[me].vouchedBy))} さんに認められて、参加しました。` : "はじまりの人として参加しました。"}<br>jeni が新しく生まれるのは、このときだけです。</p></div>
     <button type="button" class="big" data-close>カードを見に行く</button>`);
 }
 
@@ -950,8 +964,25 @@ function readMK() {
   if (v("m-url") != null) MK.url = v("m-url").trim().slice(0, 300);
   if (v("m-when") != null) MK.when = v("m-when").trim().slice(0, 60);
   if (v("m-place") != null) MK.place = v("m-place").trim().slice(0, 100);
+  if (v("m-src") != null) MK.src = v("m-src").trim().slice(0, 300);
 }
 // 作る：入力の決まりが同じものをまとめて4つ。まとまりの中で種類を選ぶと、すぐ下にその欄だけ
+// 見本の画像：種類ごとに、そのカードとして矛盾しないものだけ（見本の画面だけ。つなぐ版では出さない）
+const SAMPLES = {
+  rwa: [["media/bread.jpg", "パン"], ["media/radish.jpg", "大根"], ["media/curry.jpg", "カレー"]],
+  event: [["media/field.jpg", "畑の体験会"], ["media/paddy.jpg", "田んぼの見学"]],
+  service: [["media/bread.jpg", "パン教室"], ["media/field.jpg", "畑しごとの手伝い"]],
+  picture: [["media/paddy.jpg", "田んぼの写真"], ["media/field.jpg", "畑の写真"]],
+  music: [["media/paddy.jpg", "ジャケット：田んぼ"], ["media/field.jpg", "ジャケット：畑"]],
+  video: [["media/field.jpg", "表紙：畑"]],
+  text: [["media/paddy.jpg", "表紙：田んぼ"]],
+  app: [["media/field.jpg", "畑の地図アプリ"]],
+  shop: [["media/bread.jpg", "パン屋"], ["media/curry.jpg", "カレー屋"]],
+  org: [["media/paddy.jpg", "農家の集まり"]],
+  project: [["media/field.jpg", "畑のプロジェクト"], ["media/paddy.jpg", "田んぼのプロジェクト"]],
+  sale: [["media/bread.jpg", "パン"], ["media/curry.jpg", "カレー"]],
+};
+const sampleChips = (k, attr) => LIVE || !SAMPLES[k] ? "" : `<div class="chips"><span class="sub">見本の画像：</span>${SAMPLES[k].map(([u, l]) => `<button type="button" ${attr}="${u}">${l}</button>`).join("")}</div>`;
 const GROUPS = [
   ["thing", "もの・体験", "rwa", ["rwa", "event", "service"], "数があるもの。持った人に1回（受け取る・参加する・受ける）"],
   ["data", "データ", "data", ["picture", "music", "video", "text", "app"], "何度でも受け取れるもの"],
@@ -981,9 +1012,11 @@ function make() {
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
     ${top}${kinds}
     <label class="ph-pick${MK.img ? " has" : ""}" ${MK.img ? `style="--img:url('${MK.img}')"` : ""}><input type="file" id="m-photo" accept="image/*" ${sale ? 'capture="environment"' : ""}><span>${MK.img ? "画像を変える" : needImg ? "写真を撮る・選ぶ" : "カードの画像（なくてもよい）"}</span></label>
-      <div class="chips"><span class="sub">見本：</span>${[["media/bread.jpg", "パン"], ["media/radish.jpg", "大根"], ["media/paddy.jpg", "田んぼ"]].map(([u, l]) => `<button type="button" data-sample="${u}">${l}</button>`).join("")}</div>
-    ${media ? `<label class="ph-pick mp${MK.src ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}"><span>${MK.src ? `${k === "music" ? "音" : "動画"}を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ" : "動画を選ぶ"}</span></label>
-      <div class="chips"><span class="sub">見本：</span><button type="button" data-msample="${k === "music" ? "media/rain.mp3" : "media/field.mp4"}">${k === "music" ? "雨の音" : "畑の動画"}</button></div>` : ""}
+      ${sampleChips(k, "data-sample")}
+    ${media && LIVE ? `<label class="fl">${k === "music" ? "音" : "動画"}のURL（https・ファイルの置き場に置いたもの）<input id="m-src" type="url" maxlength="300" value="${esc(MK.src || "")}" placeholder="https://…"></label>
+      <p class="sub" style="font-size:11px;margin:-4px 0 0">中継には大きなファイルを置けないので、音や動画はファイルの置き場（Blossom など）に置き、そのURLを入れます。</p>` : ""}
+    ${media && !LIVE ? `<label class="ph-pick mp${MK.src ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}"><span>${MK.src ? `${k === "music" ? "音" : "動画"}を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ" : "動画を選ぶ"}</span></label>
+      ${LIVE ? "" : `<div class="chips"><span class="sub">見本：</span><button type="button" data-msample="${k === "music" ? "media/rain.mp3" : "media/field.mp4"}">${k === "music" ? "雨の音" : "畑の動画"}</button></div>`}` : ""}
     <label class="fl">題${sale ? "（なくてもよい）" : ""}<input id="m-title" maxlength="80" value="${esc(MK.title)}"></label>
     ${bodyL ? `<label class="fl">${bodyL}<textarea id="m-body" maxlength="2000">${esc(MK.body)}</textarea></label>` : ""}
     ${k === "project" ? `<label class="fl">求めているもの<input id="m-want" maxlength="200" value="${esc(MK.want || "")}" placeholder="例：在来種の写真、畑の場所"></label>` : ""}
@@ -994,7 +1027,7 @@ function make() {
       ${thing ? `<label class="fl">${{rwa: "数", event: "定員", service: "枠"}[k]}<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>`}
     ${!sale && circles.length ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
     ${!sale ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
-    <button type="button" class="big" data-create ${(needImg && !MK.img) || (media && !MK.src) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
+    <button type="button" class="big" data-create ${(needImg && !MK.img) || (media && !MK.src && !LIVE) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
 }
 function create() {
   readMK();
@@ -1004,12 +1037,14 @@ function create() {
     const code = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, "0")).join("");
     const e = emit(me, {t: "card", kind: "rwa", title: MK.title, price: MK.price || 80, supply: 1, lock: sha256hex(code), until: clock + 300});
     MEDIA[e.id] = {img: MK.img, where: "その場で手渡し", note: "その場で売って、その場で渡したもの。このカードがレシートになります。"};
+    if (LIVE) shrink(MK.img, 640).then(img => publishMedia(e.id, {img, where: "その場で手渡し", note: "その場で売って、その場で渡したもの。このカードがレシートになります。"}));
     MK.sale = {id: e.id, code, until: clock + 300, start: Date.now()};
     return saleQR();
   }
   const k = MK.mode;
   if (k === "app" && !/^https:\/\/\S+$/.test(MK.url || "")) return toast("アプリのURLは https:// から");
   if ((k === "music" || k === "video") && !MK.src) return toast(k === "music" ? "音を選んでください" : "動画を選んでください");
+  if (LIVE && (k === "music" || k === "video") && !/^https:\/\/\S+$/.test(MK.src)) return toast("音・動画のURLは https:// から");
   const c = {t: "card", kind: k, title: MK.title || "題のないカード", price: MK.price, body: MK.body || ""};
   if (k === "project" && MK.want) c.want = MK.want;
   if (k === "picture" && !MK.img) return toast("写真を選んでください");
@@ -1017,6 +1052,18 @@ function create() {
   if (AT.includes(k)) { c.when = MK.when; c.place = MK.place; if (MK.geo) c.geo = MK.geo; }
   if (BUNDLE.includes(k)) c.price = 0;
   if (MK.circle) c.circle = MK.circle;
+  const med = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: MK.src || "", len: MK.len || ""};
+  if (LIVE) {
+    (async () => {
+      if (med.img) med.img = await shrink(med.img, 640);
+      const e = c.circle ? await liveCircleCard(c, med) : emit(me, c);
+      if (!e || !S.cards[e.id]) return toast("出せませんでした");
+      if (!c.circle && (med.img || med.src || med.url)) publishMedia(e.id, med);
+      Object.assign(MK, {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: "", geo: null});
+      liveRecompute(); detail(e.id); toast("カードを出しました");
+    })();
+    return;
+  }
   const e = emit(me, c);
   if (!S.cards[e.id]) return toast("出せませんでした");
   MEDIA[e.id] = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: MK.src || "", len: MK.len || ""};
@@ -1028,16 +1075,17 @@ function saleQR() {
   const s = MK.sale, c = S.cards[s.id], L = 4 * 1000;   // 見本の画面では、残り時間を輪の長さで見せる（数字は出さない）
   openSheet(`<button type="button" class="back" data-close>${icon("back")}やめる</button>
     <h2 class="rh">買う人に読んでもらう</h2>
-    <div class="qrbox"><div class="qrwrap">${qrSvg(`jeni:pay:${s.id}:${s.code}`, "q")}
+    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#pay=${s.id}.${s.code}`, "q")}
       <svg class="ring" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><rect x="1.5" y="1.5" width="97" height="97" rx="6" pathLength="1" stroke-dasharray="1" stroke-dashoffset="0" id="ring"/></svg></div>
       <div style="text-align:center"><b>${esc(c.title || "その場のカード")}</b><div style="color:var(--gold);font-weight:700">${coin()} ${c.price} jeni</div></div></div>
     <p class="sub" style="font-size:12px">この QR は一度きりで、まわりの金の線がなくなると使えなくなります。写真に撮られても、あとから使い回せません。</p>
-    <section class="box"><h3>見本：買う人として読む</h3>${Object.values(S.users).filter(x => x.member && x.pk !== me).map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（${x.bal.toLocaleString("ja-JP")} jeni）</span><button type="button" class="pill go" data-buyas="${x.pk}">読む</button></div>`).join("")}</section>`);
+    ${LIVE ? `<p class="sub" style="font-size:12px">買う人は、jeni の「QRを読む」か、スマホのカメラで読みます。払われると、ここに知らせが出ます。</p>` : `<section class="box"><h3>見本：買う人として読む</h3>${Object.values(S.users).filter(x => x.member && x.pk !== me).map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（${x.bal.toLocaleString("ja-JP")} jeni）</span><button type="button" class="pill go" data-buyas="${x.pk}">読む</button></div>`).join("")}</section>`}`);
   clearInterval(saleTimer);
   const total = 5 * 60 * 1000;
   saleTimer = setInterval(() => {
     const r = $("ring"); if (!r) return clearInterval(saleTimer);
     const k = Math.min(1, (Date.now() - s.start) / total); r.style.strokeDashoffset = k;
+    if (LIVE && S.cards[s.id] && S.cards[s.id].copies.length) { clearInterval(saleTimer); MK.sale = null; openSheet(`<div class="done">${coin()}<h2 class="rh">払われました</h2><p class="sub">${esc(nameOf(S.cards[s.id].copies[0].owner))} さんから ${S.cards[s.id].price} jeni が届きました。受け取り済みのカードが、レシートとして両方の手元に残ります。</p></div><button type="button" class="big" data-detail="${s.id}">レシート（カード）を見る</button><button type="button" class="back" data-close style="margin:0 auto">${icon("back")}一覧へ</button>`); return; }
     if (k >= 1) { clearInterval(saleTimer); document.querySelector(".qrwrap svg.q").style.opacity = .15; document.querySelectorAll("[data-buyas]").forEach(b => b.disabled = true); }
   }, 1000);
   void L;
@@ -1079,14 +1127,14 @@ function rules() {
       <li><b>はじまり</b>認められて（招待のリンク・QRからも）参加すると、${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認めて・招待してあげられるのは合わせて${RULE.vouchMax}人まで。カードを作れるのは参加している人です。</li>
       <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。データは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回、体験・サービスは受けるのを1回。お店・会社や団体・プロジェクト（つなぐカード）は無料で、持つと常連・会員・仲間になり、いつでもやめられます。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
       <li><b>譲る</b>数に限りのあるカードは、持っている人から同じ値段で譲り受けます。jeni は手放した人へ戻ります。</li>
-      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。受け取るとなくなるもの（現物など数に限りのあるカード）と、つなぐカードは、全額が作った人へ。</li>
+      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ（鍵をかけて持っている人はのぞく）。受け取るとなくなるもの（現物など数に限りのあるカード）と、つなぐカードは、全額が作った人へ。</li>
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
     </ol>
-    <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話は、お互いに友達のときだけ（残高の下の吹き出しと受話器から）。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物は、持っている人が出す一度きりのQRをお店が読んで引き換えます。</p>
+    <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話は、お互いに友達のときだけ（残高の下の吹き出しと受話器、または相手のカードから）。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物・イベント・体験は、持っている人が出す一度きりのQRを作った人が読んで、受け取り・参加・受けたことにします。</p>
     <p class="rnote"><b>直す・取り下げる</b>　作った人は、題・説明・日時・場所・画像を直せます（値段・数・種類は直せません）。取り下げると、だれも持っていないカードは消え、持っている人がいるカードは受付を終えます（持っている人のものはそのまま）。自分の書いた会話は消せます。直した・消したことは記録に残ります。</p>
-    <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残ります（名前ではなく番号で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身は、輪の人にしか読めません。</p>
+    <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残り、だれでも見られます（番号と、その人が決めた名前で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」（数に限りのないカードだけ）と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身は、輪の人にしか読めません。</p>
     <p class="rnote"><b>配る量について</b>　配る量や配り方は、使われ方を見て変わることがあります。変わるときも全員に同じきまりが同じように当てはまり、前もって知らせます。jeni は円と交換できず、値段は作った人が決めるので、配る量の大きさそのものに意味はありません。</p>
-    <p class="rnote"><b>運営のサーバーはありません</b>　記録は、参加している人みんなで持ち合います。どこか1か所が止まっても、jeni は止まりません。</p>`);
+    <p class="rnote"><b>運営のサーバーはありません</b>　記録は、だれでも立てられる複数の中継（リレー）に置き、それぞれの端末にも写しを持ちます。1か所が止まっても、ほかに残ります。無料の中継は古い記録を消すことがあるので、記録の書き出しと、毎日ビットコインに刻む要約で守ります。</p>`);
 }
 
 /* ---- 再生（一覧の中でそのまま） ---- */
@@ -1159,6 +1207,10 @@ document.addEventListener("click", e => {
   if (q("[data-guide]")) return guide();
   if ((b = q("[data-go]"))) { const g = GUIDE[+b.dataset.go]; closeSheet(); g[2](); home(); return; }
   if ((b = q("[data-f]"))) { field = b.dataset.f; return home(); }
+  if (LIVE && (b = q('[data-mod="near"]')) && !MOD.near && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(p => { HERE[0] = p.coords.latitude; HERE[1] = p.coords.longitude; MOD.near = true; home(); toast("近い順（現在地はこの端末の中だけで使い、どこにも送りません）"); }, () => toast("現在地を使えません（ブラウザの設定を確かめてください）"), {timeout: 10000, maximumAge: 300000});
+    return;
+  }
   if ((b = q("[data-mod]"))) { const k = b.dataset.mod; MOD[k] = !MOD[k]; home(); if (MOD[k] && k === "near") toast("近い順（見本の現在地：東京駅のあたり。本物では端末の位置をどこにも送りません）"); return; }
   if ((b = q("[data-fx]"))) return FX.find(f => f.k === b.dataset.fx).open();
   if (q("[data-make]")) { if (!U().member) return toast("参加すると作れます"); MK.mode = "make"; return make(); }
@@ -1173,7 +1225,9 @@ document.addEventListener("click", e => {
   if (q("[data-mkcircle]")) {
     const ms = [...document.querySelectorAll("[data-cm]:checked")].map(x => x.value), name = ($("c-name").value || "").trim() || "仲間の輪";
     if (!ms.length) return toast("入ってもらう人を選んでください");
-    const ev = emit(me, {t: "circle", name, members: ms}); MK.circle = ev.id; toast(`「${name}」をつくりました`); return make();
+    const ev = emit(me, {t: "circle", name, members: ms}); MK.circle = ev.id;
+    if (LIVE && S.circles[ev.id]) { const k = LV.randHex(32); CK[ev.id] = k; lsave("jeni.ck", CK); shareCircleKey(S.circles[ev.id], k); }
+    toast(`「${name}」をつくりました`); return make();
   }
   if ((b = q("[data-buyas]"))) return buyAs(b.dataset.buyas);
   if ((b = q("[data-pay]"))) return pay(b.dataset.pay);
@@ -1190,15 +1244,24 @@ document.addEventListener("click", e => {
   if ((b = q("[data-openapp]"))) { const m = MEDIA[b.dataset.openapp] || {}; return toast(`見本：${m.url || "アプリ"} を開きます。本物では、持っていることをアプリが署名で確かめてから開きます`); }
   if ((b = q("[data-orig]"))) return toast("元のデータを受け取りました（見本。本物では、作った人の置き場所から鍵を開けて受け取ります）");
   if ((b = q("[data-pjstate]"))) { const c = S.cards[b.dataset.pjstate], order = ["prep", "doing", "done"], nx = order[(order.indexOf(c.state || "doing") + 1) % 3]; emit(me, {t: "pjstate", project: c.id, state: nx}); refreshPage(c.id); return toast(`状態：${PJS[nx]}`); }
-  if ((b = q("[data-say]"))) { const id = b.dataset.say, text = ($("t-text").value || "").trim(); if (!text) return toast("書いてから送ってください"); emit(me, {t: "comment", card: id, text}); refreshPage(id); return talkSheet(id); }
+  if ((b = q("[data-say]"))) { const id = b.dataset.say, text = ($("t-text").value || "").trim(); if (!text) return toast("書いてから送ってください");
+    const cc = S.cards[id];
+    if (LIVE && cc.circle) { if (!CK[cc.circle]) return toast("輪のかぎがまだ届いていません"); if (text.length > 300) return toast("輪の会話は300字まで");
+      LV.sealWith(CK[cc.circle], {text}, "jeni-c:" + cc.circle).then(sealed => { emit(me, {t: "comment", card: id, text: sealed}); DEC[sealed] = {text}; liveRecompute(); refreshPage(id); talkSheet(id); }); return; }
+    emit(me, {t: "comment", card: id, text}); refreshPage(id); return talkSheet(id); }
   if ((b = q("[data-flagcm]"))) { const cm = S.comments[b.dataset.flagcm]; emit(me, {t: "flag", comment: cm.id}); toast("知らせました"); refreshPage(cm.card); return talkSheet(cm.card); }
   if ((b = q("[data-flagcard]"))) { const id = b.dataset.flagcard; emit(me, {t: "flag", card: id}); toast(S.cards[id].hidden ? "知らせが2件そろい、カードが隠れました" : "知らせました"); if ($("pg-" + id)) refreshPage(id); return recSheet(id); }
   if ((b = q("[data-person]"))) { closeOver(); return personCard(b.dataset.person); }
   if ((b = q("[data-friend]"))) { emit(me, {t: "friend", who: b.dataset.friend}); toast("友達になりました"); return personCard(b.dataset.friend); }
   if ((b = q("[data-unfriend]"))) { emit(me, {t: "unfriend", who: b.dataset.unfriend}); return personCard(b.dataset.unfriend); }
   if ((b = q("[data-chat]"))) return chatSheet(b.dataset.chat);
-  if ((b = q("[data-send]"))) { const pk = b.dataset.send, text = ($("c-text").value || "").trim(); if (!text) return; const k = pairKey(me, pk); (CHAT[k] = CHAT[k] || []).push({by: me, text, at: clock}); return chatSheet(pk); }
+  if ((b = q("[data-send]"))) { const pk = b.dataset.send, text = ($("c-text").value || "").trim(); if (!text) return;
+    if (LIVE) { $("c-text").value = ""; sendDM(pk, text).then(() => setTimeout(() => chatSheet(pk), 300)); return; }
+    const k = pairKey(me, pk); (CHAT[k] = CHAT[k] || []).push({by: me, text, at: clock}); return chatSheet(pk); }
   if ((b = q("[data-call]"))) return callSheet(b.dataset.call);
+  if (LIVE && q("[data-hang]")) { rtcEnd(true); closeOver(); return toast("通話を終えました"); }
+  if (q("[data-pickup]")) return rtcAnswer();
+  if (q("[data-decline]")) { const i = RTC.inc; RTC.inc = null; if (i) sendCall(i.from, {cid: i.cid, ty: "end"}); return closeOver(); }
   if ((b = q("[data-hang]"))) { clearTimeout(callT); closeOver(); if ($("sheet").querySelector("h2.rh") && /^電話$/.test($("sheet").querySelector("h2.rh").textContent)) phoneList(); return toast("通話を終えました"); }
   if ((b = q("[data-redeem]"))) return redeemSheet(b.dataset.redeem);
   if ((b = q("[data-edit]"))) return editSheet(b.dataset.edit);
@@ -1207,6 +1270,14 @@ document.addEventListener("click", e => {
     const id = ED.id, c = S.cards[id], v = k => { const el = $(k); return el ? el.value.trim() : undefined; }, ch = {t: "edit", card: id};
     if (v("e-title") !== undefined) ch.title = v("e-title"); if (v("e-body") !== undefined) ch.body = v("e-body"); if (v("e-want") !== undefined) ch.want = v("e-want");
     if (v("e-when") !== undefined) ch.when = v("e-when"); if (v("e-place") !== undefined) ch.place = v("e-place");
+    if (LIVE) {
+      (async () => {
+        if (c.circle && CK[c.circle]) { const sealed = await LV.sealWith(CK[c.circle], {title: ch.title, body: ch.body}, "jeni-c:" + c.circle); DEC[sealed] = {title: ch.title, body: ch.body}; ch.title = ""; ch.body = sealed; }
+        emit(me, ch);
+        const old = MEDIA[id] || {}; if ((ED.img || "") !== (old.img || "")) publishMedia(id, {...old, img: ED.img ? await shrink(ED.img, 640) : ""});
+        closeOver(); OPENED.add(id); liveRecompute(); refreshPage(id); toast("直しました");
+      })(); return;
+    }
     emit(me, ch); MEDIA[id] = Object.assign(MEDIA[id] || {}, {img: ED.img}); closeOver(); OPENED.add(id); refreshPage(id); void c; return toast("直しました");
   }
   if ((b = q("[data-retireask]"))) { RETIRE = b.dataset.retireask; return refreshPage(RETIRE); }
@@ -1225,9 +1296,21 @@ document.addEventListener("click", e => {
     try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {} return; }
   if (q("[data-editme]")) return meCard(true);
   if (q("[data-invite]")) return inviteSheet();
+  if (q("[data-scan]")) return scanSheet();
+  if (q("[data-scantext]")) { const t = ($("scan-t").value || "").trim(); scanStop(); closeOver(); return /^[0-9a-f]{16}$/.test(t) && sel && S.cards[sel] && S.cards[sel].by === me ? useCode(sel, t) : onScan(t); }
+  if ((b = q("[data-vouch]"))) { const pk = b.dataset.vouch; emit(me, {t: "vouch", who: pk}); closeOver(); return toast(S.users[pk] && S.users[pk].member ? `${nameOf(pk)} さんが参加しました` : "認められませんでした（3人まで・もう参加している人は認められません）"); }
+  if (q("[data-start]")) { const name = ($("st-name").value || "").trim().slice(0, 40); if (!name) return toast("名前を入れてください"); LV.newMe(); emit(me = LV.me.pk, {t: "profile", name, line: ""}); return afterStart(); }
+  if (q("[data-startsougo]")) { const sm = LV.store.get("sougo.me", null); if (!sm || !LV.importKey(sm.sk)) return toast("鍵を読めませんでした"); me = LV.me.pk; if (!(S.users[me] && S.users[me].name)) emit(me, {t: "profile", name: sm.name || "なまえ", line: ""}); return afterStart(); }
+  if (q("[data-startkey]")) { if (!LV.importKey($("st-key").value)) return toast("鍵の形が合いません（64文字）"); return afterStart(); }
+  if (q("[data-keyexp]")) { const kb = $("keybox"); kb.innerHTML = `<p class="sub warnc" style="font-size:12px">この64文字があれば、だれでもあなたとして使えます。人に見せたり、送ったりしないでください。</p><p style="font:600 13px/1.6 ui-monospace,monospace;word-break:break-all;user-select:all;background:var(--sunk);padding:8px;border-radius:8px">${LV.me.sk}</p>`; return; }
   if ((b = q("[data-copy]"))) { try { navigator.clipboard.writeText(b.dataset.copy).then(() => toast("コピーしました"), () => toast("長押しで選んでコピーしてください")); } catch (x) { toast("長押しで選んでコピーしてください"); } return; }
   if ((b = q("[data-joinas]"))) { const id = b.dataset.joinas, by = me; closeOver(); me = AS("yuzu"); emit(me, {t: "join", invite: id, by, code: INV[id]}); if (U().member) { home(); return joined(); } return toast("参加できませんでした"); }
   if (q("[data-anchor]")) { const a = anchorNow(); toast(a ? `${a.day}日目の要約を刻みました（見本：本物では OpenTimestamps を通してビットコインへ）` : "新しい記録がありません"); return meCard(); }
+  if (LIVE && q("[data-export]")) {
+    const out = JSON.stringify({jeni: 1, tag: LV.TAG, rules: RULE.version, by: me, events: LV.events.filter(e => e.pubkey === me)}, null, 1);
+    try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([out], {type: "application/json"})); a.download = `jeni-記録-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove(); } catch (x) {}
+    return toast(`書き出しました（${Math.ceil(out.length / 1024)}KB）`);
+  }
   if (q("[data-export]")) {
     const out = JSON.stringify({jeni: 1, rules: RULE.version, by: me, events: EV.filter(e => e.pubkey === me), media: Object.values(S.cards).filter(c => c.by === me).map(c => ({card: c.id, ...MEDIA[c.id]})), anchors: ANCHORS.map(a => ({day: a.day, root: a.root}))});
     try { navigator.clipboard.writeText(out).catch(() => {}); } catch (x) {}
@@ -1259,6 +1342,9 @@ function lpStart(b) {
 }
 function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); document.querySelectorAll(".jc2.drawing").forEach(x => x.classList.remove("drawing")); }
 function lpDo(act, id) {
+  if (act === "buy") { const [cid, code] = id.split("."), c = S.cards[cid]; if (c.price > U().bal) return toast("jeni が足りません");
+    emit(me, {t: "hold", card: cid, code, vis: "show"}); if (!S.cards[cid].copies.some(x => x.owner === me)) return toast("払えませんでした（期限切れか、もう払われています）");
+    return openSheet(`<div class="done">${coin()}<h2 class="rh">払い終わりました</h2><p class="sub">${c.price} jeni が ${esc(nameOf(c.by))} さんに届きました。受け取り済みのカードが、レシートとして手元に残ります。</p></div><button type="button" class="big" data-detail="${cid}">レシート（カード）を見る</button><button type="button" class="back" data-close style="margin:0 auto">${icon("back")}一覧へ</button>`); }
   if (act === "hold") return doHold(id);
   if (act === "want") { emit(me, {t: "want", card: id}); refreshPage(id); return toast("順番待ちに並びました"); }
   if (act === "tip") {
@@ -1286,12 +1372,12 @@ document.addEventListener("change", e => {
   if (e.target.id === "e-photo" && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => { ED.img = fr.result; const pk = $("over").querySelector(".ph-pick"); pk.classList.add("has"); pk.style.setProperty("--img", `url('${ED.img}')`); }; fr.readAsDataURL(e.target.files[0]); return; }
   if (e.target.id === "p-bg" && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => {
     const k = Math.min(1, 900 / im.width), cv = document.createElement("canvas"); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
-    BGS[me] = cv.toDataURL("image/jpeg", .85); toast("カードの背景を変えました"); meCard(true); }; im.src = fr.result; }; fr.readAsDataURL(e.target.files[0]); return; }
+    BGS[me] = cv.toDataURL("image/jpeg", .85); if (LIVE) shrink(BGS[me], 640).then(bg => { LV.publish(LV.K.media, {profile: true, bg}); liveRefresh(); }); toast("カードの背景を変えました"); meCard(true); }; im.src = fr.result; }; fr.readAsDataURL(e.target.files[0]); return; }
   if (e.target.id !== "p-pic" || !e.target.files[0]) return;
   const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => {
     const k = 240 / Math.min(im.width, im.height), cv = document.createElement("canvas"); cv.width = cv.height = 240;
     cv.getContext("2d").drawImage(im, (240 - im.width * k) / 2, (240 - im.height * k) / 2, im.width * k, im.height * k);
-    PICS[me] = cv.toDataURL("image/jpeg", .85); toast("アイコンを変えました"); meCard(true); }; im.src = fr.result; };
+    PICS[me] = cv.toDataURL("image/jpeg", .85); if (LIVE) shrink(PICS[me], 160, .8).then(pic => { LV.publish(LV.K.media, {profile: true, pic}); liveRefresh(); }); toast("アイコンを変えました"); meCard(true); }; im.src = fr.result; };
   fr.readAsDataURL(e.target.files[0]);
 });
 document.addEventListener("keydown", e => {
@@ -1299,6 +1385,250 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape" && !$("sheet").hidden) closeSheet();
   if (e.key === "Enter" && e.target.classList && e.target.classList.contains("line")) detail(e.target.dataset.detail);
 });
-seed(); home();
-window.__jt = {get S() { return S; }, get EV() { return EV; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK, person: pk => personCard(pk)};
+/* ================= つなぐ版：本物の中継につなぐ（LIVE のときだけ動く） ================= */
+const GENESIS = "/*GENESIS*/";   // はじまりの人の番号の要約（つなぐ版を組み立てるときに入る）
+const BASE = LIVE ? location.origin + location.pathname : "https://nndahedeyo.github.io/jeni/";
+const LV = LIVE ? window.JeniLive : null;
+const DEC = {};                                  // 封を開けたもの（封の文字 → 中身）
+const CK = LIVE ? LV.store.get("jeni.ck", {}) : {};   // 輪のかぎ（輪の番号 → かぎ）。この端末と、輪の人だけ
+const DMS = {}, CALLEV = {}, MEDV = {};          // 開けた会話・通話のつなぎ・輪の中身
+let STAMPS = null;                               // 毎日ビットコインに刻んだ記録（日 → 番号の並び）
+const isSealed = s => typeof s === "string" && /^1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+$/.test(s);
+const lsave = (k, v) => LIVE && LV.store.set(k, v);
+function liveRecompute() {
+  clock = LV.now();
+  const evs = LV.events, K = LV.K, mine = LV.me ? LV.me.pk : null;
+  EV = evs.filter(e => e.kind === K.rule);
+  S = reduce(EV, clock + 5, {genesis: GENESIS});
+  const todo = [];
+  // 輪のかぎ：輪を作った人が、入っている人ごとに「2人のかぎ」で封をして配る
+  for (const e of evs) if (e.kind === K.ckey && mine) { try { const c = JSON.parse(e.content), ci = S.circles[c.circle];
+    if (!ci || ci.by !== e.pubkey || CK[c.circle] || !c.keys || !c.keys[mine]) continue;
+    todo.push(LV.openFrom(e.pubkey, c.keys[mine], "jeni-ck:" + c.circle).then(o => { if (o && o.k) { CK[c.circle] = o.k; lsave("jeni.ck", CK); return true; } })); } catch (x) {} }
+  // 輪のカードの中身（題と説明は本文の封の中）・輪の会話
+  for (const c of Object.values(S.cards)) if (c.circle && isSealed(c.body)) {
+    const raw = c.body, d = DEC[raw]; if (d) { c.title = d.title || ""; c.body = d.body || ""; }
+    else { const k = CK[c.circle]; c.title = k ? "…" : "（輪の人だけが読めます）"; c.body = ""; if (k) todo.push(openTo(raw, k, c.circle)); }
+  }
+  for (const c of Object.values(S.cards)) if (c.circle) for (const x of c.talk || []) { const cm = S.comments[x]; if (!cm || !isSealed(cm.text)) continue;
+    const d = DEC[cm.text]; if (d) cm.text = d.text || ""; else { const k = CK[c.circle]; const raw = cm.text; cm.text = "（輪の人だけが読めます）"; if (k) todo.push(LV.openWith(k, raw, "jeni-c:" + c.circle).then(o => { if (o) { DEC[raw] = o; return true; } })); } }
+  // カードの中身（画像など）・プロフィールの画像：最後に出したものが今の中身
+  for (const k in MEDIA) delete MEDIA[k];
+  for (const e of evs) if (e.kind === K.media) { try { const m = JSON.parse(e.content);
+    if (m.profile) { if (m.pic !== undefined) PICS[e.pubkey] = m.pic; if (m.bg !== undefined) BGS[e.pubkey] = m.bg; continue; }
+    const c = S.cards[m.card]; if (!c || c.by !== e.pubkey) continue;
+    if (m.sealed) { const d = MEDV[e.id]; if (d) MEDIA[c.id] = d; else if (CK[c.circle]) todo.push(LV.openWith(CK[c.circle], m.sealed, "jeni-m:" + c.circle).then(o => { if (o) { MEDV[e.id] = o; return true; } })); continue; }
+    MEDIA[c.id] = {img: m.img || "", src: m.src || "", len: m.len || "", note: m.note || "", url: m.url || "", where: m.where || ""};
+  } catch (x) {} }
+  // 2人だけの会話：どちらかが自分で、相手が友達のとき
+  for (const k in CHAT) delete CHAT[k];
+  for (const e of evs) if (e.kind === K.dm && mine) { const to = (e.tags.find(t => t[0] === "p") || [])[1]; if (!to || (e.pubkey !== mine && to !== mine)) continue;
+    const other = e.pubkey === mine ? to : e.pubkey, d = DMS[e.id];
+    if (d) (CHAT[pairKey(mine, other)] = CHAT[pairKey(mine, other)] || []).push({by: e.pubkey, text: d.text, at: e.created_at});
+    else todo.push(LV.openFrom(other, e.content, "jeni-dm").then(o => { if (o) { DMS[e.id] = o; return true; } })); }
+  for (const k in CHAT) CHAT[k].sort((a, b) => a.at - b.at);
+  // 通話：呼び出しの記録（不在着信）と、つなぎの受け答え
+  CALLS.length = 0;
+  for (const e of evs) if (e.kind === K.call && mine) { const to = (e.tags.find(t => t[0] === "p") || [])[1]; if (!to || (e.pubkey !== mine && to !== mine)) continue;
+    const d = CALLEV[e.id]; if (!d) { todo.push(LV.openFrom(e.pubkey === mine ? to : e.pubkey, e.content, "jeni-call").then(o => { if (o) { CALLEV[e.id] = o; return true; } })); continue; }
+    if (d.ty === "offer") CALLS.push({from: e.pubkey, to, at: e.created_at, missed: !evs.some(x => x.kind === K.call && CALLEV[x.id] && CALLEV[x.id].cid === d.cid && CALLEV[x.id].ty === "answer"), cid: d.cid});
+    rtcSignal(e, d);
+  }
+  READ_LOAD();
+  if (todo.length) Promise.all(todo).then(r => { if (r.some(Boolean)) liveRefresh(); });
+}
+function openTo(cipher, k, circle) { return LV.openWith(k, cipher, "jeni-c:" + circle).then(o => { if (o) { DEC[cipher] = o; return true; } }); }
+// 読んだところ・お気に入り・見せ方の決まり：この端末の中だけ（記録には出さない）
+let READ_LOADED = false;
+function READ_LOAD() {
+  if (READ_LOADED || !LIVE) return; READ_LOADED = true;
+  Object.assign(READ, LV.store.get("jeni.read", {})); Object.assign(CSEEN, LV.store.get("jeni.cseen", {})); Object.assign(NSEEN, LV.store.get("jeni.nseen", {}));
+  Object.assign(FAV, LV.store.get("jeni.fav", {})); Object.assign(PREF, LV.store.get("jeni.pref", {}));
+}
+function liveSaveLocal() { if (!LIVE) return; lsave("jeni.read", READ); lsave("jeni.cseen", CSEEN); lsave("jeni.nseen", NSEEN); lsave("jeni.fav", FAV); lsave("jeni.pref", PREF); }
+let refT = null;
+function liveRefresh() {
+  clearTimeout(refT); refT = setTimeout(() => {
+    liveRecompute();
+    const typing = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if (typing) return;
+    if ($("sheet").hidden) home();
+    else if ($("sheet").classList.contains("feed") && sel && $("pg-" + sel) && $("over").hidden) refreshPage(sel);
+    netBadge();
+  }, 150);
+}
+function netBadge() { const t = document.querySelector(".tbar .tag"); if (t) { const on = LV.online(); t.textContent = on ? "試験運用・つながっています" : "試験運用・つないでいます…"; t.classList.toggle("on", on); } }
+// 出す：封が要るもの（輪のカード・輪の会話）は封をしてから
+async function liveCircleCard(c, media) {
+  const k = CK[c.circle]; if (!k) { toast("輪のかぎがまだ届いていません"); return null; }
+  const sealed = await LV.sealWith(k, {title: c.title, body: c.body}, "jeni-c:" + c.circle);
+  const e = emit(me, {...c, title: "", body: sealed}); DEC[sealed] = {title: c.title, body: c.body};
+  if (media) LV.publish(LV.K.media, {card: e.id, sealed: await LV.sealWith(k, media, "jeni-m:" + c.circle)});
+  return e;
+}
+function publishMedia(id, m) {
+  const c = S.cards[id]; if (!c) return;
+  if (c.circle && CK[c.circle]) { LV.sealWith(CK[c.circle], m, "jeni-m:" + c.circle).then(sealed => { LV.publish(LV.K.media, {card: id, sealed}); liveRefresh(); }); return; }
+  LV.publish(LV.K.media, {card: id, ...m}); liveRefresh();
+}
+async function sendDM(pk, text) { const sealed = await LV.sealTo(pk, {text}, "jeni-dm"); LV.publish(LV.K.dm, sealed, [["p", pk]]); liveRefresh(); }
+async function sendCall(pk, obj) { const sealed = await LV.sealTo(pk, obj, "jeni-call"); LV.publish(LV.K.call, sealed, [["p", pk]]); }
+async function shareCircleKey(ci, k) {
+  const keys = {}; for (const pk of ci.members) keys[pk] = await LV.sealTo(pk, {k}, "jeni-ck:" + ci.id);
+  LV.publish(LV.K.ckey, {circle: ci.id, keys});
+}
+// 画像を小さくする（中継に置ける大きさに）
+function shrink(src, max, q = .72) {
+  return new Promise(res => { const im = new Image(); im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement("canvas");
+    cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height); res(cv.toDataURL("image/jpeg", q)); };
+    im.onerror = () => res(""); im.src = src; });
+}
+// 毎日の刻み（GitHub の決まった仕事が、中継の出来事を集めて OpenTimestamps に送っている）
+function loadStamps() {
+  if (!LIVE || !window.fetch) return;
+  fetch("https://raw.githubusercontent.com/nndahedeyo/jeni/main/stamps/index.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).then(j => { if (j && j.days) { STAMPS = j.days; } }).catch(() => {});
+}
+function liveProof(id) { if (!STAMPS) return null; for (const d of Object.keys(STAMPS).sort()) if (STAMPS[d].includes(id)) return d; return null; }
+
+/* ---- 通話：2人の端末を直接つなぐ（WebRTC）。つなぐための受け答えは、2人のかぎで封をして中継で渡す ---- */
+const RTC = {pc: null, cid: null, peer: null, stream: null, done: new Set(), pend: []};
+const ICE = [{urls: "stun:stun.l.google.com:19302"}, {urls: "stun:stun.cloudflare.com:3478"}];
+async function rtcStart(pk) {
+  rtcEnd(false);
+  try { RTC.stream = await navigator.mediaDevices.getUserMedia({audio: true}); } catch (x) { toast("マイクを使えません（ブラウザの設定を確かめてください）"); return false; }
+  RTC.peer = pk; RTC.cid = LV.randHex(8); RTC.pc = rtcPc(pk);
+  RTC.stream.getTracks().forEach(t => RTC.pc.addTrack(t, RTC.stream));
+  const off = await RTC.pc.createOffer(); await RTC.pc.setLocalDescription(off);
+  await sendCall(pk, {cid: RTC.cid, ty: "offer", sdp: off.sdp}); return true;
+}
+function rtcPc(pk) {
+  const pc = new RTCPeerConnection({iceServers: ICE});
+  pc.onicecandidate = ev => { if (ev.candidate) sendCall(pk, {cid: RTC.cid, ty: "ice", c: ev.candidate.toJSON()}); };
+  pc.ontrack = ev => { let a = $("rtc-audio"); if (!a) { a = document.createElement("audio"); a.id = "rtc-audio"; a.autoplay = true; document.body.appendChild(a); } a.srcObject = ev.streams[0]; };
+  pc.onconnectionstatechange = () => { const s = $("call-s"); if (!s) return; if (pc.connectionState === "connected") s.textContent = "話しています"; if (["failed", "disconnected"].includes(pc.connectionState)) s.textContent = "つながりませんでした（電波や回線の具合で、つながらないことがあります）"; };
+  return pc;
+}
+function rtcSignal(e, d) {
+  const mine = LV.me && LV.me.pk; if (!mine || RTC.done.has(e.id)) return; RTC.done.add(e.id);
+  if (e.pubkey === mine) return;
+  const fresh = clock - e.created_at < 60;
+  if (d.ty === "offer" && fresh && !RTC.pc) { RTC.inc = {from: e.pubkey, cid: d.cid, sdp: d.sdp}; setTimeout(() => incomingCall(), 0); return; }
+  if (d.cid !== RTC.cid || !RTC.pc) { if (d.ty === "ice" && RTC.inc && RTC.inc.cid === d.cid) RTC.pend.push(d.c); if (d.ty === "end" && RTC.inc && RTC.inc.cid === d.cid) { RTC.inc = null; closeOver(); } return; }
+  if (d.ty === "answer") RTC.pc.setRemoteDescription({type: "answer", sdp: d.sdp}).catch(() => {});
+  if (d.ty === "ice") RTC.pc.addIceCandidate(d.c).catch(() => {});
+  if (d.ty === "end") { rtcEnd(false); closeOver(); toast("通話が終わりました"); }
+}
+function incomingCall() {
+  const i = RTC.inc; if (!i) return;
+  openOver(`<div class="call"><div class="pav2">${esc(nameOf(i.from).slice(0, 1))}</div><b>${esc(nameOf(i.from))}</b><span class="sub" id="call-s">電話がかかってきています</span>
+    <div class="row2"><button type="button" class="pill go" data-pickup>出る</button><button type="button" class="pill warn" data-decline>出ない</button></div></div>`);
+}
+async function rtcAnswer() {
+  const i = RTC.inc; if (!i) return; RTC.inc = null;
+  try { RTC.stream = await navigator.mediaDevices.getUserMedia({audio: true}); } catch (x) { toast("マイクを使えません"); return; }
+  RTC.peer = i.from; RTC.cid = i.cid; RTC.pc = rtcPc(i.from);
+  RTC.stream.getTracks().forEach(t => RTC.pc.addTrack(t, RTC.stream));
+  await RTC.pc.setRemoteDescription({type: "offer", sdp: i.sdp});
+  for (const c of RTC.pend.splice(0)) RTC.pc.addIceCandidate(c).catch(() => {});
+  const ans = await RTC.pc.createAnswer(); await RTC.pc.setLocalDescription(ans);
+  await sendCall(i.from, {cid: i.cid, ty: "answer", sdp: ans.sdp});
+  openOver(`<div class="call"><div class="pav2">${esc(nameOf(i.from).slice(0, 1))}</div><b>${esc(nameOf(i.from))}</b><span class="sub" id="call-s">つないでいます…</span><button type="button" class="pill warn" data-hang="${i.from}">終える</button></div>`);
+}
+function rtcEnd(tell = true) {
+  if (tell && RTC.peer && RTC.cid) sendCall(RTC.peer, {cid: RTC.cid, ty: "end"});
+  try { RTC.pc && RTC.pc.close(); } catch (x) {} try { RTC.stream && RTC.stream.getTracks().forEach(t => t.stop()); } catch (x) {}
+  RTC.pc = null; RTC.stream = null; RTC.cid = null; RTC.peer = null;
+}
+
+/* ---- QR を読む（読めるブラウザではカメラで。読めないときは、スマホのカメラで読むか、番号を入れる） ---- */
+let scanStream = null, scanLoop = null;
+async function scanSheet() {
+  openOver(`<h2 class="rh">QRを読む</h2><p class="sub">参加していない人のプロフィールのQR（認める）・受け取りのQR・その場で売るQR・カードのQRを読めます。</p>
+    <video id="scanv" playsinline muted style="width:100%;border-radius:12px;background:#000;aspect-ratio:1;object-fit:cover"></video>
+    <p class="sub" id="scan-m" style="font-size:12px"></p>
+    <label class="fl">読めないときは、QRの下の文字を入れる<input id="scan-t" placeholder="https://… または番号"></label><button type="button" class="pill go" data-scantext>読む</button>`);
+  const m = $("scan-m");
+  if (!("BarcodeDetector" in window)) { m.textContent = "このブラウザはカメラで読めません。スマホのカメラアプリで読むと、そのまま jeni が開きます。"; return; }
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}}); const v = $("scanv"); v.srcObject = scanStream; await v.play();
+    const det = new BarcodeDetector({formats: ["qr_code"]});
+    scanLoop = setInterval(async () => { try { const r = await det.detect(v); if (r[0]) { const t = r[0].rawValue; scanStop(); closeOver(); onScan(t); } } catch (x) {} }, 400);
+  } catch (x) { m.textContent = "カメラを使えません。スマホのカメラアプリで読むか、下に入れてください。"; }
+}
+function scanStop() { clearInterval(scanLoop); scanLoop = null; try { scanStream && scanStream.getTracks().forEach(t => t.stop()); } catch (x) {} scanStream = null; }
+// QR の中身（または開いたリンク）：#me= 人・#card= カード・#pay= その場で売る・#used= 受け取り・#join= 招待・#genesis= はじまり
+function onScan(text) {
+  const m = String(text || "").match(/#(me|card|pay|used|join|genesis)=([0-9a-zA-Z.]+)/); if (!m) return toast("jeni のQRではありません");
+  return handleLink(m[1], m[2]);
+}
+function handleLink(kind, val) {
+  if (!LV.me) { PENDING = [kind, val]; return startSheet(); }
+  const [a, b2, c3] = val.split(".");
+  if (kind === "card") { if (S.cards[a]) return detail(a); return toast("カードを探しています…（まだ届いていません）"); }
+  if (kind === "me") {
+    if (a === me) return meCard();
+    const u = S.users[a];
+    if (U().member && (!u || !u.member)) return confirmVouch(a);
+    return personCard(a);
+  }
+  if (kind === "pay") { const c = S.cards[a]; if (!c) { PENDING = [kind, val]; return toast("カードを探しています…"); } return buySheet(a, b2); }
+  if (kind === "used") { const c = S.cards[a]; if (!c || c.by !== me) return toast("自分のカードの受け取りだけ読めます"); return useCode(a, b2); }
+  if (kind === "join") return joinWith(a, c3);
+  if (kind === "genesis") { emit(me, {t: "genesis", code: a}); if (U().member) { home(); return joined(); } return toast("はじまりの番号が合いません（もう始まっています）"); }
+}
+let PENDING = null;
+function confirmVouch(pk) {
+  openOver(`<h2 class="rh">この人を認める</h2><p class="sub">${esc(nameOf(pk))} さん（${pk.slice(0, 8)}…）を認めて参加してもらいます。${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認められるのは${RULE.vouchMax}人まで（あと${Math.max(0, RULE.vouchMax - U().vouched.length)}人）。会ったことのある人だけにしてください。</p>
+    <button type="button" class="big" data-vouch="${pk}">認める</button>`);
+}
+function useCode(id, code) {
+  const c = S.cards[id], x = c.copies.find(y => !y.used && y.redeem && y.redeem.lock === sha256hex(code));
+  if (!x) return toast("受け取りの番号が合いません（期限切れか、使い終わり）");
+  emit(me, {t: "used", card: id, holder: x.owner, code});
+  const ok = S.cards[id].copies.some(y => y.owner === x.owner && y.used); refreshPageSafe(id);
+  return toast(ok ? `${nameOf(x.owner)} さんの受け取りを記録しました` : "記録できませんでした");
+}
+function refreshPageSafe(id) { if ($("pg-" + id)) refreshPage(id); else detail(id); }
+function buySheet(id, code) {
+  const c = S.cards[id];
+  openSheet(`${cardHtml(c, false)}
+    <dl class="flow"><dt>持つと</dt><dd>${c.price} jeni → ${esc(nameOf(c.by))} さんへ<small>その場で受け取るので、払うと受け取り済みになります</small></dd></dl>
+    ${lpBtn("buy", id + "." + code, `${coin()}${c.price} jeni<small>長押しで払う</small>`, "go big")}
+    <button type="button" class="back" data-close>${icon("back")}やめる</button>`);
+}
+function joinWith(inviteId, code) {
+  const inv = Object.values(S.users).find(u => (u.invites || []).some(x => x.id === inviteId));
+  if (!inv) { PENDING = ["join", inviteId + ".." + code]; return toast("招待を探しています…（つながるまで少し待ってください）"); }
+  emit(me, {t: "join", invite: inviteId, by: inv.pk, code});
+  if (U().member) { PENDING = null; home(); return joined(); }
+  return toast("この招待は使えません（期限切れか、もう使われています）");
+}
+// はじめて開いた人：名前を決めて、この端末にかぎを作る（前のかぎで続けることもできる）
+function startSheet() {
+  const sougo = LV.store.get("sougo.me", null);
+  openSheet(`<div class="done">${gmark(64, {halo: true})}<h2 class="rh">jeni（試験運用）</h2>
+    <p class="sub">名前を決めると、この端末の中に、あなただけの鍵が作られます。鍵はどこにも送りません。なくすと戻せないので、あとで「わたしのカード」から書き出して、大切に保管してください。</p></div>
+    <label class="fl">名前（あとで変えられます）<input id="st-name" maxlength="40" placeholder="例：はなこ"></label>
+    <button type="button" class="big" data-start>始める</button>
+    ${sougo && sougo.sk ? `<button type="button" class="big ghost" data-startsougo>相互レビューと同じ鍵で始める</button>` : ""}
+    <details class="more"><summary>前の鍵で続ける（別の端末から）</summary><label class="fl">書き出した鍵<input id="st-key" autocomplete="off" spellcheck="false" placeholder="64文字"></label><button type="button" class="pill go" data-startkey>この鍵で続ける</button>
+      <p class="sub" style="font-size:11px">${icon("lock")} 鍵を入れるのは、自分で書き出した鍵だけにしてください。jeni の人がたずねることはありません。</p></details>`);
+}
+function afterStart() {
+  me = LV.me.pk; READ_LOADED = false; liveRecompute(); closeSheet(); home();
+  if (PENDING) { const [k, v] = PENDING; PENDING = null; setTimeout(() => handleLink(k, v), 300); }
+}
+function liveBoot() {
+  me = LV.me ? LV.me.pk : "0".repeat(64);
+  $("guide").hidden = true; document.title = "jeni 試験運用";
+  document.addEventListener("click", () => setTimeout(liveSaveLocal, 0));
+  LV.start(() => { liveRecompute(); if (PENDING && LV.me) { const [k, v] = PENDING; if (k === "join" || k === "pay" || k === "card") { PENDING = null; handleLink(k, v); } } liveRefresh(); });
+  liveRecompute(); home(); netBadge(); loadStamps(); setInterval(netBadge, 3000); setInterval(() => { if (LV.me) liveRefresh(); }, 30000);
+  const h = location.hash.match(/#(me|card|pay|used|join|genesis)=([0-9a-zA-Z.]+)/);
+  if (h) { history.replaceState(null, "", location.pathname); if (!LV.me) { PENDING = [h[1], h[2]]; return startSheet(); } setTimeout(() => handleLink(h[1], h[2]), 600); }
+  else if (!LV.me) startSheet();
+}
+
+if (LIVE) liveBoot(); else { seed(); home(); }
+window.__jt = {get S() { return S; }, get EV() { return EV; }, get CHAT() { return CHAT; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK, person: pk => personCard(pk)};
 </script>
