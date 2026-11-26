@@ -59,7 +59,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .me-r .bal{margin-left:0}
 .comm{display:flex;gap:6px}
 .cb{position:relative;width:36px;height:36px;border:0;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center;padding:0}.cb svg.i{width:19px;height:19px}
-.cb b{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:#c0392b;color:#fff;font-size:10.5px;display:grid;place-items:center;padding:0 4px;box-shadow:0 0 0 2px var(--card)}
+.cb b{position:absolute;top:1px;right:1px;width:9px;height:9px;border-radius:50%;background:#d63a2b;box-shadow:0 0 0 2px var(--card)}
 .list.slide{transition:transform .22s ease-out,opacity .22s}
 .menu button{aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}
 .menu button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf)}
@@ -211,7 +211,13 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .over .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
 .warnc{color:var(--warn)!important}
-.mk-top{display:flex;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -2px;padding:2px 18px 2px 2px;mask-image:linear-gradient(90deg,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent)}.mk-top::-webkit-scrollbar{display:none}.mk-top button{flex:0 0 64px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 2px;display:grid;justify-items:center;gap:3px;font:inherit;font-size:10.5px;letter-spacing:-.03em;white-space:nowrap;color:var(--mute)}.mk-top button svg.i{width:20px;height:20px}.mk-top button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf);border-color:transparent;font-weight:700}
+.mk-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.mk-g button{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 2px;display:grid;justify-items:center;gap:4px;font:inherit;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}.mk-g button svg.i{width:22px;height:22px}.mk-g button[aria-pressed="true"]{background:var(--leaf);color:#fff;border-color:transparent}
+.mk-k{display:flex;flex-wrap:wrap;gap:6px}.mk-k button{display:flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 11px 6px 8px;font:inherit;font-size:13px}.mk-k button svg.i{width:16px;height:16px}.mk-k button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf);border-color:var(--leaf);font-weight:700}
+.hint{margin:0;font-size:12px}
+.gdesc{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:4px 0;font-size:13px}.gdesc dt{font-weight:700}.gdesc dd{margin:0;color:var(--mute)}.gdesc small{display:block;font-size:11px}
+.hmap{padding:0 2px}
+.map{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);touch-action:manipulation}.map.pick{cursor:crosshair}
+.map .mbg{fill:#eef1e6}.map .mgrid{stroke:#dfe5d4;stroke-width:.3}.map .msea{fill:#dbe8ee}.map .mpin path{fill:#d63a2b}.map .mpin circle{fill:#fff}.map .mpin text{font:3.2px sans-serif;fill:#3b3a30;paint-order:stroke;stroke:#fff;stroke-width:.8px}.map .mpin[data-detail]{cursor:pointer}.map .mnote{font:2.6px sans-serif;fill:#8a8a7a}
 .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .who{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;margin-right:auto;min-width:0;font-size:13px;color:var(--ink)}
 .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:9em}
@@ -223,7 +229,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .pjk dd .link{border:0;background:none;padding:0;color:var(--leaf);font-size:inherit;text-decoration:underline}
 .minor .pill{min-height:36px;font-size:13px;margin-right:6px}
 .talk{display:grid;gap:8px;max-height:46dvh;overflow:auto;align-content:start}
-.nb{min-width:20px;height:20px;border-radius:10px;background:#c0392b;color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
+.nb{width:9px;height:9px;border-radius:50%;background:#d63a2b;flex:0 0 auto}
 .crow{flex:1;min-width:0;border:0;background:none;text-align:left;display:grid;gap:2px;padding:4px 0;font:inherit;color:inherit}.crow small{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cm{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:14px}
 .cm b{font-size:13px} .cm p{margin:2px 0 0;line-height:1.7;overflow-wrap:anywhere}
@@ -308,6 +314,10 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
   <symbol id="i-event" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9 5.5 4h13L20 9"/><path d="M4 9c0 1.7 1.3 2.5 2.7 2.5S9.3 10.7 9.3 9c0 1.7 1.3 2.5 2.7 2.5s2.7-.8 2.7-2.5c0 1.7 1.3 2.5 2.6 2.5S20 10.7 20 9"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-5h4v5"/></symbol>
   <symbol id="i-org" viewBox="0 0 24 24"><path d="M5 20V5h9v15"/><path d="M14 9h5v11"/><path d="M3 20h18"/><path d="M8 8h3M8 11h3M8 14h3M16.5 12v.01M16.5 15v.01"/></symbol>
+  <symbol id="i-service" viewBox="0 0 24 24"><path d="M3 13h4l3 3h4a2 2 0 0 0 0-4h-3"/><path d="M7 13l3-3h3l5 4h3"/><path d="M3 19h18"/><path d="M15 5l1-2 1 2 2 .5-1.5 1.5.3 2L16 8l-1.8 1 .3-2L13 5.5Z"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11Z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-bundle" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M6 6h12M8 3h8"/></symbol>
+  <symbol id="i-data" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="m9 15 2 2 4-4"/></symbol>
   <symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v10"/><path d="m6 17 3.5-4 2.5 3 1.5-1.5L16 17"/></symbol>
   <symbol id="i-talk" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
@@ -335,15 +345,15 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 <script>/*QR*/</script>
 <script>
 "use strict";
-const {reduce, sha256hex, R: RULE} = JeniRules;
+const {reduce, sha256hex, R: RULE, COUNTED, AT} = JeniRules;
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 const COIN = `/*COIN*/`;
 const coin = (cls = "") => COIN.replace("<svg ", `<svg class="coin ${cls}" aria-hidden="true" `);
 const G = /*G*/, PHI = (1 + Math.sqrt(5)) / 2;
-const KIND = {rwa: "現物", event: "イベント", music: "音楽", video: "動画", picture: "写真", text: "文章", app: "アプリ", shop: "お店", org: "会社・団体", project: "プロジェクト", other: "そのほか"};
-const BUNDLE = ["project", "shop", "org"];   // つなぐカード（ほかのカードを束ねる）
+const KIND = {rwa: "現物", event: "イベント", service: "体験・サービス", music: "音楽", video: "動画", picture: "写真", text: "文章", app: "アプリ", shop: "お店", org: "会社・団体", project: "プロジェクト", place: "場所", other: "そのほか"};
+const BUNDLE = ["project", "shop", "org", "place"];   // つなぐカード（ほかのカードを束ねる）
 
 /* ---- 見本の人たちと、はじめの記録（この画面の中だけ。どこにも送らない） ---- */
 const P = {
@@ -371,7 +381,7 @@ function seed() {
   for (const p of [A, B, C, D]) emit(p.pk, {t: "profile", name: p.name});
   emit(A.pk, {t: "vouch", who: B.pk}); emit(A.pk, {t: "vouch", who: C.pk}); emit(B.pk, {t: "vouch", who: D.pk});
   const card = (who, c, m) => { const e = emit(who.pk, {t: "card", ...c}); MEDIA[e.id] = m || {}; return e.id; };
-  const radish = card(B, {kind: "rwa", title: "朝採り大根 3本セット", price: 80, supply: 10}, {img: "media/radish.jpg", note: "朝に抜いた大根を3本。千葉の畑で受け取れます。", where: "千葉県 の畑"});
+  const radish = card(B, {kind: "rwa", title: "朝採り大根 3本セット", price: 80, supply: 10, place: "千葉県 の畑", geo: [35.58, 140.08]}, {img: "media/radish.jpg", note: "朝に抜いた大根を3本。千葉の畑で受け取れます。"});
   const waves = card(D, {kind: "music", title: "Ambient Waves", price: 50}, {src: "media/waves.mp3", len: "0:24", note: "自然と調和する音。作業のあいまに。"});
   const soil = card(B, {kind: "text", title: "土を耕すということ", price: 0, body: "土は、耕すほどやわらかくなるわけではありません。根が通り、虫が通り、水が通る道を、少しだけ手伝うのが耕すということだと思っています。今年は、耕す回数を半分にしてみました。すると、畑の真ん中に小さな道ができました。"}, {note: "畑で考えたことの短い文章。"});
   const bread = card(C, {kind: "rwa", title: "天然酵母カンパーニュ", price: 60, supply: 3}, {img: "media/bread.jpg", note: "自家製の天然酵母で焼いたパン。店頭で受け取り。", where: "東京都 の店頭"});
@@ -399,12 +409,15 @@ function seed() {
   emit(A.pk, {t: "hold", card: app, vis: "show"});
   emit(C.pk, {t: "comment", card: pj, text: "うちの酵母の元になった小麦の産地も載せたいです。"});
   // イベント（持つ＝参加券）・お店・会社や団体
-  card(B, {kind: "event", title: "畑の収穫体験", price: 50, supply: 8, when: "12月14日（日）9:00", place: "千葉県 の畑", body: "大根を抜いて、その場で味見します。長ぐつがあると安心です。"}, {img: "media/radish.jpg", note: "当日は、参加券のQRで受付します。"});
-  const shop = card(C, {kind: "shop", title: "Bakery_Haru", price: 0, when: "火〜土 8:00–17:00", place: "東京都 の店頭", body: "天然酵母のパン屋。焼きたては朝8時から。"}, {img: "media/bread.jpg"});
+  card(B, {kind: "event", title: "畑の収穫体験", price: 50, supply: 8, when: "12月14日（日）9:00", place: "千葉県 の畑", geo: [35.6, 140.12], body: "大根を抜いて、その場で味見します。長ぐつがあると安心です。"}, {img: "media/radish.jpg", note: "当日は、参加券のQRで受付します。"});
+  const shop = card(C, {kind: "shop", title: "Bakery_Haru", price: 0, when: "火〜土 8:00–17:00", place: "東京都 の店頭", geo: [35.67, 139.77], body: "天然酵母のパン屋。焼きたては朝8時から。"}, {img: "media/bread.jpg"});
   emit(C.pk, {t: "attach", project: shop, card: bread}); emit(C.pk, {t: "attach", project: shop, card: curry});
   const org = card(B, {kind: "org", title: "ちばの畑ネット", price: 0, body: "千葉の小さな畑をつなぐ集まり。体験や直売の案内をしています。"}, {img: "media/paddy.jpg"});
   emit(B.pk, {t: "attach", project: org, card: pj});
   MEDIA[rain].img = "media/field.jpg";   // 音楽にも画像をつけられる
+  card(C, {kind: "service", title: "パンの焼き方を教えます", price: 40, supply: 4, when: "毎週月曜 14:00", place: "東京都 の店頭", geo: [35.69, 139.7], body: "天然酵母の扱い方から。2時間ほど。"}, {img: "media/bread.jpg"});
+  const plc = card(B, {kind: "place", title: "在来種の畑", price: 0, place: "千葉県 の山あい", geo: [35.42, 140.05], body: "在来の大根と小かぶを育てている畑。ここで撮った写真や記録をつなげてください。"}, {img: "media/paddy.jpg"});
+  emit(B.pk, {t: "attach", project: plc, card: paddy});
   // 2人だけの会話（見本。本物では2人の鍵で封をしてから置く）
   CHAT[pairKey(A.pk, B.pk)] = [{by: B.pk, text: "大根、来週もとれそうです。", at: clock - 600}, {by: A.pk, text: "土曜に受け取りに行きます。", at: clock - 300}, {by: B.pk, text: "畑の入口で待っています。", at: clock - 100}];
   READ[A.pk + ":" + B.pk] = clock - 300;
@@ -465,12 +478,13 @@ function holdBtn(c) {
     : `<button type="button" class="hold free" data-detail="${c.id}">無料</button>`;
 }
 // 項目：1枚のもの → つなぐもの → 仲間の輪（見える範囲）。作る画面も同じ並び
-const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["event", "イベント"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["app", "アプリ"], ["shop", "お店"], ["org", "会社・団体"], ["project", "プロジェクト"], ["circle", "仲間の輪"]];
-function visibleCards() {
+const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["event", "イベント"], ["service", "体験・サービス"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["app", "アプリ"], ["shop", "お店"], ["org", "会社・団体"], ["project", "プロジェクト"], ["place", "場所"], ["circle", "仲間の輪"]];
+function visibleCards(all = false) {
   return Object.values(S.cards).filter(canSee).filter(c => !c.lock || c.by === me || mine(c).length || c.copies.some(x => x.owner === me))
     .filter(c => !c.hidden || c.by === me || c.copies.some(x => x.owner === me))
-    .filter(c => field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
+    .filter(c => all || field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
 }
+visibleCards.all = () => visibleCards(true);
 function home() {
   const u = U(), p = byPk[me], list = visibleCards(), m0 = document.querySelector("#home .menu"), mx = m0 ? m0.scrollLeft : 0;
   $("home").innerHTML = `
@@ -481,11 +495,12 @@ function home() {
       <div class="me-top"><div class="av" ${PICS[me] ? `style="background:url('${PICS[me]}') center/cover"` : ""}>${PICS[me] ? "" : esc(nameOf(me).slice(0, 1))}</div>
         <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc((S.users[me] && S.users[me].line) || p.line) : "まだ参加していません"}</div></div>
         <div class="me-r"><button type="button" class="bal" data-rules title="jeni のきまり">${coin()}<span id="balv">${u.bal.toLocaleString("ja-JP")}</span><small>jeni</small></button>
-          ${u.member ? `<div class="comm"><button type="button" class="cb" data-chats aria-label="話す${unreadChat() ? `（新しい ${unreadChat()}件）` : ""}" title="話す">${icon("talk")}${unreadChat() ? `<b>${unreadChat()}</b>` : ""}</button><button type="button" class="cb" data-phones aria-label="電話${missedCalls() ? `（不在着信 ${missedCalls()}件）` : ""}" title="電話">${icon("phone")}${missedCalls() ? `<b>${missedCalls()}</b>` : ""}</button></div>` : ""}</div></div>
+          ${u.member ? `<div class="comm">${FX.map(f => { const n = f.dot(); return `<button type="button" class="cb" data-fx="${f.k}" aria-label="${f.l}${n ? "（新しい知らせあり）" : ""}" title="${f.l}">${icon(f.i)}${n ? `<b aria-hidden="true"></b>` : ""}</button>`; }).join("")}</div>` : ""}</div></div>
       <div class="me-mid"><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
       <div class="menu-w"><nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav><button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></div>
     </section>
     ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
+    ${field === "place" ? `<div class="hmap">${mapSvg(visibleCards.all().filter(c => c.geo).map(c => ({g: c.geo, id: c.id, t: c.title})))}<p class="sub" style="margin:4px 2px 0;font-size:11px">場所・お店・イベントなど、地図の点があるカード</p></div>` : ""}
     <div class="cap"><span>${FIELDS.find(f => f[0] === field)[1]}・${list.length}枚</span><span>${field === "circle" ? "輪の中は、輪の人にしか見えません" : ""}</span></div>
     <main class="list">${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
@@ -497,7 +512,7 @@ function home() {
 }
 
 /* ---- カードの見た目 ---- */
-const PAPER = {event: ["#f6f0e6", "#e6d6bd", "d"], shop: ["#f7efe6", "#e8d3bf", "d"], org: ["#eef0f2", "#d3d8de", "d"], app: ["#eef3f1", "#c9ddd5", "d"], project: ["#eef1f6", "#cfd8e6", "d"], music: ["#22283d", "#0f1220", "l"], text: ["#fffdf7", "#efe3d1", "d"], picture: ["#f4f1ea", "#ddd5c4", "d"], rwa: ["#f3f6ea", "#d9e3cc", "d"], video: ["#1b1f2e", "#0d0f18", "l"], other: ["#f4f1ea", "#ddd5c4", "d"]};
+const PAPER = {service: ["#f3efe8", "#e0d5c3", "d"], place: ["#edf2ea", "#cfdcc8", "d"], event: ["#f6f0e6", "#e6d6bd", "d"], shop: ["#f7efe6", "#e8d3bf", "d"], org: ["#eef0f2", "#d3d8de", "d"], app: ["#eef3f1", "#c9ddd5", "d"], project: ["#eef1f6", "#cfd8e6", "d"], music: ["#22283d", "#0f1220", "l"], text: ["#fffdf7", "#efe3d1", "d"], picture: ["#f4f1ea", "#ddd5c4", "d"], rwa: ["#f3f6ea", "#d9e3cc", "d"], video: ["#1b1f2e", "#0d0f18", "l"], other: ["#f4f1ea", "#ddd5c4", "d"]};
 function cardHtml(c, held) {
   const m = MEDIA[c.id] || {}, bg = m.img ? `<img class="bgimg" src="${m.img}" alt="" data-probe>` : "";
   const pp = PAPER[c.kind] || PAPER.text, ink = bg ? "l" : pp[2];
@@ -510,8 +525,8 @@ function cardHtml(c, held) {
       ${c.kind === "music" && m.src ? `<div class="cbar"><i id="cbar-${c.id}"></i></div>` : ""}
       <button type="button" class="mark" data-flip aria-label="このカードの裏（QR）">${gmark(100, {line: true, halo: true})}</button></div>`;
   const back = `<div class="face back" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
-      <div class="qr">${qrSvg(`jeni:card:${c.id}`)}</div>
-      <div class="bk"><div class="no">jeni No.${cardNo(c.id)}</div><div class="bt">${esc(c.title || "その場のカード")}</div><div class="how">読むと、このカードが開きます</div>
+      <div class="qr">${qrSvg(`jeni:${c.qr || "open"}:${c.id}`)}</div>
+      <div class="bk"><div class="no">jeni No.${cardNo(c.id)}</div><div class="bt">${esc(c.title || "その場のカード")}</div><div class="how">${{open: "読むと、このカードが開きます", tip: "読むと、投げ銭の画面が開きます", hold: "読むと、持つ画面が開きます", orig: "持っている人が読むと、元のデータを受け取れます"}[c.qr || "open"]}</div>
         <dl><dt>作った人</dt><dd>${esc(nameOf(c.by))}</dd><dt>署名</dt><dd>${c.by.slice(0, 4)}…${c.id.slice(-4)}</dd></dl></div></div>`;
   return `<div class="jc2${held ? " held" : ""}"><div class="in">${front}${back}</div></div>`;
 }
@@ -573,16 +588,16 @@ function pageHtml(c) {
   if (c.hidden) main = `<span class="sub warnc">知らせが${RULE.flagsToHide}件あり、隠されました</span>`;
   const canRedeem = lim && !c.handover && my.some(x => !x.used);
   // 持つ＝受け取れる：デジタルは元のデータ、現物は引き換え（QR）
-  const recv = canRedeem ? `<button type="button" class="pill go" data-redeem="${c.id}">${c.kind === "event" ? "入る（参加券のQR）" : "受け取る（引き換えのQR）"}</button>`
+  const recv = canRedeem ? `<button type="button" class="pill go" data-redeem="${c.id}">${{event: "入る（参加券のQR）", service: "受ける（券のQR）"}[c.kind] || "受け取る（引き換えのQR）"}</button>`
     : my.length && c.kind === "app" ? `<button type="button" class="pill go" data-openapp="${c.id}">${icon("app")}アプリを開く</button>`
     : my.length && !lim && !BUNDLE.includes(c.kind) ? `<button type="button" class="pill" data-orig="${c.id}">元のデータを受け取る</button>` : "";
-  const info = c.kind === "event" || c.kind === "shop" ? `<dl class="kv pjk">${c.when ? `<dt>${c.kind === "event" ? "日時" : "営業"}</dt><dd>${esc(c.when)}</dd>` : ""}${c.place ? `<dt>場所</dt><dd>${esc(c.place)}</dd>` : ""}${c.kind === "event" ? `<dt>定員</dt><dd>残り ${c.left} / ${c.supply}</dd>` : ""}</dl>` : "";
+  const info = AT.includes(c.kind) && (c.when || c.place || c.geo || c.kind !== "rwa") ? `<dl class="kv pjk">${c.when ? `<dt>${c.kind === "shop" ? "営業" : "日時"}</dt><dd>${esc(c.when)}</dd>` : ""}${c.place ? `<dt>${c.kind === "rwa" ? "受け取り" : "場所"}</dt><dd>${esc(c.place)}</dd>` : ""}${c.kind === "event" || c.kind === "service" ? `<dt>${c.kind === "event" ? "定員" : "枠"}</dt><dd>残り ${c.left} / ${c.supply}</dd>` : ""}</dl>${c.geo ? mapSvg([{g: c.geo, t: c.title}]) : ""}` : "";
   const pj = c.kind === "project" ? (() => {
     const who = [...new Set([...c.items.map(x => x.by), ...(c.talk || []).map(x => S.comments[x].by)])].filter(x => x !== c.by);
     return `<dl class="kv pjk"><dt>状態</dt><dd>${PJS[c.state || "doing"]}${isMe ? ` <button type="button" class="link" data-pjstate="${c.id}">変える</button>` : ""}</dd>${c.want ? `<dt>求めているもの</dt><dd>${esc(c.want)}</dd>` : ""}<dt>関わった人</dt><dd>${who.length ? who.map(x => `<button type="button" class="link" data-person="${x}">${esc(nameOf(x))}</button>`).join("、") : "まだいません"}</dd></dl>`; })() : "";
-  const text = ["text", "project", "app", "event", "shop", "org"].includes(c.kind) && c.body ? `<p class="body">${esc(c.body)}</p>` : "";
-  const canAttach = u.member && (c.kind === "project" || isMe);
-  const items = BUNDLE.includes(c.kind) ? `<section class="box pj"><h3>${{project: "つながったカード", shop: "お店の品", org: "この会社・団体のカード"}[c.kind]} ${c.items.length}</h3>${c.items.map(x => S.cards[x.card]).filter(Boolean).filter(canSee).filter(it => !it.hidden).map(it => `<button type="button" class="mini" data-detail="${it.id}">${icon(kindIcon(it.kind))}<span>${esc(it.title)}</span><small>${esc(nameOf(it.by))}</small></button>`).join("") || `<p class="sub">まだありません</p>`}
+  const text = c.kind !== "picture" && c.kind !== "music" && c.kind !== "video" && c.body ? `<p class="body">${esc(c.body)}</p>` : "";
+  const canAttach = u.member && (c.kind === "project" || c.kind === "place" || isMe);
+  const items = BUNDLE.includes(c.kind) ? `<section class="box pj"><h3>${{project: "つながったカード", shop: "お店の品", org: "この会社・団体のカード", place: "この場所のカード"}[c.kind]} ${c.items.length}</h3>${c.items.map(x => S.cards[x.card]).filter(Boolean).filter(canSee).filter(it => !it.hidden).map(it => `<button type="button" class="mini" data-detail="${it.id}">${icon(kindIcon(it.kind))}<span>${esc(it.title)}</span><small>${esc(nameOf(it.by))}</small></button>`).join("") || `<p class="sub">まだありません</p>`}
       ${canAttach ? `<button type="button" class="link" data-attachask="${c.id}">自分のカードをつなぐ</button>` : ""}</section>` : "";
   return `<section class="pg" id="pg-${c.id}" data-pg="${c.id}">
     ${cardHtml(c, my.length > 0)}
@@ -682,6 +697,11 @@ function personCard(pk) {
     <section class="box"><h3>${esc(nameOf(pk))} さんのカード ${theirs.length}</h3>${theirs.map(c => `<button type="button" class="mini" data-detail="${c.id}">${icon(kindIcon(c.kind))}<span>${esc(c.title)}</span><small>${c.price ? c.price + " jeni" : "無料"}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>
     ${iFriend ? `<button type="button" class="link" data-unfriend="${pk}" style="justify-self:start;color:var(--mute);font-size:12px">友達をやめる</button>` : ""}`);
 }
+// 残高の下の働き：吹き出し（会話）・受話器（電話）。ウォレットをつないだら、ここに1つ足すだけ（例：{k: "wallet", i: "wallet", l: "ウォレット", dot: …, open: …}）
+const FX = [
+  {k: "chats", i: "talk", l: "話す", dot: () => unreadChat(), open: () => chatList()},
+  {k: "phones", i: "phone", l: "電話", dot: () => missedCalls(), open: () => phoneList()},
+];
 const unreadOf = pk => (CHAT[pairKey(me, pk)] || []).filter(m => m.by === pk && m.at > (READ[me + ":" + pk] || 0)).length;
 const unreadChat = () => friendsOf(me).reduce((n, pk) => n + unreadOf(pk), 0);
 const missedCalls = () => CALLS.filter(c => c.to === me && c.missed && c.at > (CSEEN[me] || 0)).length;
@@ -692,7 +712,7 @@ function chatList() {
     <h2 class="rh">話す</h2>
     <section class="box">${fs.map(pk => `<div class="who-row"><button type="button" class="who" data-person="${pk}" aria-label="${esc(nameOf(pk))} さんのカード">${avatar(pk)}</button>
       <button type="button" class="crow" data-chat="${pk}"><b>${esc(nameOf(pk))}</b><small>${last(pk) ? esc(last(pk).text) : "まだ話していません"}</small></button>
-      ${unreadOf(pk) ? `<span class="nb">${unreadOf(pk)}</span>` : ""}</div>`).join("") || `<div class="who-row"><span>まだ話せる人がいません</span></div>`}</section>
+      ${unreadOf(pk) ? `<span class="nb" aria-label="新しい会話"></span>` : ""}</div>`).join("") || `<div class="who-row"><span>まだ話せる人がいません</span></div>`}</section>
     <p class="fline">お互いに友達の人とだけ、2人で話せます（鍵つき）。友達になるのは、その人のプロフィールカードから。</p>`);
 }
 // 電話：不在着信と、かけられる人（お互いに友達）
@@ -727,7 +747,7 @@ function redeemSheet(id) {
   const code = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, "0")).join("");
   emit(me, {t: "redeem", card: id, lock: sha256hex(code), until: clock + 300});
   RD = {id, code, holder: me};
-  const evt = c.kind === "event";
+  const evt = c.kind === "event" || c.kind === "service";
   openOver(`<h2 class="rh">${evt ? "入る" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
     <div class="qrbox"><div class="qrwrap">${qrSvg(`jeni:redeem:${id}:${code}`, "q")}</div><b>${esc(c.title)}</b></div>
     <button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（${evt ? "受付" : "お店"}）として読む</button>`);
@@ -792,7 +812,7 @@ function joined() {
 }
 
 /* ---- 作る・その場で売る ---- */
-const MK = {mode: "make", want: "", url: "", src: "", len: "", when: "", place: "", kind: "text", title: "", body: "", price: 0, limited: false, supply: 1, circle: "", img: "", sale: null};
+const MK = {mode: "make", want: "", url: "", src: "", len: "", when: "", place: "", geo: null, qr: "open", kind: "text", title: "", body: "", price: 0, limited: false, supply: 1, circle: "", img: "", sale: null};
 function readMK() {
   const v = id => $(id) ? $(id).value : null;
   if (v("m-kind") != null) MK.kind = v("m-kind");
@@ -806,22 +826,45 @@ function readMK() {
   if (v("m-url") != null) MK.url = v("m-url").trim().slice(0, 300);
   if (v("m-when") != null) MK.when = v("m-when").trim().slice(0, 60);
   if (v("m-place") != null) MK.place = v("m-place").trim().slice(0, 100);
+  if (v("m-qr") != null) MK.qr = v("m-qr");
 }
-// 作る：上に横に滑る選び（一覧の項目と同じアイコン・同じ並び＋その場で売る）、下にそのカードに要る欄だけ
-const MAKE_TOP = [...FIELDS.filter(([k]) => k !== "all" && k !== "circle"), ["sale", "その場で売る"]];
+// 作る：入力の決まりが同じものをまとめて4つ。まとまりの中で種類を選ぶと、すぐ下にその欄だけ
+const GROUPS = [
+  ["thing", "もの・体験", "rwa", ["rwa", "event", "service"], "数があるもの。持った人に1回（受け取る・参加する・受ける）"],
+  ["data", "データ", "data", ["picture", "music", "video", "text", "app"], "何度でも受け取れるもの"],
+  ["bundle", "つなぐ", "bundle", ["shop", "org", "project", "place"], "ほかのカードを束ねて並べる"],
+  ["sale", "その場で売る", "sale", ["sale"], "写真と値段で、一度きりのQR"],
+];
+const groupOf = k => GROUPS.find(g => g[3].includes(k));
+const QRL = {open: "このカードを開く", tip: "投げ銭の画面", hold: "持つ画面", orig: "元のデータを受け取る（持っている人）"};
+// 見本の地図（関東のあたり）。本物では、この上に地図の絵（OpenStreetMap など）を重ねる
+const MAPB = {s: 35.25, n: 36.05, w: 139.3, e: 140.5};
+const mxy = g => [(g[1] - MAPB.w) / (MAPB.e - MAPB.w) * 100, (MAPB.n - g[0]) / (MAPB.n - MAPB.s) * 62];
+function mapSvg(pins, {pick = false, h = 62} = {}) {
+  const grid = [...Array(9)].map((_, i) => `<path d="M${i * 12.5} 0V62"/>`).join("") + [...Array(6)].map((_, i) => `<path d="M0 ${i * 12.4}H100"/>`).join("");
+  return `<svg class="map${pick ? " pick" : ""}" viewBox="0 0 100 ${h}" ${pick ? 'data-mappick role="button" aria-label="地図を押して場所を決める"' : 'role="img" aria-label="地図（見本）"'}>
+    <rect width="100" height="${h}" rx="3" class="mbg"/><g class="mgrid">${grid}</g><path class="msea" d="M100 30C88 34 84 44 78 50 70 58 62 62 56 62H100Z"/>
+    ${pins.map(p => { const [x, y] = mxy(p.g); return `<g ${p.id ? `data-detail="${p.id}" class="mpin" role="button" aria-label="${esc(p.t)}"` : 'class="mpin"'} transform="translate(${x.toFixed(2)} ${y.toFixed(2)})"><path d="M0 0c-1.6-2.2-3-3.6-3-5.4a3 3 0 0 1 6 0C3-3.6 1.6-2.2 0 0Z"/><circle cy="-5.4" r="1.1"/>${p.t ? `<text x="3.6" y="-4.2">${esc(p.t.slice(0, 10))}</text>` : ""}</g>`; }).join("")}
+    <text class="mnote" x="2" y="${h - 2}">見本の地図</text></svg>`;
+}
 function make() {
   const circles = Object.values(S.circles).filter(ci => ci.members.includes(me));
-  const pick = `<div class="mk-top" role="group" aria-label="何をカードにする？">${MAKE_TOP.map(([k, l]) => `<button type="button" data-mk="${k}" aria-pressed="${MK.mode === k}">${icon(k)}<span>${l}</span></button>`).join("")}</div>`;
-  if (!MK.mode || MK.mode === "make") {
+  const g = MK.mode && MK.mode !== "make" ? groupOf(MK.mode) : null;
+  const top = `<div class="mk-g" role="group" aria-label="何を作る？">${GROUPS.map(([gk, l, ic, ks]) => `<button type="button" data-mk="${g && g[0] === gk ? MK.mode : ks[0]}" aria-pressed="${!!g && g[0] === gk}">${icon(ic)}<span>${l}</span></button>`).join("")}</div>`;
+  if (!g) {
     return openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
-      <h2 class="rh">何をカードにする？</h2>${pick}
+      <h2 class="rh">何を作る？</h2>${top}
+      <dl class="gdesc">${GROUPS.map(([, l, , ks, d]) => `<dt>${l}</dt><dd>${d}<small>${ks.filter(k => k !== "sale").map(k => KIND[k]).join("・")}</small></dd>`).join("")}</dl>
       <button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>`);
   }
-  const k = MK.mode, sale = k === "sale", media = k === "music" || k === "video", needImg = sale || k === "picture";
-  const bodyL = {text: "本文", project: "何をめざすか", app: "どんなアプリか", event: "どんなイベントか", shop: "どんなお店か", org: "何をしているか"}[k];
-  const hint = {rwa: "数に限りのあるもの。持った人に1回渡します", event: "持つ＝参加券。当日は券のQRで入ります", shop: "お店の品（自分のカード）をつなげます", org: "会社・団体のカード（自分のカード）をつなげます", project: "だれでも自分のカードをつなげて育てます", app: "持っている人が使えます", sale: "写真と値段で、一度きりのQR"}[k];
+  const k = MK.mode, sale = k === "sale", media = k === "music" || k === "video", needImg = sale || k === "picture", thing = g[0] === "thing", bundle = g[0] === "bundle";
+  const kinds = g[3].length > 1 ? `<div class="mk-k" role="group" aria-label="${g[1]}の種類">${g[3].map(x => `<button type="button" data-mk="${x}" aria-pressed="${k === x}">${icon(x)}${KIND[x]}</button>`).join("")}</div>` : "";
+  const hint = {rwa: "持った人に1回渡します（受け取りのQR）", event: "持つ＝参加券。当日は券のQRで受付", service: "持つ＝受ける券。枠の数だけ", picture: "写真そのものがカードになります", music: "音を選び、カードの画像もつけられます", video: "動画を選び、カードの画像もつけられます", text: "文章を書きます", app: "持っている人だけが使えるアプリ", shop: "お店の品（自分のカード）をつなげます", org: "自分のカードやプロジェクトをつなげます", project: "だれでも自分のカードをつなげて育てます", place: "だれでも自分のカードをこの場所につなげます", sale: g[4]}[k];
+  const bodyL = {text: "本文", app: "どんなアプリか", project: "何をめざすか"}[k] || (k === "picture" || media || sale ? "" : "説明");
+  const whenL = {event: "日時", service: "日時・受けられる日", shop: "営業の日・時間"}[k], placeL = {rwa: "受け取る場所", event: "場所", service: "場所", shop: "場所", place: "どこ"}[k];
+  const qrOpts = sale ? [] : ["open", "tip", ...(bundle ? [] : ["hold"]), ...(g[0] === "data" ? ["orig"] : [])];
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
-    <h2 class="rh">何をカードにする？</h2>${pick}${hint ? `<p class="sub" style="margin:0">${hint}</p>` : ""}
+    <h2 class="rh">何を作る？</h2>${top}${kinds}<p class="sub hint">${hint}</p>
     <label class="ph-pick${MK.img ? " has" : ""}" ${MK.img ? `style="--img:url('${MK.img}')"` : ""}><input type="file" id="m-photo" accept="image/*" ${sale ? 'capture="environment"' : ""}><span>${MK.img ? "画像を変える" : needImg ? "写真を撮る・選ぶ" : "カードの画像（なくてもよい）"}</span></label>
       <div class="chips"><span class="sub">見本：</span>${[["media/bread.jpg", "パン"], ["media/radish.jpg", "大根"], ["media/paddy.jpg", "田んぼ"]].map(([u, l]) => `<button type="button" data-sample="${u}">${l}</button>`).join("")}</div>
     ${media ? `<label class="ph-pick mp${MK.src ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}"><span>${MK.src ? `${k === "music" ? "音" : "動画"}を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ" : "動画を選ぶ"}</span></label>
@@ -829,13 +872,15 @@ function make() {
     <label class="fl">題${sale ? "（なくてもよい）" : ""}<input id="m-title" maxlength="80" value="${esc(MK.title)}"></label>
     ${bodyL ? `<label class="fl">${bodyL}<textarea id="m-body" maxlength="2000">${esc(MK.body)}</textarea></label>` : ""}
     ${k === "project" ? `<label class="fl">求めているもの<input id="m-want" maxlength="200" value="${esc(MK.want || "")}" placeholder="例：在来種の写真、畑の場所"></label>` : ""}
-    ${k === "event" || k === "shop" ? `<div class="row2"><label class="fl">${k === "event" ? "日時" : "営業の日・時間"}<input id="m-when" maxlength="60" value="${esc(MK.when || "")}" placeholder="${k === "event" ? "例：12月14日（日）9:00" : "例：火〜土 8:00–17:00"}"></label><label class="fl">場所<input id="m-place" maxlength="100" value="${esc(MK.place || "")}" placeholder="例：千葉県 の畑"></label></div>` : ""}
     ${k === "app" ? `<label class="fl">アプリのURL（持っている人だけに見える）<input id="m-url" type="url" maxlength="300" value="${esc(MK.url || "")}" placeholder="https://"></label>` : ""}
-    <div class="row2"><label class="fl">値段（jeni）<input id="m-price" type="number" inputmode="numeric" min="0" max="99999" value="${sale ? MK.price || 80 : MK.price}"></label>
-      ${k === "rwa" || k === "event" ? `<label class="fl">${k === "event" ? "定員" : "数"}<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>
+    ${whenL || placeL ? `<div class="row2">${whenL ? `<label class="fl">${whenL}<input id="m-when" maxlength="60" value="${esc(MK.when || "")}" placeholder="${k === "shop" ? "例：火〜土 8:00–17:00" : "例：12月14日（日）9:00"}"></label>` : ""}${placeL ? `<label class="fl">${placeL}<input id="m-place" maxlength="100" value="${esc(MK.place || "")}" placeholder="例：千葉県 の畑"></label>` : ""}</div>
+      <div class="fl"><span>地図の点${k === "place" ? "" : "（なくてもよい）"}${MK.geo ? ` <button type="button" class="link" data-geoclear style="font-size:12px;padding:0">消す</button>` : ""}</span>${mapSvg(MK.geo ? [{g: MK.geo}] : [], {pick: true})}</div>` : ""}
+    ${bundle ? "" : `<div class="row2"><label class="fl">値段（jeni）<input id="m-price" type="number" inputmode="numeric" min="0" max="99999" value="${sale ? MK.price || 80 : MK.price}"></label>
+      ${thing ? `<label class="fl">${{rwa: "数", event: "定員", service: "枠"}[k]}<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>`}
+    ${qrOpts.length ? `<label class="fl">裏のQRを読むと<select id="m-qr">${qrOpts.map(o => `<option value="${o}" ${MK.qr === o ? "selected" : ""}>${QRL[o]}</option>`).join("")}</select></label>` : ""}
     ${!sale && circles.length ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
     ${!sale ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
-    <button type="button" class="big" data-create ${(needImg && !MK.img) || (media && !MK.src) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
+    <button type="button" class="big" data-create ${(needImg && !MK.img) || (media && !MK.src) || (k === "place" && !MK.geo) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
 }
 function create() {
   readMK();
@@ -854,13 +899,16 @@ function create() {
   const c = {t: "card", kind: k, title: MK.title || "題のないカード", price: MK.price, body: MK.body || ""};
   if (k === "project" && MK.want) c.want = MK.want;
   if (k === "picture" && !MK.img) return toast("写真を選んでください");
-  if (k === "rwa" || k === "event") c.supply = MK.supply;
-  if (k === "event" || k === "shop") { c.when = MK.when; c.place = MK.place; }
+  if (COUNTED.includes(k)) c.supply = MK.supply;
+  if (AT.includes(k)) { c.when = MK.when; c.place = MK.place; if (MK.geo) c.geo = MK.geo; }
+  if (k === "place" && !MK.geo) return toast("地図を押して、場所を決めてください");
+  if (BUNDLE.includes(k)) c.price = 0;
+  c.qr = MK.qr || "open";
   if (MK.circle) c.circle = MK.circle;
   const e = emit(me, c);
   if (!S.cards[e.id]) return toast("出せませんでした");
   MEDIA[e.id] = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: MK.src || "", len: MK.len || ""};
-  Object.assign(MK, {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: ""});
+  Object.assign(MK, {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: "", geo: null, qr: "open"});
   detail(e.id); toast("カードを出しました");
 }
 let saleTimer;
@@ -917,7 +965,7 @@ function rules() {
     <h2 class="rh">${coin()} jeni のきまり</h2>
     <ol class="rules">
       <li><b>はじまり</b>認められて参加すると、${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認めてあげられるのは${RULE.vouchMax}人まで。</li>
-      <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。デジタルは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
+      <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。データは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回、体験・サービスは受けるのを1回。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
       <li><b>譲る</b>数に限りのあるカードは、持っている人から同じ値段で譲り受けます。jeni は手放した人へ戻ります。</li>
       <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。受け取るとなくなるもの（現物など数に限りのあるカード）は、全額が作った人へ。</li>
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
@@ -947,15 +995,17 @@ player.addEventListener("ended", () => { const id = playing; playing = ""; if ($
 const AS = name => P[name].pk;
 const cardBy = t => Object.values(S.cards).find(c => c.title === t);
 const GUIDE = [
-  ["項目は横に滑らせて選ぶ", "アイコンはまとめず、自分のカードの中で横に滑ります。イベント・お店・会社や団体を加えました。＋は右はしに固定。", () => { me = AS("kenji"); field = "shop"; closeSheet(); }],
-  ["話す・電話は、残高の下", "吹き出しは会話、受話器は電話。新しい会話と不在着信は赤い数で知らせます。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
+  ["作るは4つのまとまりから", "もの・体験／データ／つなぐ／その場で売る。入力の決まりが同じものをまとめ、選んだ種類の欄だけがすぐ下に出ます。", () => { me = AS("kenji"); MK.mode = "event"; make(); }],
+  ["場所と地図", "「場所」の項目では上に地図。点を押すとそのカード。場所・お店・イベント・体験は、作るときに地図を押して点を置けます。", () => { me = AS("kenji"); field = "place"; closeSheet(); }],
+  ["体験・サービス", "持つ＝受ける券。枠の数だけ。当日は券のQRで。", () => { me = AS("kenji"); detail(cardBy("パンの焼き方を教えます").id); }],
+  ["裏のQRの意味を選べる", "カードを開く・投げ銭・持つ・元のデータ（データのカード）。外のリンクにはできません。", () => { me = AS("kenji"); MK.mode = "music"; make(); }],
+  ["知らせは小さな赤い印", "残高の下の吹き出し（会話）と受話器（電話）。数は出しません。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
   ["電話：不在着信と、かけられる人", "お互いに友達の人とだけ（見本・つながない）。", () => { me = AS("kenji"); phoneList(); }],
-  ["イベント：持つ＝参加券", "日時・場所・定員。当日は券のQRで受付。", () => { me = AS("kenji"); detail(cardBy("畑の収穫体験").id); }],
-  ["お店・会社や団体", "自分のカードをつなげて並べます（つなげるのは作った人だけ）。プロジェクトはだれでも。", () => { me = AS("kenji"); detail(cardBy("Bakery_Haru").id); }],
+  ["項目は横に滑らせて選ぶ", "アイコンはまとめず、自分のカードの中で横に滑ります。＋は右はしに固定。", () => { me = AS("kenji"); field = "shop"; closeSheet(); }],
+  ["お店・会社や団体", "自分のカードをつなげて並べます（つなげるのは作った人だけ）。プロジェクトと場所はだれでも。", () => { me = AS("kenji"); detail(cardBy("Bakery_Haru").id); }],
   ["どのカードにも画像", "音楽や文章にも、カードの画像をつけられます。", () => { me = AS("kenji"); MK.mode = "music"; make(); }],
   ["左右・上下とも、指の勢いのまま滑る", "カードは勢いよくめくると何枚も進みます。一覧は指について横に動き、強くはらうと2つ先の項目へ。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["名前から、その人のカードへ", "作った人・持っている人・会話を書いた人・関わった人。どの名前を押しても同じカードが開きます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); talkSheet(cardBy("夜明けの田んぼ").id); }],
-  ["作るは1つの画面で", "上に横に滑る選び（一覧と同じアイコン・同じ並び＋その場で売る）、下にそのカードに要る欄だけ。", () => { me = AS("kenji"); MK.mode = "event"; make(); }],
   ["カードの会話", "カードの右上の吹き出しから。だれでも読めて、参加している人が書けます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); }],
   ["プロジェクトを育てる", "自分のカードをつなげ、会話で進めます。状態・求めているもの・関わった人。", () => { me = AS("haru"); detail(cardBy("みんなの種の地図").id); }],
   ["アプリのカード", "持っている人には「アプリを開く」。", () => { me = AS("kenji"); detail(cardBy("在来種の地図（アプリ）").id); }],
@@ -1001,10 +1051,12 @@ document.addEventListener("click", e => {
   if (q("[data-guide]")) return guide();
   if ((b = q("[data-go]"))) { const g = GUIDE[+b.dataset.go]; closeSheet(); g[2](); home(); return; }
   if ((b = q("[data-f]"))) { field = b.dataset.f; return home(); }
-  if (q("[data-chats]")) return chatList();
-  if (q("[data-phones]")) return phoneList();
+  if ((b = q("[data-fx]"))) return FX.find(f => f.k === b.dataset.fx).open();
   if (q("[data-make]")) { if (!U().member) return toast("参加すると作れます"); MK.mode = "make"; return make(); }
-  if ((b = q("[data-mk]"))) { readMK(); MK.mode = b.dataset.mk; return make(); }
+  if ((b = q("[data-mk]"))) { readMK(); MK.mode = b.dataset.mk; if (MK.qr === "orig" && !["picture", "music", "video", "text", "app"].includes(MK.mode) || MK.qr === "hold" && BUNDLE.includes(MK.mode)) MK.qr = "open"; return make(); }
+  if ((b = q("[data-mappick]"))) { readMK(); const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    MK.geo = [Math.round((MAPB.n - y * (MAPB.n - MAPB.s)) * 1e4) / 1e4, Math.round((MAPB.w + x * (MAPB.e - MAPB.w)) * 1e4) / 1e4]; return make(); }
+  if (q("[data-geoclear]")) { readMK(); MK.geo = null; return make(); }
   if ((b = q("[data-sample]"))) { readMK(); MK.img = b.dataset.sample; return make(); }
   if ((b = q("[data-msample]"))) { readMK(); return pickMedia(b.dataset.msample); }
   if (q("[data-create]")) return create();
