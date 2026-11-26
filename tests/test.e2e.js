@@ -41,9 +41,11 @@ const K = c => c.repeat(64);
     // 投げ銭：金額を選んで長押し
     const waves = await id("Ambient Waves");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), waves); await p.waitForTimeout(200);
-    await p.click(`#pg-${waves} [data-tipask]`); await p.click(`[data-amt="50"][data-for="${waves}"]`);
+    check(tag + " 投げ銭の額は最初に届く量に合わせた段（はじめ 5）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "5");
+    await p.click(`#pg-${waves} [data-tipstep]`);
+    check(tag + " 額を押すと 5→10 に変わる（画面はそのまま）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "10");
     const b1 = await bal(); await lp(`#pg-${waves} [data-lp="tip"]`);
-    check(tag + " 投げ銭を長押しで贈る（50 jeni）・合計は変わらない", await bal() === b1 - 50 && await total());
+    check(tag + " となりを長押しで投げ銭（10 jeni）・合計は変わらない", await bal() === b1 - 10 && await total());
     // 動画はカードの中で再生
     const field = await id("畑の一日");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), field);
@@ -198,7 +200,7 @@ const K = c => c.repeat(64);
     check(tag + " 実績のある2人の知らせでカードが隠れる", await p.evaluate(id => __jt.S.cards[id].hidden, soil2) && !(await p.textContent("#home .list")).includes("土を耕す"));
     await p.selectOption("#who", K("a"));
     await p.evaluate(id => __jt.detail(id), soil2); await p.waitForTimeout(150);
-    check(tag + " 隠れたカードには投げ銭のボタンを出さない", !(await p.$(`#pg-${soil2} [data-tipask]`)));
+    check(tag + " 隠れたカードには投げ銭のボタンを出さない", !(await p.$(`#pg-${soil2} [data-tipstep]`)));
     await p.click("#sheet [data-close]");
     // 作る：まず何をカードにするか選び、要る欄だけ出る
     await p.selectOption("#who", K("a")); await p.click('[data-f="all"]');
@@ -215,13 +217,12 @@ const K = c => c.repeat(64);
     check(tag + " もの・体験：数の欄（イベントは定員）と地図", !!(await p.$("#m-supply")) && !!(await p.$("[data-mappick]")));
     await (await p.$("[data-mappick]")).scrollIntoViewIfNeeded(); const box = await (await p.$("[data-mappick]")).boundingBox(); await p.mouse.click(box.x + box.width * .7, box.y + box.height * .45); await p.waitForTimeout(150);
     check(tag + " 地図を押すと点が置ける", !!(await p.$("[data-mappick] .mpin")));
-    check(tag + " 裏のQRの意味：もの・体験に「元のデータ」は出ない", !(await p.$('#m-qr option[value="orig"]')) && !!(await p.$('#m-qr option[value="tip"]')));
-    await p.selectOption("#m-qr", "tip");
+    check(tag + " 作る画面に QR の選びはない（QR はいつもカードを開くだけ）", !(await p.$("#m-qr")));
     check(tag + " イベント：日時・場所・定員の欄", !!(await p.$("#m-when")) && !!(await p.$("#m-place")) && /定員/.test(await p.textContent("#sheet")));
     await p.fill("#m-title", "パンづくり教室"); await p.fill("#m-when", "1月10日 10:00"); await p.fill("#m-place", "東京"); await p.fill("#m-supply", "2"); await p.fill("#m-price", "30"); await p.click("[data-create]"); await p.waitForTimeout(200);
     const evt = await id("パンづくり教室");
     check(tag + " イベントを出せる：日時・場所・定員・地図がカードに", /1月10日 10:00/.test(await p.textContent(`#pg-${evt}`)) && /残り 2 \/ 2/.test(await p.textContent(`#pg-${evt}`)) && !!(await p.$(`#pg-${evt} svg.map .mpin`)));
-    check(tag + " 裏のQRに選んだ意味が出る", /投げ銭の画面/.test(await p.textContent(`#pg-${evt} .back`)) && await p.evaluate(id => __jt.S.cards[id].qr === "tip", evt));
+    check(tag + " 裏のQRは「読むと、このカードが開きます」", /読むと、このカードが開きます/.test(await p.textContent(`#pg-${evt} .back`)));
     await p.click("#sheet [data-close]"); await p.click("[data-make]");
     await mk("data", "app");
     await p.fill("#m-title", "苗の記録帳"); await p.fill("#m-url", "http://だめ"); await p.click("[data-create]"); await p.waitForTimeout(150);
@@ -232,7 +233,6 @@ const K = c => c.repeat(64);
     await p.click("#sheet [data-close]");
     // 音楽のカード：音を選ばないと出せない。選ぶと長さが入る
     await p.click("[data-make]"); await mk("data", "music");
-    check(tag + " データには「元のデータを受け取る」の QR を選べる", !!(await p.$('#m-qr option[value="orig"]')));
     check(tag + " 音楽のカード：音を選ぶまで出せない", await p.$eval("[data-create]", e => e.disabled) && !!(await p.$("#m-media")));
     await p.fill("#m-title", "畑の朝の音"); await p.click('[data-msample]'); await p.waitForTimeout(600); await p.click('[data-sample="media/paddy.jpg"]'); await p.waitForTimeout(150);
     check(tag + " 音を選ぶと題を残したまま長さが入る", await p.$eval("#m-title", e => e.value) === "畑の朝の音" && /0:\d\d/.test(await p.textContent(".ph-pick.mp")));
@@ -250,6 +250,18 @@ const K = c => c.repeat(64);
     await p.click('[data-f="music"]');
     check(tag + " 音楽の項目", /雨の作業小屋/.test(await p.textContent("#home .list")) && !/夜明けの田んぼ/.test(await p.textContent("#home .list")));
     check(tag + " 一覧の外に切り替えの帯を出さない", !(await p.$(".wsub")));
+    // 全画面：中身が画面いっぱい（カードの枠なし）・1枚ずつ
+    const fld = await id("畑の一日");
+    await p.evaluate(id => __jt.detail(id), fld); await p.click("[data-imm]"); await p.waitForTimeout(250);
+    check(tag + " 全画面：カードが画面いっぱい、写真は全体が見える大きさ", await p.evaluate(id => { const j = document.querySelector("#pg-" + id + " .jc2").getBoundingClientRect(), im = document.querySelector("#pg-" + id + " .bgimg"); return Math.abs(j.width - innerWidth) < 2 && Math.abs(j.height - innerHeight) < 2 && (!im || getComputedStyle(im).objectFit === "contain"); }, fld));
+    await p.click("[data-imm]"); await p.click("#sheet [data-close]");
+    // 招待：一度きりのリンクとQR → まだ参加していない人が開くと参加
+    await p.click(".me [data-me]"); await p.waitForTimeout(150);
+    await p.click("[data-invite]"); await p.waitForTimeout(150);
+    check(tag + " 招待：リンクとQR（7日間・1人）", /#join=/.test(await p.textContent("#over")) && !!(await p.$("#over .qrbox svg")));
+    await p.click("[data-joinas]"); await p.waitForTimeout(200);
+    check(tag + " 招待のリンクから参加すると 1,000 jeni", /1,000 jeni が届きました/.test(await p.textContent("#sheet")) && await p.evaluate(() => __jt.S.users["e".repeat(64)].member));
+    await p.click("#sheet [data-close]"); await p.selectOption("#who", K("a")); await p.waitForTimeout(150);
     // きまりの版・記録の控え（書き出し・要約を刻む）・ウォレットの場所
     check(tag + " 出来事にきまりの版が付く", await p.evaluate(() => __jt.EV.every(e => JSON.parse(e.content).v === 1)));
     await p.click(".me [data-me]"); await p.waitForTimeout(150);
@@ -267,11 +279,14 @@ const K = c => c.repeat(64);
     await p.click("[data-overclose]"); await p.click("#sheet [data-close]");
     check(tag + " 名前の前にプロフィールアイコン（角丸の四角）", await p.evaluate(() => { const a = document.querySelector("#home .list .avs"); return !!a && getComputedStyle(a).borderRadius !== "50%"; }));
     // 近く：現在地から近い順（ほかの項目と同じ一覧・距離つき）
-    await p.click('[data-f="near"]'); await p.waitForTimeout(200);
+    await p.click('[data-f="all"]'); await p.click('[data-mod="near"]'); await p.waitForTimeout(200);
+    check(tag + " 近くのしぼり：どのアイコンにも小さな印", await p.evaluate(() => document.querySelector(".menu").classList.contains("m-near") && getComputedStyle(document.querySelector('.menu [data-f="music"]'), "::after").content !== "none"));
     check(tag + " 近く：近い順に距離つき、地図の点のないカードは出ない", await p.evaluate(() => { const ds = [...document.querySelectorAll("#home .list .dist")].map(x => x.textContent); const km = ds.map(t => t.endsWith("km") ? parseFloat(t) : parseFloat(t) / 1000); return ds.length >= 3 && km.every((k, i) => !i || k >= km[i - 1]); }) && !/Ambient Waves/.test(await p.textContent("#home .list")) && !(await p.$("#home svg.map")));
-    await p.click('[data-f="all"]');
+    await p.click('[data-f="rwa"]'); await p.waitForTimeout(150);
+    check(tag + " 近く×現物：現物だけが近い順に", await p.evaluate(() => [...document.querySelectorAll("#home .list .line")].length >= 1) && !/パンの焼き方/.test(await p.textContent("#home .list")) && /朝採り大根/.test(await p.textContent("#home .list")));
+    await p.click('[data-mod="near"]'); await p.click('[data-f="all"]');
     // カードのページはどれも同じ並び：カード・人と持つ・（受け取る）・くわしく（たたんである）
-    check(tag + " カードのページ：くわしくはたたんである・どのカードも同じ並び", await p.evaluate(() => { __jt.detail(Object.keys(__jt.S.cards)[0]); const pgs = [...document.querySelectorAll("#sheet .pg")]; return pgs.length > 5 && pgs.every(g => { const k = [...g.children].map(x => x.className.split(" ")[0]).filter(x => x !== "tipbox" && x !== "recv"); return k.join() === "jc2,acts2,more"; }) && pgs.filter(g => !g.querySelector(".more").open).length >= pgs.length - 10; }));
+    check(tag + " カードのページ：くわしくはたたんである・どのカードも同じ並び", await p.evaluate(() => { __jt.detail(Object.keys(__jt.S.cards)[0]); const pgs = [...document.querySelectorAll("#sheet .pg")]; return pgs.length > 5 && pgs.every(g => { const k = [...g.children].map(x => x.className.split(" ")[0]).filter(x => x !== "tipbox" && x !== "recv"); return /^jc2,acts2,basic(,own)?(,more)?$/.test(k.join()) && !!g.querySelector(".basic .bl") && (!g.querySelector(".more") || !!g.querySelector(".more>summary")); }) && pgs.some(g => !g.querySelector(".more")); }));
     await p.click("#sheet [data-close]");
     // 直す・取り下げる（作った人だけ）
     await p.click("[data-make]"); await p.click(".mk-g button:nth-child(2)"); await p.click('.mk-k [data-mk="text"]'); await p.fill("#m-title", "試しの文"); await p.fill("#m-body", "はじめの文"); await p.click("[data-create]"); await p.waitForTimeout(200);
@@ -292,19 +307,22 @@ const K = c => c.repeat(64);
     check(tag + " 自分の会話を消せる（消したことは残る）", !/消すための一言/.test(await p.textContent("#over")) && /書いた人が消しました/.test(await p.textContent("#over")));
     await p.click("[data-overclose]"); await p.click("#sheet [data-close]");
     // お気に入り：☆で入れる・外す。項目「お気に入り」に集まる。記録には出ない
-    await p.click('[data-f="fav"]');
-    check(tag + " お気に入りの項目（見本は Ambient Waves）・あなただけに見える", /Ambient Waves/.test(await p.textContent("#home .list")) && /あなただけ/.test(await p.textContent(".me .mcap")));
+    await p.click('[data-mod="fav"]');
+    check(tag + " お気に入りのしぼり（見本は Ambient Waves）", /Ambient Waves/.test(await p.textContent("#home .list")) && /☆/.test(await p.textContent(".me .mcap")));
+    await p.click('[data-f="music"]');
+    check(tag + " ☆×音楽：お気に入りの音楽だけ", /Ambient Waves/.test(await p.textContent("#home .list")) && !/雨の作業小屋/.test(await p.textContent("#home .list")));
+    await p.click('[data-f="all"]');
     const rainF = await id("雨の作業小屋"), evN = await p.evaluate(() => __jt.S.ok ? 0 : 0);
     await p.evaluate(id => __jt.detail(id), rainF); await p.waitForTimeout(150);
     const evBefore = await p.evaluate(() => document.querySelectorAll("*").length >= 0 && window.__jt.S && Object.keys(__jt.S.cards).length);
     await p.click(`#pg-${rainF} [data-fav]`); await p.waitForTimeout(150);
     check(tag + " ☆を押すとお気に入りに（しるしが金色）", await p.$eval(`#pg-${rainF} [data-fav]`, e => e.getAttribute("aria-pressed") === "true"));
-    await p.click("#sheet [data-close]"); await p.click('[data-f="fav"]');
+    await p.click("#sheet [data-close]");
     check(tag + " お気に入りの項目に入る", /雨の作業小屋/.test(await p.textContent("#home .list")));
     await p.evaluate(id => __jt.detail(id), rainF); await p.click(`#pg-${rainF} [data-fav]`); await p.waitForTimeout(150); await p.click("#sheet [data-close]");
     check(tag + " もう一度押すと外れる", !/雨の作業小屋/.test(await p.textContent("#home .list")));
     void evN; void evBefore;
-    await p.click('[data-f="all"]');
+    await p.click('[data-mod="fav"]');
     // 常連・会員：お知らせ（鈴）に、常連のお店に新しくつながったカード
     check(tag + " 常連のお店に新しいカード → 鈴に赤い印", !!(await p.$('[data-fx="news"] b')));
     await p.click('[data-fx="news"]'); await p.waitForTimeout(150);
@@ -328,7 +346,7 @@ const K = c => c.repeat(64);
     check(tag + " プロジェクトの項目", (await p.textContent("#home .list")).includes("みんなの種の地図") && !(await p.textContent("#home .list")).includes("在来種の地図（アプリ）"));
     await p.click('[data-f="app"]');
     check(tag + " アプリの項目", (await p.textContent("#home .list")).includes("在来種の地図（アプリ）") && !(await p.textContent("#home .list")).includes("みんなの種の地図"));
-    check(tag + " 項目は1行で横に滑る・＋は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .make").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 15 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
+    check(tag + " 項目は1行で横に滑る・＋は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .make").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 13 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
     check(tag + " 選んだ項目が見える位置まで滑っている", await p.evaluate(() => { const b = document.querySelector('.menu [aria-pressed="true"]').getBoundingClientRect(), m = document.querySelector(".menu").getBoundingClientRect(); return b.left >= m.left - 1 && b.right <= m.right + 1; }));
     if (SHOT) await p.screenshot({path: `${SHOT}/home2-${w}.png`});
     await p.click('[data-f="all"]');
@@ -342,7 +360,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/畑の収穫体験/, /直す/, /東京駅/, /Farmer_S/, /記録の控え/, /定員/, /枠/, /裏のQRを読むと/, /Ambient Waves/, /電話・会話/, /お知らせ/, /畑の収穫体験/, /不在着信/, /Bakery_Haru/, /お店の品/, /カードの画像/, /Ambient Waves/, /冬至のころ/, /夜明けの田んぼ/, /みんなの種の地図/, /アプリを開く/, /雨の作業小屋/, /天然酵母/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
+    const want = [/近い順/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /朝採り大根/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));

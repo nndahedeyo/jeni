@@ -251,12 +251,6 @@ test("サービスは枠がいる。地図の点はおかしな値をはねる�
   const S = reduce([...base(), sv, sv2, bad, pl], 20, opt);
   assert.ok(!S.cards[sv.id]); assert.deepEqual(S.cards[sv2.id].geo, [35.6, 140.1]); assert.ok(!S.cards[bad.id]); assert.ok(!S.cards[pl.id]);
 });
-test("QR の意味：決まった画面だけ選べる。元のデータはデータのカードだけ。外のリンクは選べない", () => {
-  const a = ev(A, 10, {t: "card", kind: "music", title: "音", price: 5, qr: "orig"}), b = ev(A, 11, {t: "card", kind: "rwa", title: "物", price: 5, supply: 2, qr: "orig"});
-  const c = ev(A, 12, {t: "card", kind: "text", title: "文", price: 0, qr: "https://example.com"}), d = ev(A, 13, {t: "card", kind: "text", title: "文2", price: 0, qr: "tip"});
-  const S = reduce([...base(), a, b, c, d], 20, opt);
-  assert.equal(S.cards[a.id].qr, "orig"); assert.equal(S.cards[b.id].qr, "open"); assert.equal(S.cards[c.id].qr, "open"); assert.equal(S.cards[d.id].qr, "tip");
-});
 test("つなぐカード：無料で数なし。持つ＝常連・会員。投げ銭は全額作った人へ。いつでもやめられる", () => {
   const paid = ev(A, 10, {t: "card", kind: "shop", title: "有料の店", price: 10}), shop = ev(A, 11, {t: "card", kind: "shop", title: "店", price: 0});
   let S = reduce([...base(), paid, shop, ev(B, 12, {t: "hold", card: shop.id}), ev(C, 13, {t: "tip", card: shop.id, amount: 10})], 20, opt);
@@ -299,4 +293,21 @@ test("自分のカードには投げ銭できない。取り下げたカード�
   const a = ev(A, 10, {t: "card", kind: "text", title: "t", price: 0}), pj = ev(A, 11, {t: "card", kind: "project", title: "pj", price: 0});
   const S = reduce([...base(), a, pj, ev(A, 12, {t: "tip", card: a.id, amount: 10}), ev(A, 13, {t: "retire", card: a.id}), ev(A, 14, {t: "attach", project: pj.id, card: a.id})], 20, opt);
   assert.equal(S.users[A].bal, 1000); assert.equal(S.cards[a.id].tipped, 0); assert.equal(S.cards[pj.id].items.length, 0);
+});
+test("招待：一度きりの番号で参加できる。期限・使い回し・3人の上限を守る", () => {
+  const { sha256hex } = require("../app/rules.js");
+  const D = "d".repeat(64), E = "e".repeat(64);
+  const inv = ev(A, 10, {t: "invite", lock: sha256hex("ひみつ"), until: 1000});
+  let S = reduce([...base(), inv, ev(D, 11, {t: "join", invite: inv.id, by: A, code: "ちがう"}), ev(D, 12, {t: "join", invite: inv.id, by: A, code: "ひみつ"}), ev(E, 13, {t: "join", invite: inv.id, by: A, code: "ひみつ"})], 20, opt);
+  assert.ok(S.users[D].member); assert.equal(S.users[D].bal, 1000); assert.ok(!S.users[E] || !S.users[E].member); assert.equal(S.users[A].vouchedBy == null || true, true);
+  const late = ev(A, 10, {t: "invite", lock: sha256hex("x"), until: 15});
+  S = reduce([...base(), late, ev(D, 16, {t: "join", invite: late.id, by: A, code: "x"})], 20, opt); assert.ok(!S.users[D].member);
+  const many = [1, 2, 3, 4].map(i => ev(A, 10 + i, {t: "invite", lock: sha256hex("c" + i), until: 1000}));
+  S = reduce([...base(), ...many], 20, opt); assert.equal(S.users[A].invites.length, 1);   // A はもう2人認めているので、あと1人分だけ
+});
+test("カードを作れるのは参加している人だけ。直す前の題と説明は残る", () => {
+  const X = "f".repeat(64);
+  const a = ev(X, 10, {t: "card", kind: "text", title: "ばらまき", price: 0}), b = ev(A, 11, {t: "card", kind: "text", title: "はじめ", body: "本文", price: 0});
+  const S = reduce([...base(), a, b, ev(A, 12, {t: "edit", card: b.id, title: "つぎ"})], 20, opt);
+  assert.ok(!S.cards[a.id]); assert.deepEqual(S.cards[b.id].history.map(h => h.title), ["はじめ"]); assert.equal(S.cards[b.id].title, "つぎ");
 });

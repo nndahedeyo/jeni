@@ -24,14 +24,14 @@
     flagsToHide: 2,     // 危ないカード・会話を隠すのに要る知らせの数（実績のある別々の人から）
     redeemMax: 600,     // 現物を引き換える QR が使える長さ（秒）の上限
     commentMax: 500,
+    inviteMax: 7 * 86400,   // 招待のリンク・QR が使える長さ（秒）の上限
   };
   const KINDS = ["rwa", "event", "service", "music", "video", "picture", "text", "app", "shop", "org", "project", "other"];
   // つなぐカード：ほかのカードを束ねる。プロジェクトはだれでも自分のカードをつなげる。お店・会社や団体は、作った人だけが自分のカードをつなぐ
   const BUNDLE = ["project", "shop", "org"], OPEN_BUNDLE = ["project"];
   const COUNTED = ["rwa", "event", "service"];   // 数があるもの（持った人に1回）。イベントの定員・サービスの枠もいる
   const AT = ["rwa", "event", "service", "shop"];   // 日時・場所・地図の点（受け取る場所・会場・お店）を持てるもの
-  // カードの裏の QR を読んだときに開くもの。作った人が選べるのは jeni の中の決まった画面だけ（外のリンクにはしない：にせの画面へ誘う悪用を防ぐ）
-  const QR = ["open", "tip", "hold", "orig"];   // app：持つと使えるアプリ（持っているかは、アプリの側が署名で確かめる）
+  // カードの裏の QR は、いつも「そのカードを開く」だけ（外のリンクや支払いにはしない：にせの画面へ誘う悪用を防ぎ、読んだだけで jeni が動かないように）
   const isHex = (s, n) => typeof s === "string" && new RegExp(`^[0-9a-f]{${n}}$`).test(s);
   const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
@@ -64,7 +64,7 @@
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
     const S = {users: {}, cards: {}, circles: {}, comments: {}, log: []};
-    const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: []});
+    const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: [], invites: []});
     // 実績：持った・持たれた・譲った・譲られたことが1回でもある人（知らせを出せるのはこの人たち）
     const trusted = pk => S.users[pk] && S.users[pk].member && S.users[pk].deals >= 1;
     const flagsOf = (o, pk) => { o.flags = o.flags || []; if (o.flags.includes(pk)) return false; o.flags.push(pk); if (o.flags.length >= R.flagsToHide) o.hidden = true; return true; };
@@ -91,6 +91,20 @@
         if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || me.vouched.length >= R.vouchMax) continue;
         if (U(c.who).member) continue;
         me.vouched.push(c.who); join(c.who, t, e.pubkey); ok(e, "vouch"); continue;
+      }
+
+      // 招待：参加している人が、一度きりの番号（の要約）と期限を出す。リンクや QR で番号を受け取った人が「参加」を出すと、認めたのと同じになる
+      // （認められるのは1人3人まで。まだ使われていない招待も数に入れる）
+      if (c.t === "invite") {
+        const open = me.invites.filter(x => !x.used && x.until >= t).length;
+        if (!me.member || !isHex(c.lock, 64) || !int(c.until, t, t + R.inviteMax) || me.vouched.length + open >= R.vouchMax) continue;
+        me.invites.push({id: e.id, lock: c.lock, until: c.until, used: null}); ok(e, "invite"); continue;
+      }
+      if (c.t === "join") {
+        if (me.member || !isHex(c.by, 64) || typeof c.code !== "string") continue;
+        const inv = U(c.by), x = inv.invites.find(y => y.id === c.invite);
+        if (!inv.member || !x || x.used || t > x.until || sha256hex(c.code) !== x.lock || inv.vouched.length >= R.vouchMax) continue;
+        x.used = e.pubkey; inv.vouched.push(e.pubkey); join(e.pubkey, t, c.by); ok(e, "join"); continue;
       }
 
       // 友達：相手のプロフィールカードを持つ（無料・1人1枚）。お互いに友達なら、2人だけで話せる
@@ -136,9 +150,9 @@
         ci.members = ci.members.filter(m => m !== who); ok(e, c.t); continue;
       }
 
-      // カードを作る（参加していなくても作れる。持つには jeni が要る）
+      // カードを作る：参加している人だけ（だれでも鍵を作れるので、認められた人だけにしてばらまきを防ぐ）
       if (c.t === "card") {
-        if (!KINDS.includes(c.kind) || !int(c.price, 0, R.priceMax)) continue;
+        if (!me.member || !KINDS.includes(c.kind) || !int(c.price, 0, R.priceMax)) continue;
         const supply = c.supply == null ? null : (int(c.supply, 1, 100000) ? c.supply : undefined);
         if (supply === undefined) continue;
         const card = {id: e.id, by: e.pubkey, at: t, kind: c.kind, title: str(c.title, 80), body: str(c.body, 2000), media: str(c.media, 300),
@@ -152,8 +166,6 @@
           card.when = str(c.when, 60); card.place = str(c.place, 100);
           if (c.geo !== undefined) { const g = c.geo; if (!Array.isArray(g) || g.length !== 2 || !g.every(Number.isFinite) || Math.abs(g[0]) > 90 || Math.abs(g[1]) > 180) continue; card.geo = [Math.round(g[0] * 1e5) / 1e5, Math.round(g[1] * 1e5) / 1e5]; }
         }
-        card.qr = QR.includes(c.qr) ? c.qr : "open";
-        if (card.qr === "orig" && (COUNTED.includes(c.kind) || BUNDLE.includes(c.kind))) card.qr = "open";   // 元のデータはデータのカードだけ
         if (c.lock !== undefined) {
           if (!isHex(c.lock, 64) || !int(c.until, t, t + R.saleMax) || supply !== 1) continue;
           card.lock = c.lock; card.until = c.until; card.handover = true;
@@ -183,6 +195,7 @@
       // 直す：作った人だけ。題・説明・日時・場所・地図の点・求めているもの。値段・数・種類は直せない（持った人との約束なので）
       if (c.t === "edit") {
         if (card.by !== e.pubkey) continue;
+        (card.history = card.history || []).push({at: t, title: card.title, body: card.body});   // 直す前の題と説明を残す（持った人が確かめられるように）
         if (c.title !== undefined) card.title = str(c.title, 80);
         if (c.body !== undefined) card.body = str(c.body, 2000);
         if (AT.includes(card.kind)) {
@@ -317,6 +330,6 @@
     return path;
   }
   const merkleCheck = (id, path, root) => path.reduce((h, s) => pairHash(h, s), id) === root;
-  const api = {R, merkleRoot, merkleProof, merkleCheck, KINDS, BUNDLE, COUNTED, AT, QR, reduce, sha256hex};
+  const api = {R, merkleRoot, merkleProof, merkleCheck, KINDS, BUNDLE, COUNTED, AT, reduce, sha256hex};
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.JeniRules = api;
 })(typeof self !== "undefined" ? self : this);
