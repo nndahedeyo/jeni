@@ -15,3 +15,5 @@ out = (tpl.replace("/*RULES*/", open(os.path.join(app, "rules.js"), encoding="ut
           .replace("/*COIN*/", coin).replace("/*G*/", json.dumps(gp)))
 open(os.path.join(app, "test.html"), "w", encoding="utf-8").write(out)
 print("built app/test.html", len(out))
+# 確かめ用：公開のときと同じ包み（doctype・head）をつけた写し（git には入れない）
+open(os.path.join(app, "_t.html"), "w", encoding="utf-8").write('<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>\n' + out + '\n</body></html>')
