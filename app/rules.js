@@ -6,7 +6,7 @@
 //  2 持つ　　：持つと、カードに書かれたものを受け取れる。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わらない
 //             （デジタルは元のデータを何度でも。現物はそのものを1回。受け取るとなくなるものは「使った」になる）
 //  3 譲る　　：数に限りのあるカードは、持っている人から同じ値段で譲り受ける。jeni は手放した人へ
-//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。受け取るとなくなるもの（数に限りのあるカード）は全額が作った人へ
+//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。受け取るとなくなるもの（数に限りのあるカード）と、つなぐカードは全額が作った人へ
 //  5 上限　　：同じカードは3枚まで（無料のカードは1枚まで）。使うか贈ると、また持てる
 "use strict";
 (function (root) {
@@ -80,7 +80,6 @@
     for (const e of evs) {
       let c; try { c = JSON.parse(e.content); } catch (x) { continue; }
       if (!c || typeof c !== "object" || (c.v !== undefined && !(Number.isInteger(c.v) && c.v >= 1 && c.v <= R.version))) continue;
-      if (!c || typeof c !== "object") continue;
       const me = U(e.pubkey), t = e.created_at;
       // 最初の人たちは、何か出来事を出した時点で参加
       if (!me.member && founders.has(e.pubkey)) join(e.pubkey, t, null);
@@ -103,7 +102,7 @@
       // 会話：カードの公開の会話（コメント）。参加している人だけ。輪のカードは輪の人だけ
       if (c.t === "comment") {
         const card = S.cards[c.card], text = str(c.text, R.commentMax).trim();
-        if (!card || card.hidden || !me.member || !text) continue;
+        if (!card || card.hidden || card.gone || !me.member || !text) continue;
         if (card.circle && !S.circles[card.circle].members.includes(e.pubkey)) continue;
         const cm = {id: e.id, card: card.id, by: e.pubkey, at: t, text, holder: holdsOf(card, e.pubkey).length > 0, flags: [], hidden: false};
         S.comments[e.id] = cm; (card.talk = card.talk || []).push(e.id); ok(e, "comment"); continue;
@@ -115,6 +114,8 @@
         if (!target || target.by === e.pubkey) continue;
         if (flagsOf(target, e.pubkey)) ok(e, "flag"); continue;
       }
+      // 自分の書いた会話を消す（記録には「消した」ことが残る）
+      if (c.t === "uncomment") { const cm = S.comments[c.comment]; if (!cm || cm.by !== e.pubkey || cm.removed) continue; cm.removed = true; cm.hidden = true; ok(e, "uncomment"); continue; }
 
       // 仲間の輪：作った人と、選ばれた人たち。輪の中のカードの中身は、輪の鍵で封をして置く（外からは読めない）
       if (c.t === "circle") {
@@ -125,6 +126,14 @@
       if (c.t === "circle-add") {
         const ci = S.circles[c.circle]; if (!ci || ci.by !== e.pubkey || !isHex(c.who, 64)) continue;
         if (!ci.members.includes(c.who)) ci.members.push(c.who); continue;
+      }
+      // 輪から抜ける（本人）・外す（輪を作った人）。作った人は抜けられない
+      if (c.t === "circle-leave" || c.t === "circle-remove") {
+        const ci = S.circles[c.circle]; if (!ci) continue;
+        const who = c.t === "circle-leave" ? e.pubkey : c.who;
+        if (c.t === "circle-remove" && ci.by !== e.pubkey) continue;
+        if (who === ci.by || !ci.members.includes(who)) continue;
+        ci.members = ci.members.filter(m => m !== who); ok(e, c.t); continue;
       }
 
       // カードを作る（参加していなくても作れる。持つには jeni が要る）
@@ -155,7 +164,7 @@
       // プロジェクトを育てる：自分のカードを、プロジェクトのカードにつなぐ。外すのは、つないだ人かプロジェクトを作った人
       if (c.t === "attach" || c.t === "detach") {
         const pj = S.cards[c.project], it = S.cards[c.card];
-        if (!pj || !it || !BUNDLE.includes(pj.kind) || pj.hidden || it.hidden || !me.member || pj.id === it.id) continue;
+        if (!pj || !it || !BUNDLE.includes(pj.kind) || pj.hidden || it.hidden || pj.gone || it.gone || !me.member || pj.id === it.id) continue;
         if (c.t === "attach" && !OPEN_BUNDLE.includes(pj.kind) && pj.by !== e.pubkey) continue;
         if (pj.circle && !S.circles[pj.circle].members.includes(e.pubkey)) continue;
         if (c.t === "attach") { if (it.by !== e.pubkey || pj.items.some(x => x.card === it.id)) continue; pj.items.push({card: it.id, by: e.pubkey, at: t}); }
@@ -167,8 +176,30 @@
       if (c.t === "pjstate") { const pj = S.cards[c.project]; if (pj && pj.kind === "project" && pj.by === e.pubkey && ["prep", "doing", "done"].includes(c.state)) pj.state = c.state; continue; }
 
       const card = S.cards[c.card];
-      if (!card) continue;
+      if (!card || card.gone) continue;   // 取り下げたカードには、もう何もできない
       if (card.hidden && ["hold", "want", "tip"].includes(c.t)) continue;   // 隠されたカードは、新しく持てない・投げ銭できない
+      if (card.closed && ["hold", "want"].includes(c.t)) continue;           // 受付を終えたカードは、新しく持てない・順番を待てない
+
+      // 直す：作った人だけ。題・説明・日時・場所・地図の点・求めているもの。値段・数・種類は直せない（持った人との約束なので）
+      if (c.t === "edit") {
+        if (card.by !== e.pubkey) continue;
+        if (c.title !== undefined) card.title = str(c.title, 80);
+        if (c.body !== undefined) card.body = str(c.body, 2000);
+        if (AT.includes(card.kind)) {
+          if (c.when !== undefined) card.when = str(c.when, 60);
+          if (c.place !== undefined) card.place = str(c.place, 100);
+          if (c.geo === null) delete card.geo;
+          else if (c.geo !== undefined) { const g = c.geo; if (Array.isArray(g) && g.length === 2 && g.every(Number.isFinite) && Math.abs(g[0]) <= 90 && Math.abs(g[1]) <= 180) card.geo = [Math.round(g[0] * 1e5) / 1e5, Math.round(g[1] * 1e5) / 1e5]; }
+        }
+        if (card.kind === "project" && c.want !== undefined) card.want = str(c.want, 200);
+        card.edits = (card.edits || 0) + 1; ok(e, "edit"); continue;
+      }
+      // 取り下げる：作った人だけ。まだだれも持っていなければ消える。持っている人がいれば「受付を終える」（持っている人のものはそのまま）
+      if (c.t === "retire") {
+        if (card.by !== e.pubkey) continue;
+        if (!card.copies.length) card.gone = true; else card.closed = true;
+        card.queue = []; ok(e, "retire"); continue;
+      }
 
       // 2 持つ：作った人から（数に限りがあるときは残りがあるあいだ）
       if (c.t === "hold") {
@@ -248,7 +279,7 @@
 
       // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードと、つなぐカード（常連・会員）は全額が作った人へ
       if (c.t === "tip") {
-        if (!me.member || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;
+        if (!me.member || e.pubkey === card.by || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;   // 自分のカードには投げ銭しない
         const holders = {};
         if (card.supply == null && !BUNDLE.includes(card.kind)) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
         const n = Object.values(holders).reduce((a, b) => a + b, 0);

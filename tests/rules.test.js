@@ -277,3 +277,26 @@ test("記録の要約：根は並び順によらない。どの出来事も短�
   for (const id of ids) { const p = merkleProof(ids, id); assert.ok(p.length <= 3); assert.ok(merkleCheck(id, p, root)); }
   assert.ok(!merkleCheck(sha256hex("にせ"), merkleProof(ids, ids[0]), root));
 });
+test("直す：作った人だけ。題や説明は直せて、値段・数は直せない", () => {
+  const a = ev(A, 10, {t: "card", kind: "rwa", title: "大根", price: 10, supply: 3, place: "畑"});
+  const S = reduce([...base(), a, ev(A, 11, {t: "edit", card: a.id, title: "大根（太め）", place: "畑の入口", price: 1, supply: 99}), ev(B, 12, {t: "edit", card: a.id, title: "のっとり"})], 20, opt);
+  const c = S.cards[a.id]; assert.equal(c.title, "大根（太め）"); assert.equal(c.place, "畑の入口"); assert.equal(c.price, 10); assert.equal(c.supply, 3); assert.equal(c.edits, 1);
+});
+test("取り下げる：だれも持っていなければ消える。持っている人がいれば受付を終える（持っている人のものは残る）", () => {
+  const a = ev(A, 10, {t: "card", kind: "text", title: "下書き", price: 0}), b = ev(A, 11, {t: "card", kind: "text", title: "持たれた", price: 5});
+  const S = reduce([...base(), a, b, ev(B, 12, {t: "hold", card: b.id}), ev(A, 13, {t: "retire", card: a.id}), ev(A, 14, {t: "retire", card: b.id}), ev(C, 15, {t: "hold", card: b.id}), ev(C, 16, {t: "comment", card: a.id, text: "x"}), ev(B, 17, {t: "retire", card: b.id})], 20, opt);
+  assert.ok(S.cards[a.id].gone); assert.ok(S.cards[b.id].closed); assert.equal(S.cards[b.id].copies.length, 1); assert.equal(S.cards[b.id].copies[0].owner, B);
+  assert.equal(S.cards[a.id].talk.length, 0);
+});
+test("会話は書いた人が消せる。輪は本人が抜けられ、作った人が外せる（作った人は抜けない）", () => {
+  const a = ev(A, 10, {t: "card", kind: "text", title: "t", price: 0}), cm = ev(B, 11, {t: "comment", card: a.id, text: "やあ"});
+  const ci = ev(A, 12, {t: "circle", name: "輪", members: [B, C]});
+  const S = reduce([...base(), a, cm, ev(C, 13, {t: "uncomment", comment: cm.id}), ev(B, 14, {t: "uncomment", comment: cm.id}), ci,
+    ev(B, 15, {t: "circle-leave", circle: ci.id}), ev(C, 16, {t: "circle-remove", circle: ci.id, who: A}), ev(A, 17, {t: "circle-leave", circle: ci.id}), ev(A, 18, {t: "circle-remove", circle: ci.id, who: C})], 30, opt);
+  assert.ok(S.comments[cm.id].removed); assert.deepEqual(S.circles[ci.id].members, [A]);
+});
+test("自分のカードには投げ銭できない。取り下げたカードはつなげない", () => {
+  const a = ev(A, 10, {t: "card", kind: "text", title: "t", price: 0}), pj = ev(A, 11, {t: "card", kind: "project", title: "pj", price: 0});
+  const S = reduce([...base(), a, pj, ev(A, 12, {t: "tip", card: a.id, amount: 10}), ev(A, 13, {t: "retire", card: a.id}), ev(A, 14, {t: "attach", project: pj.id, card: a.id})], 20, opt);
+  assert.equal(S.users[A].bal, 1000); assert.equal(S.cards[a.id].tipped, 0); assert.equal(S.cards[pj.id].items.length, 0);
+});
