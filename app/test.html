@@ -196,8 +196,25 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .over .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
 .over .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
+.warnc{color:var(--warn)!important}
+.talk{display:grid;gap:8px;max-height:46dvh;overflow:auto;align-content:start}
+.cm{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:14px}
+.cm b{font-size:13px} .cm p{margin:2px 0 0;line-height:1.7;overflow-wrap:anywhere}
+.cm .hb{font-size:10px;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf)}
+.cm .link{border:0;background:none;padding:2px 0;font-size:11px;text-decoration:underline}
+.cm.hid{color:var(--mute);font-size:12px}
+.say{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.say textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-height:44px;max-height:120px;resize:vertical;min-width:0}
+.chat .bub{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:14px;justify-self:start;overflow-wrap:anywhere}
+.chat .bub.me{justify-self:end;background:var(--leaf-soft)}
+.call{display:grid;justify-items:center;gap:10px;padding:24px 0}
+.pav2{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:var(--leaf-soft);color:var(--leaf);font-size:32px;font-weight:700;animation:shine 2.4s ease-in-out infinite}
+.mini{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:8px 0;text-align:left;font-size:14px}
+.mini:first-of-type{border-top:0}
+.mini span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .mini small{color:var(--mute);font-size:12px}
+.pj .link{border:0;background:none;padding:6px 0;color:var(--leaf);font-size:13px;text-decoration:underline}
 .form{display:grid;gap:10px}
-.guide{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;border:1px dashed var(--gold);background:var(--card);color:var(--gold);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;min-height:34px;box-shadow:0 6px 18px -8px rgba(0,0,0,.6)}
+.guide{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:24;border:1px dashed var(--gold);background:var(--card);color:var(--gold);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;min-height:34px;box-shadow:0 6px 18px -8px rgba(0,0,0,.6)}
 .gl{display:grid;gap:8px}
 .gi{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .gi .n{width:24px;height:24px;border-radius:50%;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center;font-size:12px;font-weight:700}
@@ -256,6 +273,9 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
   <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></symbol>
   <symbol id="i-picture" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 6-5 4 3 3-2 4 3"/></symbol>
   <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 19l1-4L16 5l3 3L9 18Z"/><path d="M14 7l3 3"/></symbol>
+  <symbol id="i-project" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="20" r="2"/><path d="M7 7l3 3M17 7l-3 3M12 15v3"/></symbol>
+  <symbol id="i-talk" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
   <symbol id="i-other" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></symbol>
   <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="6.5" r="2"/><circle cx="7" cy="15" r="2"/><circle cx="17" cy="15" r="2"/></symbol>
   <symbol id="i-mine" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M14 15.5a2.6 2.6 0 1 0 0-5"/></symbol>
@@ -279,9 +299,10 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 //
 // jeni の5つのきまり
 //  1 はじまり：認められて参加すると、決まった量の jeni が届く（jeni が新しく生まれるのはここだけ）
-//  2 持つ　　：作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わらない
+//  2 持つ　　：持つと、カードに書かれたものを受け取れる。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わらない
+//             （デジタルは元のデータを何度でも。現物はそのものを1回。受け取るとなくなるものは「使った」になる）
 //  3 譲る　　：数に限りのあるカードは、持っている人から同じ値段で譲り受ける。jeni は手放した人へ
-//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードは全額が作った人へ
+//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。受け取るとなくなるもの（数に限りのあるカード）は全額が作った人へ
 //  5 上限　　：同じカードは3枚まで（無料のカードは1枚まで）。使うか贈ると、また持てる
 "use strict";
 (function (root) {
@@ -295,8 +316,11 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
     futureSkew: 600,    // 未来の時刻の出来事は、この秒数より先なら無視する
     saleMax: 600,       // その場で売るカードの QR が使える長さ（秒）の上限
     founders: [],       // 最初の人たち（だれにも認められずに参加できる）。試験のはじめに決める
+    flagsToHide: 2,     // 危ないカード・会話を隠すのに要る知らせの数（実績のある別々の人から）
+    redeemMax: 600,     // 現物を引き換える QR が使える長さ（秒）の上限
+    commentMax: 500,
   };
-  const KINDS = ["rwa", "music", "video", "picture", "text", "other"];
+  const KINDS = ["rwa", "music", "video", "picture", "text", "project", "other"];
   const isHex = (s, n) => typeof s === "string" && new RegExp(`^[0-9a-f]{${n}}$`).test(s);
   const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
@@ -328,8 +352,11 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
     const founders = new Set(opt.founders || R.founders);
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
-    const S = {users: {}, cards: {}, circles: {}, log: []};
-    const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null});
+    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: []};
+    const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: []});
+    // 実績：持った・持たれた・譲った・譲られたことが1回でもある人（知らせを出せるのはこの人たち）
+    const trusted = pk => S.users[pk] && S.users[pk].member && S.users[pk].deals >= 1;
+    const flagsOf = (o, pk) => { o.flags = o.flags || []; if (o.flags.includes(pk)) return false; o.flags.push(pk); if (o.flags.length >= R.flagsToHide) o.hidden = true; return true; };
     // カード1枚ずつ（copy）を持ち主ごとに数える。used：使った（受け取った）もの。from：作った人から持ったか、譲り受けたか
     const holdsOf = (c, pk) => c.copies.filter(x => x.owner === pk && !x.used);
     const cap = c => c.price ? R.capPaid : R.capFree;
@@ -355,6 +382,28 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         me.vouched.push(c.who); join(c.who, t, e.pubkey); ok(e, "vouch"); continue;
       }
 
+      // 友達：相手のプロフィールカードを持つ（無料・1人1枚）。お互いに友達なら、2人だけで話せる
+      if (c.t === "friend" || c.t === "unfriend") {
+        if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || !U(c.who).member) continue;
+        me.friends = me.friends.filter(x => x !== c.who); if (c.t === "friend") me.friends.push(c.who);
+        ok(e, c.t); continue;
+      }
+      // 会話：カードの公開の会話（コメント）。参加している人だけ。輪のカードは輪の人だけ
+      if (c.t === "comment") {
+        const card = S.cards[c.card], text = str(c.text, R.commentMax).trim();
+        if (!card || card.hidden || !me.member || !text) continue;
+        if (card.circle && !S.circles[card.circle].members.includes(e.pubkey)) continue;
+        const cm = {id: e.id, card: card.id, by: e.pubkey, at: t, text, holder: holdsOf(card, e.pubkey).length > 0, flags: [], hidden: false};
+        S.comments[e.id] = cm; (card.talk = card.talk || []).push(e.id); ok(e, "comment"); continue;
+      }
+      // 危ないものを知らせる：実績のある別々の人2人で、カードや会話が隠れる。自分のものには出せない
+      if (c.t === "flag") {
+        if (!trusted(e.pubkey)) continue;
+        const target = c.card ? S.cards[c.card] : c.comment ? S.comments[c.comment] : null;
+        if (!target || target.by === e.pubkey) continue;
+        if (flagsOf(target, e.pubkey)) ok(e, "flag"); continue;
+      }
+
       // 仲間の輪：作った人と、選ばれた人たち。輪の中のカードの中身は、輪の鍵で封をして置く（外からは読めない）
       if (c.t === "circle") {
         if (!Array.isArray(c.members) || c.members.length > 50 || !c.members.every(m => isHex(m, 64))) continue;
@@ -372,7 +421,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const supply = c.supply == null ? null : (int(c.supply, 1, 100000) ? c.supply : undefined);
         if (supply === undefined) continue;
         const card = {id: e.id, by: e.pubkey, at: t, kind: c.kind, title: str(c.title, 80), body: str(c.body, 2000), media: str(c.media, 300),
-          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null, issued: 0};
+          price: c.price, supply, copies: [], queue: [], tips: 0, tipped: 0, refunds: 0, circle: null, issued: 0, talk: [], items: [], flags: [], hidden: false};
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.lock !== undefined) {
@@ -382,8 +431,19 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         S.cards[e.id] = card; ok(e, "card"); continue;
       }
 
+      // プロジェクトを育てる：自分のカードを、プロジェクトのカードにつなぐ。外すのは、つないだ人かプロジェクトを作った人
+      if (c.t === "attach" || c.t === "detach") {
+        const pj = S.cards[c.project], it = S.cards[c.card];
+        if (!pj || !it || pj.kind !== "project" || pj.hidden || it.hidden || !me.member || pj.id === it.id) continue;
+        if (pj.circle && !S.circles[pj.circle].members.includes(e.pubkey)) continue;
+        if (c.t === "attach") { if (it.by !== e.pubkey || pj.items.some(x => x.card === it.id)) continue; pj.items.push({card: it.id, by: e.pubkey, at: t}); }
+        else { const i = pj.items.findIndex(x => x.card === it.id); if (i < 0 || (pj.by !== e.pubkey && pj.items[i].by !== e.pubkey)) continue; pj.items.splice(i, 1); }
+        ok(e, c.t); continue;
+      }
+
       const card = S.cards[c.card];
       if (!card) continue;
+      if (card.hidden && ["hold", "want", "tip"].includes(c.t)) continue;   // 隠されたカードは、新しく持てない・投げ銭できない
 
       // 2 持つ：作った人から（数に限りがあるときは残りがあるあいだ）
       if (c.t === "hold") {
@@ -394,7 +454,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         // 持ち方：show＝みんなに見せる、hide＝画面に出さない（記録を調べれば分かる）、lock＝何を持ったかに鍵（数に限りのないカードだけ。投げ銭の分け前は受け取らない）
         const vis = ["show", "hide", "lock"].includes(c.vis) ? c.vis : "show";
         if (vis === "lock" && card.supply != null) continue;
-        pay(e.pubkey, card.by, card.price);
+        pay(e.pubkey, card.by, card.price); me.deals++; U(card.by).deals++;
         card.copies.push({owner: e.pubkey, fromCreator: true, paid: card.price, at: t, used: card.handover ? t : null, vis}); card.issued++;
         card.queue = card.queue.filter(p => p !== e.pubkey);
         ok(e, "hold"); continue;
@@ -411,8 +471,8 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const to = c.to, mine = holdsOf(card, e.pubkey);
         if (!mine.length || !card.queue.includes(to) || !U(to).member) continue;
         if (holdsOf(card, to).length >= cap(card) || U(to).bal < card.price) continue;
-        pay(to, e.pubkey, card.price);
-        Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t, vis: "show"});
+        pay(to, e.pubkey, card.price); me.deals++; U(to).deals++;
+        Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t, vis: "show", redeem: null});
         card.queue = card.queue.filter(p => p !== to); ok(e, "pass"); continue;
       }
 
@@ -428,14 +488,21 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         const to = c.to, mine = holdsOf(card, e.pubkey);
         if (!mine.length || !isHex(to, 64) || to === e.pubkey || to === card.by || !U(to).member) continue;
         if (holdsOf(card, to).length >= cap(card)) continue;
-        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t, vis: "show"}); ok(e, "gift"); continue;
+        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t, vis: "show", redeem: null}); ok(e, "gift"); continue;
       }
 
       // 使う：現物を受け取ったことを、作った人が記録する（その1枚は「使った」になり、上限が空く）
+      // 現物の引き換え：持っている人が、その場限りの QR（番号の要約と期限）を出す。作った人がそれを読んだときだけ「使った」になる
+      // （作った人が勝手に「渡した」ことにして、持っている人の受け取りを消せないように）
+      if (c.t === "redeem") {
+        if (card.supply == null || card.handover) continue;
+        const x = holdsOf(card, e.pubkey)[0]; if (!x || !isHex(c.lock, 64) || !int(c.until, t, t + R.redeemMax)) continue;
+        x.redeem = {lock: c.lock, until: c.until}; continue;
+      }
       if (c.t === "used") {
-        if (e.pubkey !== card.by) continue;
-        const x = holdsOf(card, c.holder)[0]; if (!x) continue;
-        x.used = t; ok(e, "used"); continue;
+        if (e.pubkey !== card.by || typeof c.code !== "string") continue;
+        const x = holdsOf(card, c.holder).find(y => y.redeem && t <= y.redeem.until && sha256hex(c.code) === y.redeem.lock); if (!x) continue;
+        x.used = t; x.redeem = null; ok(e, "used"); continue;
       }
 
       // 返す：売った人だけが、作った人から持った人へ、その人がまだ持っているあいだだけ、払った額を返す
@@ -530,7 +597,7 @@ const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 const COIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 50 48"><path d="M24 42c-1-1.4-1.6-2.6-1.8-3.6-2.3.5-4.6.2-6.6-1-2.3-1.4-3.8-3.7-4.2-6.3-2-.1-3.9-1.1-5.1-2.8-1.3-1.8-1.7-4-1.1-6.1-1.6-1.2-2.6-3-2.6-5C2.6 11.4 12 5.5 24 5.5s21.4 5.9 21.4 11.7c0 2-1 3.8-2.6 5 .6 2.1.2 4.3-1.1 6.1-1.2 1.7-3.1 2.7-5.1 2.8-.4 2.6-1.9 4.9-4.2 6.3-2 1.2-4.3 1.5-6.6 1-.2 1-.8 2.2-1.8 3.6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><g transform="translate(24 21.5) scale(.118) translate(-100 -103)" stroke="currentColor" fill="none" stroke-linecap="round"><path d="M 115,45 V 140 C 115,170 70,170 70,140" stroke-width="20"/><line x1="56" y1="82" x2="141" y2="82" stroke-width="17"/><line x1="56" y1="112" x2="141" y2="112" stroke-width="17"/></g></svg>`;
 const coin = (cls = "") => COIN.replace("<svg ", `<svg class="coin ${cls}" aria-hidden="true" `);
 const G = "M0,1.0000 A1.0000,1.0000 0 0 1 1.0000,0.0000 A0.6180,0.6180 0 0 1 1.6180,0.6180 A0.3820,0.3820 0 0 1 1.2361,1.0000 A0.2361,0.2361 0 0 1 1.0000,0.7639 A0.1459,0.1459 0 0 1 1.1459,0.6180 A0.0902,0.0902 0 0 1 1.2361,0.7082 A0.0557,0.0557 0 0 1 1.1803,0.7639 A0.0344,0.0344 0 0 1 1.1459,0.7295 A0.0213,0.0213 0 0 1 1.1672,0.7082 A0.0132,0.0132 0 0 1 1.1803,0.7214 A0.0081,0.0081 0 0 1 1.1722,0.7295 A0.0050,0.0050 0 0 1 1.1672,0.7245", PHI = (1 + Math.sqrt(5)) / 2;
-const KIND = {rwa: "現物", music: "音楽", video: "動画", picture: "写真", text: "文章", other: "そのほか"};
+const KIND = {rwa: "現物", music: "音楽", video: "動画", picture: "写真", text: "文章", project: "プロジェクト", other: "そのほか"};
 
 /* ---- 見本の人たちと、はじめの記録（この画面の中だけ。どこにも送らない） ---- */
 const P = {
@@ -545,13 +612,14 @@ const nameOf = pk => (S.users[pk] && S.users[pk].name) || (byPk[pk] && byPk[pk].
 const FOUNDERS = [P.kenji.pk];
 const MEDIA = {};   // カードの中身（写真・音・本文）。本物では、輪のカードは鍵で封をしてから置く
 let EV = [], seq = 0, clock = 0, S = null, me = P.kenji.pk;
+const CHAT = {}; const pairKey = (a, b) => [a, b].sort().join(":");
 function emit(who, c) {
   clock += 30;
   const e = {id: String(++seq).padStart(6, "0"), pubkey: who, created_at: clock, kind: 7720, content: JSON.stringify(c)};
   EV.push(e); S = reduce(EV, clock, {founders: FOUNDERS}); return e;
 }
 function seed() {
-  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k];
+  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k]; for (const k in CHAT) delete CHAT[k];
   const {kenji: A, farmer: B, haru: C, sound: D} = P;
   for (const p of [A, B, C, D]) emit(p.pk, {t: "profile", name: p.name});
   emit(A.pk, {t: "vouch", who: B.pk}); emit(A.pk, {t: "vouch", who: C.pk}); emit(B.pk, {t: "vouch", who: D.pk});
@@ -572,7 +640,18 @@ function seed() {
   emit(C.pk, {t: "tip", card: waves, amount: 20});
   const ci = emit(B.pk, {t: "circle", name: "畑の仲間", members: [A.pk, C.pk]}).id;
   card(B, {kind: "text", title: "来週の種まきの段取り", price: 0, circle: ci, body: "土曜の朝7時に畑の入口で。大根と小かぶの種をまきます。手袋だけ持ってきてください。雨なら日曜に。"}, {note: "畑の仲間だけに見えるお知らせ。"});
-  void radish; void soil; void bread; void rain;
+  // 友達（お互い）と、カードの会話
+  emit(A.pk, {t: "friend", who: B.pk}); emit(B.pk, {t: "friend", who: A.pk}); emit(C.pk, {t: "friend", who: A.pk});
+  emit(C.pk, {t: "comment", card: waves, text: "朝の仕込みのときに流しています。"});
+  emit(A.pk, {t: "comment", card: paddy, text: "この光、見に行きたくなりました。"});
+  emit(B.pk, {t: "comment", card: paddy, text: "冬至のころがいちばんきれいです。"});
+  // プロジェクト：みんなの種の地図。自分のカードをつなげて育てる
+  const pj = card(B, {kind: "project", title: "みんなの種の地図", price: 0, body: "在来の種を、だれがどこで育てているかを地図にしていくプロジェクト。写真や記録のカードをつないでください。"}, {note: "つながったカードと会話で、少しずつ育てています。"});
+  emit(B.pk, {t: "attach", project: pj, card: paddy}); emit(B.pk, {t: "attach", project: pj, card: soil});
+  emit(C.pk, {t: "comment", card: pj, text: "うちの酵母の元になった小麦の産地も載せたいです。"});
+  // 2人だけの会話（見本。本物では2人の鍵で封をしてから置く）
+  CHAT[pairKey(A.pk, B.pk)] = [{by: B.pk, text: "大根、来週もとれそうです。", at: clock - 600}, {by: A.pk, text: "土曜に受け取りに行きます。", at: clock - 300}];
+  void radish; void bread; void rain;
 }
 
 /* ---- 黄金らせんの印・地の模様・QR ---- */
@@ -630,6 +709,7 @@ function holdBtn(c) {
 const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["circle", "仲間の輪"]];
 function visibleCards() {
   return Object.values(S.cards).filter(canSee).filter(c => !c.lock || c.by === me || mine(c).length || c.copies.some(x => x.owner === me))
+    .filter(c => !c.hidden || c.by === me || c.copies.some(x => x.owner === me))
     .filter(c => field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
 }
 function home() {
@@ -655,7 +735,7 @@ function home() {
 }
 
 /* ---- カードの見た目 ---- */
-const PAPER = {music: ["#22283d", "#0f1220", "l"], text: ["#fffdf7", "#efe3d1", "d"], picture: ["#f4f1ea", "#ddd5c4", "d"], rwa: ["#f3f6ea", "#d9e3cc", "d"], video: ["#1b1f2e", "#0d0f18", "l"], other: ["#f4f1ea", "#ddd5c4", "d"]};
+const PAPER = {project: ["#eef1f6", "#cfd8e6", "d"], music: ["#22283d", "#0f1220", "l"], text: ["#fffdf7", "#efe3d1", "d"], picture: ["#f4f1ea", "#ddd5c4", "d"], rwa: ["#f3f6ea", "#d9e3cc", "d"], video: ["#1b1f2e", "#0d0f18", "l"], other: ["#f4f1ea", "#ddd5c4", "d"]};
 function cardHtml(c, held) {
   const m = MEDIA[c.id] || {}, bg = m.img && c.kind !== "music" ? `<img class="bgimg" src="${m.img}" alt="" data-probe>` : "";
   const pp = PAPER[c.kind] || PAPER.text, ink = bg ? "l" : pp[2];
@@ -724,7 +804,11 @@ function pageHtml(c) {
   else if (lim && !c.left && !my.length) main = c.queue.includes(me) ? `<button type="button" class="pill" data-unwant="${c.id}">順番待ちをやめる</button>` : lpBtn("want", c.id, "長押しで順番を待つ", "go");
   else if (my.length >= capOf(c)) main = `<span class="sub">持っている（${capOf(c)}枚まで）</span>`;
   else main = lpBtn("hold", c.id, `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go");
-  const text = c.kind === "text" ? `<p class="body">${esc(c.body)}</p>` : "";
+  if (c.hidden) main = `<span class="sub warnc">知らせが${RULE.flagsToHide}件あり、隠されました</span>`;
+  const canRedeem = lim && !c.handover && my.some(x => !x.used);
+  const text = c.kind === "text" || c.kind === "project" ? `<p class="body">${esc(c.body)}</p>` : "";
+  const items = c.kind === "project" ? `<section class="box pj"><h3>つながったカード ${c.items.length}</h3>${c.items.map(x => S.cards[x.card]).filter(Boolean).filter(canSee).map(it => `<button type="button" class="mini" data-detail="${it.id}">${icon(kindIcon(it.kind))}<span>${esc(it.title)}</span><small>${esc(nameOf(it.by))}</small></button>`).join("") || `<p class="sub">まだありません</p>`}
+      ${u.member ? `<button type="button" class="link" data-attachask="${c.id}">自分のカードをつなぐ</button>` : ""}</section>` : "";
   return `<section class="pg" id="pg-${c.id}" data-pg="${c.id}">
     ${cardHtml(c, my.length > 0)}
     <div class="acts2"><span class="mine">${isMe ? "自分のカード" : my.length ? `持っている ${my.length}` : ""}</span>
@@ -732,7 +816,9 @@ function pageHtml(c) {
     <div class="tipbox" id="tip-${c.id}" hidden></div>
     ${isMe ? "" : `<p class="fline">${flowLine(c)}</p>`}
     ${m.note ? `<p class="note1">${esc(m.note)}</p>` : ""}${text}
-    <div class="minor"><button type="button" class="link" data-rec="${c.id}">記録</button>${my.length && my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : my.length ? `<span>・${VIS.lock}</span>` : ""}${my.length ? `<span>・</span><span class="sub">持つと元のデータ（圧縮していないもの）を受け取れます</span>` : ""}</div>
+    ${items}
+    ${canRedeem ? `<button type="button" class="pill go" data-redeem="${c.id}">引き換える（QRを出す）</button>` : ""}
+    <div class="minor"><button type="button" class="link" data-talk="${c.id}">会話 ${(c.talk || []).filter(x => !S.comments[x].hidden).length}</button><span>・</span><button type="button" class="link" data-person="${c.by}">${esc(nameOf(c.by))}</button><span>・</span><button type="button" class="link" data-rec="${c.id}">記録</button>${my.length && my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : my.length ? `<span>・${VIS.lock}</span>` : ""}${my.length ? `<span>・</span><span class="sub">持つと元のデータ（圧縮していないもの）を受け取れます</span>` : ""}</div>
   </section>`;
 }
 let feedIds = [];
@@ -772,7 +858,6 @@ function holdersHtml(c) {
   const show = [], hide = []; let lock = 0;
   for (const [pk, xs] of Object.entries(by)) { const v = xs[0].vis || "show"; if (v === "lock") lock++; else if (v === "hide" && pk !== me && c.by !== me) hide.push(pk); else show.push([pk, xs.length, v]); }
   const rows = show.map(([pk, n, v]) => `<div class="who-row"><span>${esc(nameOf(pk))}${pk === me ? "（わたし）" : ""}${v === "hide" ? "・画面に出さない" : ""}${c.handover ? "・受け取り済み" : ""}</span>${n > 1 ? `${n}枚` : ""}
-     ${c.by === me && c.supply != null && !c.handover ? `<button type="button" class="pill" data-used="${pk}">受け取った</button>` : ""}
      ${c.by === me && c.copies.some(x => x.owner === pk && x.fromCreator && (!x.used || c.handover)) ? `<button type="button" class="pill warn" data-refund="${pk}">返す</button>` : ""}</div>`).join("");
   const extra = (hide.length ? `<div class="who-row"><span>ほか ${hide.length}人（画面に出さない）</span></div>` : "") + (lock ? `<div class="who-row"><span>${icon("lock")} 鍵をかけて持っている人は、人数に入りません</span></div>` : "");
   return rows || extra ? rows + extra : `<div class="who-row"><span>まだいません</span></div>`;
@@ -785,10 +870,74 @@ function recSheet(id) {
   if (c.circle) rec.push(["見える人", `${esc(S.circles[c.circle].name)}（${S.circles[c.circle].members.length}人）`]);
   if (c.refunds) rec.push(["返した", c.refunds + "回"]);
   const acts = my.length ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
+  const u2 = S.users[me] || {}, canFlag = u2.member && u2.deals >= 1 && c.by !== me && !c.flags.includes(me);
   openOver(`<h2 class="rh">${esc(c.title || "その場のカード")}</h2>${acts}
     <section class="box"><h3>持っている人</h3>${holdersHtml(c)}</section>
-    <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>`);
+    <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>
+    ${canFlag ? `<button type="button" class="link warnc" data-flagcard="${id}">危ないカードとして知らせる</button><p class="sub" style="font-size:11px">実績のある別々の人${RULE.flagsToHide}人から知らせが届くと、カードが隠れます。</p>` : c.flags.includes(me) ? `<p class="sub">知らせました（${c.flags.length}/${RULE.flagsToHide}）</p>` : ""}`);
   sel = id;
+}
+/* ---- 会話（カードの公開の会話） ---- */
+function talkSheet(id) {
+  const c = S.cards[id], u = S.users[me] || {}, canFlag = u.member && u.deals >= 1;
+  const can = u.member && !c.hidden && canSee(c);
+  const list = (c.talk || []).map(x => S.comments[x]);
+  openOver(`<h2 class="rh">会話：${esc(c.title)}</h2>
+    <div class="talk">${list.length ? list.map(cm => cm.hidden ? `<div class="cm hid">知らせが${RULE.flagsToHide}件あり、隠されました</div>`
+      : `<div class="cm"><b>${esc(nameOf(cm.by))}</b>${cm.holder ? `<span class="hb">持っている</span>` : ""}${cm.by === c.by ? `<span class="hb">作った人</span>` : ""}<p>${esc(cm.text)}</p>
+        ${canFlag && cm.by !== me && !cm.flags.includes(me) ? `<button type="button" class="link warnc" data-flagcm="${cm.id}">知らせる</button>` : ""}</div>`).join("") : `<p class="sub">まだ会話はありません</p>`}</div>
+    ${can ? `<div class="say"><textarea id="t-text" maxlength="${RULE.commentMax}" placeholder="${c.circle ? "輪の人にだけ見えます" : "だれでも読めます"}"></textarea><button type="button" class="pill go" data-say="${id}">送る</button></div>` : `<p class="sub">${u.member ? "" : "参加すると書けます"}</p>`}`);
+  sel = id;
+  const t = $("over").querySelector(".talk"); if (t) t.scrollTop = t.scrollHeight;
+}
+/* ---- 人のカード：友達になる・2人で話す（お互いに友達のときだけ） ---- */
+function personCard(pk) {
+  if (pk === me) return meCard();
+  const u = S.users[pk] || {}, mu = S.users[me] || {}, p = byPk[pk] || {};
+  const iFriend = (mu.friends || []).includes(pk), theyFriend = (u.friends || []).includes(me), mutual = iFriend && theyFriend;
+  const theirs = Object.values(S.cards).filter(c => c.by === pk && canSee(c) && !c.hidden && !c.lock).sort((a, b) => b.at - a.at);
+  const av = PICS[pk] ? `<div class="pav" style="background:url('${PICS[pk]}') center/cover"></div>` : `<div class="pav">${esc(nameOf(pk).slice(0, 1))}</div>`;
+  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
+    <div class="jc2"><div class="in"><div class="face" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#f3f6ea,#d9e3cc)"></div>${gfield(.7)}<div class="shade"></div>
+      <div class="jno">jeni プロフィール</div>${av}
+      <div class="txt"><div class="k">${esc(u.line || p.line || "")}</div><div class="t">${esc(nameOf(pk))}</div><div class="by">${theyFriend ? "あなたを友達にしています" : ""}</div></div></div></div></div>
+    <div class="acts2">${mu.member && u.member ? (iFriend ? `<button type="button" class="pill" data-unfriend="${pk}">友達をやめる</button>` : `<button type="button" class="pill go" data-friend="${pk}">友達になる</button>`) : ""}
+      ${mutual ? `<button type="button" class="pill go" data-chat="${pk}">${icon("talk")}話す</button>` : ""}</div>
+    <p class="fline">${mutual ? "お互いに友達なので、2人だけで話せます（鍵つき）。" : "お互いに友達になると、2人だけで話せます。知らない人からいきなり話しかけられないように。"}</p>
+    <section class="box"><h3>${esc(nameOf(pk))} さんのカード ${theirs.length}</h3>${theirs.map(c => `<button type="button" class="mini" data-detail="${c.id}">${icon(kindIcon(c.kind))}<span>${esc(c.title)}</span><small>${c.price ? c.price + " jeni" : "無料"}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>`);
+}
+function chatSheet(pk) {
+  const k = pairKey(me, pk), msgs = CHAT[k] || [];
+  openOver(`<h2 class="rh">${esc(nameOf(pk))} さんと</h2><p class="sub" style="font-size:11px">${icon("lock")} 2人の鍵で封をして置きます。ほかの人には読めません（この見本の画面では、どこにも送りません）。</p>
+    <div class="talk chat">${msgs.map(m => `<div class="bub${m.by === me ? " me" : ""}">${esc(m.text)}</div>`).join("") || `<p class="sub">まだ話していません</p>`}</div>
+    <div class="say"><textarea id="c-text" maxlength="1000" placeholder="メッセージ"></textarea><button type="button" class="pill go" data-send="${pk}">送る</button></div>
+    <button type="button" class="pill" data-call="${pk}">${icon("phone")}通話する</button>`);
+  const t = $("over").querySelector(".talk"); if (t) t.scrollTop = t.scrollHeight;
+}
+let callT = null;
+function callSheet(pk) {
+  const start = Date.now();
+  openOver(`<div class="call"><div class="pav2">${esc(nameOf(pk).slice(0, 1))}</div><b>${esc(nameOf(pk))}</b><span class="sub" id="call-s">呼び出しています…（見本・つながない）</span>
+    <button type="button" class="pill warn" data-hang="${pk}">終える</button></div>`);
+  clearTimeout(callT); callT = setTimeout(() => { const el = $("call-s"); if (el) el.textContent = "話しています（見本）。本物では、2人の端末を直接つなぎます"; }, 1500);
+  void start;
+}
+/* ---- 引き換え：持っている人がその場限りの QR を出し、作った人（お店）が読む ---- */
+let RD = null;
+function redeemSheet(id) {
+  const c = S.cards[id];
+  const code = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, "0")).join("");
+  emit(me, {t: "redeem", card: id, lock: sha256hex(code), until: clock + 300});
+  RD = {id, code, holder: me};
+  openOver(`<h2 class="rh">引き換える</h2><p class="sub">お店（作った人）に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
+    <div class="qrbox"><div class="qrwrap">${qrSvg(`jeni:redeem:${id}:${code}`, "q")}</div><b>${esc(c.title)}</b></div>
+    <button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（お店）として読む</button>`);
+}
+function attachAsk(pid) {
+  const pj = S.cards[pid], own = Object.values(S.cards).filter(c => c.by === me && c.id !== pid && !c.hidden && !pj.items.some(x => x.card === c.id));
+  openOver(`<h2 class="rh">自分のカードをつなぐ</h2><p class="sub">「${esc(pj.title)}」に、あなたのカードをつなぎます。つないだカードはそのまま、あなたのものです。</p>
+    <section class="box">${own.map(c => `<div class="who-row"><span>${esc(c.title)}</span><button type="button" class="pill go" data-attach="${c.id}">つなぐ</button></div>`).join("") || `<div class="who-row"><span>つなげる自分のカードがありません</span></div>`}</section>`);
+  sel = pid;
 }
 function pickPerson(title, id, act, people, note) {
   openOver(`<h2 class="rh">${title}</h2>${note ? `<p class="sub">${note}</p>` : ""}
@@ -947,11 +1096,12 @@ function rules() {
     <h2 class="rh">${coin()} jeni のきまり</h2>
     <ol class="rules">
       <li><b>はじまり</b>認められて参加すると、${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認められるのは${RULE.vouchMax}人まで。</li>
-      <li><b>持つ</b>作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
+      <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。デジタルは元のデータを何度でも、現物はそのものを1回。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
       <li><b>譲る</b>数に限りのあるカードは、持っている人から同じ値段で譲り受けます。jeni は手放した人へ戻ります。</li>
-      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。数に限りのあるカードは、全額が作った人へ。</li>
+      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。受け取るとなくなるもの（現物など数に限りのあるカード）は、全額が作った人へ。</li>
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
     </ol>
+    <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話は、お互いに友達のときだけ。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物は、持っている人が出す一度きりのQRをお店が読んで引き換えます。</p>
     <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残ります（名前ではなく番号で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身は、輪の人にしか読めません。</p>
     <p class="rnote"><b>配る量について</b>　配る量や配り方は、使われ方を見て変わることがあります。変わるときも全員に同じきまりが同じように当てはまり、前もって知らせます。jeni は円と交換できず、値段は作った人が決めるので、配る量の大きさそのものに意味はありません。</p>
     <p class="rnote"><b>運営のサーバーはありません</b>　記録は、参加している人みんなで持ち合います。どこか1か所が止まっても、jeni は止まりません。</p>`);
@@ -976,12 +1126,17 @@ player.addEventListener("ended", () => { const id = playing; playing = ""; if ($
 const AS = name => P[name].pk;
 const cardBy = t => Object.values(S.cards).find(c => c.title === t);
 const GUIDE = [
+  ["カードの会話", "カードの下の「会話」から。だれでも読めて、参加している人が書けます。持っている人・作った人には印。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); talkSheet(cardBy("夜明けの田んぼ").id); }],
+  ["友達と2人の会話・通話", "作った人の名前を押すと、その人のカード。お互いに友達なら「話す」と通話（見本）。", () => { me = AS("kenji"); personCard(AS("farmer")); }],
+  ["プロジェクトを育てる", "プロジェクトのカードに、自分のカードをつなげていきます。会話で進めます。", () => { me = AS("haru"); detail(cardBy("みんなの種の地図").id); }],
+  ["現物の引き換え", "持っている人が一度きりのQRを出し、お店が読むと「使った」に。お店が勝手に渡したことにはできません。", () => { me = AS("kenji"); detail(cardBy("天然酵母カンパーニュ").id); }],
+  ["危ないものを知らせる", "記録や会話から。実績のある別々の人2人の知らせで隠れます。", () => { me = AS("kenji"); detail(cardBy("土を耕すということ").id); recSheet(cardBy("土を耕すということ").id); }],
   ["カードは1枚ずつ、上下にめくる", "上下にめくると次のカード。右へスワイプで戻る。一覧では左右のスワイプで項目が切り替わる。「全画面」でカードだけに。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["カードの中で再生", "音楽・動画はカードの再生ボタンで、そのまま。写真は押すと大きく。文章はカードの下に全部。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
   ["長押しで持つ・投げ銭", "押しているあいだカードの印が描かれていき、描き終わると持てます（1秒）。はなすと元に戻ります。", () => { me = AS("kenji"); detail(cardBy("雨の作業小屋").id); }],
   ["中身はだれでも全部", "持つ前でも全部見られます（旧 jeni と同じ）。持つと、元のデータ（圧縮していないもの）を受け取れます。", () => { me = AS("sound"); detail(cardBy("土を耕すということ").id); }],
   ["持っている印が光る", "持っているカードにだけ黄金らせんの印。印を押すと裏返ってQR。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
-  ["記録は下から", "持っている人・譲る・贈る・受け取り・返すは「記録」にまとめました。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); recSheet(cardBy("天然酵母カンパーニュ").id); }],
+  ["記録は下から", "持っている人・譲る・贈る・返すは「記録」にまとめました。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); recSheet(cardBy("天然酵母カンパーニュ").id); }],
   ["見せ方はプロフィールで", "持つたびに選ぶのをやめ、プロフィールで決めておく形に。持ったあとも「見せ方」で変えられます。", () => { me = AS("kenji"); meCard(true); }],
   ["その場で売る", "写真と値段で、一度きりのQR。残り時間は数字ではなく金の線で。", () => { me = AS("kenji"); MK.mode = "sale"; make(); }],
   ["参加すると貝が現れる", "まだ参加していない人のQRを読んで認めると、1,000 jeni が届きます。", () => { me = AS("yuzu"); meCard(); }],
@@ -1034,6 +1189,21 @@ document.addEventListener("click", e => {
   if ((b = q(".jc2.on")) && !q(".mark")) { b.classList.remove("on"); return; }
   if ((b = q("[data-cplay]"))) return cplay(b.dataset.cplay);
   if ((b = q("[data-rec]"))) return recSheet(b.dataset.rec);
+  if ((b = q("[data-talk]"))) return talkSheet(b.dataset.talk);
+  if ((b = q("[data-say]"))) { const id = b.dataset.say, text = ($("t-text").value || "").trim(); if (!text) return toast("書いてから送ってください"); emit(me, {t: "comment", card: id, text}); refreshPage(id); return talkSheet(id); }
+  if ((b = q("[data-flagcm]"))) { const cm = S.comments[b.dataset.flagcm]; emit(me, {t: "flag", comment: cm.id}); toast("知らせました"); refreshPage(cm.card); return talkSheet(cm.card); }
+  if ((b = q("[data-flagcard]"))) { const id = b.dataset.flagcard; emit(me, {t: "flag", card: id}); toast(S.cards[id].hidden ? "知らせが2件そろい、カードが隠れました" : "知らせました"); if ($("pg-" + id)) refreshPage(id); return recSheet(id); }
+  if ((b = q("[data-person]"))) { closeOver(); return personCard(b.dataset.person); }
+  if ((b = q("[data-friend]"))) { emit(me, {t: "friend", who: b.dataset.friend}); toast("友達になりました"); return personCard(b.dataset.friend); }
+  if ((b = q("[data-unfriend]"))) { emit(me, {t: "unfriend", who: b.dataset.unfriend}); return personCard(b.dataset.unfriend); }
+  if ((b = q("[data-chat]"))) return chatSheet(b.dataset.chat);
+  if ((b = q("[data-send]"))) { const pk = b.dataset.send, text = ($("c-text").value || "").trim(); if (!text) return; const k = pairKey(me, pk); (CHAT[k] = CHAT[k] || []).push({by: me, text, at: clock}); return chatSheet(pk); }
+  if ((b = q("[data-call]"))) return callSheet(b.dataset.call);
+  if ((b = q("[data-hang]"))) { clearTimeout(callT); toast("通話を終えました"); return chatSheet(b.dataset.hang); }
+  if ((b = q("[data-redeem]"))) return redeemSheet(b.dataset.redeem);
+  if ((b = q("[data-shopread]"))) { const id = b.dataset.shopread, c = S.cards[id]; emit(c.by, {t: "used", card: id, holder: RD.holder, code: RD.code}); const ok = S.cards[id].copies.some(x => x.owner === RD.holder && x.used); closeOver(); refreshPage(id); return toast(ok ? "引き換えました（このカードは「使った」になり、また持てます）" : "引き換えられませんでした"); }
+  if ((b = q("[data-attachask]"))) return attachAsk(b.dataset.attachask);
+  if ((b = q("[data-attach]"))) { const pid = sel; emit(me, {t: "attach", project: pid, card: b.dataset.attach}); closeOver(); refreshPage(pid); return toast("つなぎました"); }
   if ((b = q("[data-vis]"))) { const c = S.cards[b.dataset.vis], v = mine(c)[0].vis === "hide" ? "show" : "hide"; emit(me, {t: "vis", card: c.id, vis: v}); refreshPage(c.id); return toast(`見せ方：${VIS[v]}`); }
   if (q("[data-imm]")) { const on = !$("sheet").classList.contains("imm"); $("sheet").classList.toggle("imm", on); q("[data-imm]").setAttribute("aria-pressed", on); q("[data-imm]").textContent = on ? "もどす" : "全画面";
     try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {} return; }
@@ -1105,5 +1275,5 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.classList && e.target.classList.contains("line")) detail(e.target.dataset.detail);
 });
 seed(); home();
-window.__jt = {get S() { return S; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK};
+window.__jt = {get S() { return S; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK, person: pk => personCard(pk)};
 </script>

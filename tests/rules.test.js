@@ -81,7 +81,7 @@ test("使う：作った人が受け取りを記録すると、その1枚は使�
   const card = ev(A, 10, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 10});
   const e = [...base(), card];
   for (let i = 0; i < 3; i++) e.push(ev(B, 11 + i, {t: "hold", card: card.id}));
-  e.push(ev(B, 15, {t: "hold", card: card.id}), ev(A, 16, {t: "used", card: card.id, holder: B}), ev(B, 17, {t: "hold", card: card.id}));
+  e.push(ev(B, 15, {t: "hold", card: card.id}), ev(B, 15, {t: "redeem", card: card.id, lock: sha256hex("x1"), until: 300}), ev(A, 16, {t: "used", card: card.id, holder: B, code: "x1"}), ev(B, 17, {t: "hold", card: card.id}));
   const S = reduce(e, 20, opt);
   assert.equal(S.cards[card.id].copies.filter(x => x.owner === B && !x.used).length, 3);
   assert.equal(S.cards[card.id].copies.length, 4);
@@ -181,4 +181,45 @@ test("見せ方を変える：見せる⇔画面に出さないは変えられ�
     ev(B, 13, {t: "vis", card: card.id, vis: "hide"}), ev(C, 14, {t: "vis", card: card.id, vis: "show"}), ev(D, 15, {t: "vis", card: card.id, vis: "hide"})], 20, opt);
   assert.equal(S.cards[card.id].copies.find(x => x.owner === B).vis, "hide");
   assert.equal(S.cards[card.id].copies.find(x => x.owner === C).vis, "lock");
+});
+
+test("引き換え：持っている人が出した QR の番号を、作った人が期限内に読んだときだけ「使った」になる", () => {
+  const card = ev(A, 10, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 5});
+  const e = [...base(), card, ev(B, 11, {t: "hold", card: card.id})];
+  let S = reduce([...e, ev(A, 12, {t: "used", card: card.id, holder: B, code: "勝手に"})], 50, opt);
+  assert.ok(!S.cards[card.id].copies[0].used);                              // 作った人が勝手に「渡した」ことにはできない
+  S = reduce([...e, ev(B, 12, {t: "redeem", card: card.id, lock: sha256hex("abc"), until: 100}), ev(A, 13, {t: "used", card: card.id, holder: B, code: "ちがう"})], 50, opt);
+  assert.ok(!S.cards[card.id].copies[0].used);
+  S = reduce([...e, ev(B, 12, {t: "redeem", card: card.id, lock: sha256hex("abc"), until: 100}), ev(A, 101, {t: "used", card: card.id, holder: B, code: "abc"})], 200, opt);
+  assert.ok(!S.cards[card.id].copies[0].used);                              // 期限切れ
+  S = reduce([...e, ev(B, 12, {t: "redeem", card: card.id, lock: sha256hex("abc"), until: 100}), ev(A, 13, {t: "used", card: card.id, holder: B, code: "abc"})], 50, opt);
+  assert.ok(S.cards[card.id].copies[0].used);
+});
+test("会話：参加している人だけ書ける。輪のカードは輪の人だけ", () => {
+  const card = ev(A, 10, {t: "card", kind: "music", title: "曲", price: 10});
+  const ci = ev(B, 11, {t: "circle", name: "輪", members: [A]}), inner = ev(B, 12, {t: "card", kind: "text", title: "輪の中", price: 0, circle: ci.id});
+  const S = reduce([...base(), card, ci, inner, ev(B, 13, {t: "comment", card: card.id, text: "いい音"}), ev(E, 14, {t: "comment", card: card.id, text: "参加していない"}),
+    ev(C, 15, {t: "comment", card: inner.id, text: "輪の外"}), ev(A, 16, {t: "comment", card: inner.id, text: "輪の中から"}), ev(B, 17, {t: "comment", card: card.id, text: "   "})], 20, opt);
+  assert.deepEqual(S.cards[card.id].talk.map(id => S.comments[id].text), ["いい音"]);
+  assert.deepEqual(S.cards[inner.id].talk.map(id => S.comments[id].text), ["輪の中から"]);
+});
+test("危ないものを知らせる：実績のある別々の人2人で隠れる。実績のない人・自分のもの・同じ人の2回は数えない。隠れたカードは持てない", () => {
+  const bad = ev(D, 20, {t: "card", kind: "text", title: "あやしい", price: 5});
+  const deal = ev(A, 10, {t: "card", kind: "text", title: "ふつう", price: 1});
+  const e = [...base(), ev(A, 5, {t: "vouch", who: D}), deal, bad, ev(B, 11, {t: "hold", card: deal.id})];
+  let S = reduce([...e, ev(C, 21, {t: "flag", card: bad.id}), ev(B, 22, {t: "flag", card: bad.id}), ev(B, 23, {t: "flag", card: bad.id}), ev(D, 24, {t: "flag", card: bad.id})], 50, opt);
+  assert.ok(!S.cards[bad.id].hidden);                                         // C は実績なし、B は1回、D は自分のもの
+  S = reduce([...e, ev(B, 22, {t: "flag", card: bad.id}), ev(A, 23, {t: "flag", card: bad.id}), ev(C, 24, {t: "hold", card: bad.id})], 50, opt);
+  assert.ok(S.cards[bad.id].hidden); assert.equal(S.cards[bad.id].copies.length, 0);
+});
+test("友達：お互いに友達になれる。参加していない人とはなれない", () => {
+  const S = reduce([...base(), ev(B, 10, {t: "friend", who: C}), ev(C, 11, {t: "friend", who: B}), ev(B, 12, {t: "friend", who: E}), ev(C, 13, {t: "unfriend", who: B})], 20, opt);
+  assert.deepEqual(S.users[B].friends, [C]); assert.deepEqual(S.users[C].friends, []);
+});
+test("プロジェクト：自分のカードだけをつなげる。外せるのはつないだ人かプロジェクトを作った人", () => {
+  const pj = ev(A, 10, {t: "card", kind: "project", title: "種の地図", price: 0});
+  const mineB = ev(B, 11, {t: "card", kind: "picture", title: "Bの写真", price: 0}), mineC = ev(C, 12, {t: "card", kind: "text", title: "Cの文", price: 0});
+  let S = reduce([...base(), pj, mineB, mineC, ev(B, 13, {t: "attach", project: pj.id, card: mineB.id}), ev(B, 14, {t: "attach", project: pj.id, card: mineC.id}),
+    ev(C, 15, {t: "attach", project: pj.id, card: mineC.id}), ev(C, 16, {t: "detach", project: pj.id, card: mineB.id}), ev(A, 17, {t: "detach", project: pj.id, card: mineC.id})], 30, opt);
+  assert.deepEqual(S.cards[pj.id].items.map(x => x.card), [mineB.id]);
 });

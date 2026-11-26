@@ -115,9 +115,51 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/joined-${w}.png`});
     check(tag + " 合計は 参加人数×1000 のまま", await total());
     await p.click("#sheet [data-close]");
-    // 変わったところ：11項目それぞれ押すと画面が開く
-    const want = [/Ambient|雨の作業小屋/, /畑の一日/, /長押しで持つ|持っている/, /小さな道ができました/, /特製スパイスカレー/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
-    for (let i = 0; i < 11; i++) {
+    // 会話：書くと会話に出る
+    await p.selectOption("#who", K("a"));
+    const paddy2 = await id("夜明けの田んぼ");
+    await p.evaluate(id => __jt.detail(id), paddy2); await p.click(`#pg-${paddy2} [data-talk]`); await p.waitForTimeout(200);
+    check(tag + " 会話が読める（持っている・作った人の印）", (await p.textContent("#over")).includes("冬至のころ") && (await p.textContent("#over")).includes("作った人"));
+    await p.fill("#t-text", "来年の春に行きます"); await p.click("[data-say]"); await p.waitForTimeout(200);
+    check(tag + " 会話を書ける", (await p.textContent("#over")).includes("来年の春に行きます"));
+    if (SHOT) await p.screenshot({path: `${SHOT}/talk-${w}.png`});
+    await p.click("[data-overclose]");
+    // 人のカード：お互いに友達なら話せる・通話（見本）
+    await p.click(`#pg-${paddy2} [data-person]`); await p.waitForTimeout(200);
+    check(tag + " お互いに友達なら「話す」", !!(await p.$("[data-chat]")));
+    await p.click("[data-chat]"); await p.fill("#c-text", "土曜はよろしく"); await p.click("[data-send]"); await p.waitForTimeout(150);
+    check(tag + " 2人の会話を送れる", (await p.textContent("#over")).includes("土曜はよろしく"));
+    if (SHOT) await p.screenshot({path: `${SHOT}/chat-${w}.png`});
+    await p.click("[data-call]"); await p.waitForTimeout(200);
+    check(tag + " 通話の画面（見本）", (await p.textContent("#over")).includes("終える"));
+    await p.click("[data-hang]"); await p.click("[data-overclose]"); await p.click("#sheet [data-close]");
+    // 友達でない人とは話せない（SoundArchitect は Kenji を友達にしていない）
+    await p.evaluate(() => __jt.person(__jt.P.sound.pk)); await p.waitForTimeout(150);
+    check(tag + " お互いに友達でなければ「話す」は出ない", !(await p.$("[data-chat]")));
+    await p.click("#sheet [data-close]");
+    // 現物の引き換え：持っている人が QR を出し、お店が読む
+    const bread2 = await id("天然酵母カンパーニュ");
+    await p.evaluate(id => __jt.detail(id), bread2); await p.click(`#pg-${bread2} [data-redeem]`); await p.waitForTimeout(200);
+    check(tag + " 引き換えの一度きりの QR", !!(await p.$("#over .qrwrap svg")));
+    if (SHOT) await p.screenshot({path: `${SHOT}/redeem-${w}.png`});
+    const usedBefore = await p.evaluate(id => __jt.S.cards[id].copies.filter(x => x.used).length, bread2);
+    await p.click("[data-shopread]"); await p.waitForTimeout(200);
+    check(tag + " お店が読むと「使った」になる", await p.evaluate(id => __jt.S.cards[id].copies.filter(x => x.used).length, bread2) === usedBefore + 1);
+    // プロジェクト：自分のカードをつなぐ
+    await p.selectOption("#who", K("c"));
+    const pj = await id("みんなの種の地図");
+    await p.evaluate(id => __jt.detail(id), pj); await p.click(`#pg-${pj} [data-attachask]`); await p.click("[data-attach]"); await p.waitForTimeout(200);
+    check(tag + " プロジェクトに自分のカードをつなげる", await p.evaluate(id => __jt.S.cards[id].items.length, pj) === 3);
+    if (SHOT) await p.screenshot({path: `${SHOT}/project-${w}.png`});
+    await p.click("#sheet [data-close]");
+    // 危ないカード：実績のある2人で隠れる
+    const soil2 = await id("土を耕すということ");
+    for (const who of ["a", "c"]) { await p.selectOption("#who", K(who)); await p.evaluate(id => __jt.detail(id), soil2); await p.click(`#pg-${soil2} [data-rec]`); await p.click("[data-flagcard]"); await p.waitForTimeout(150); await p.click("[data-overclose]"); await p.click("#sheet [data-close]"); }
+    check(tag + " 実績のある2人の知らせでカードが隠れる", await p.evaluate(id => __jt.S.cards[id].hidden, soil2) && !(await p.textContent("#home .list")).includes("土を耕す"));
+    await p.selectOption("#who", K("a"));
+    // 変わったところ：それぞれ押すと画面が開く
+    const want = [/会話/, /友達|話す/, /みんなの種の地図/, /天然酵母/, /記録/, /Ambient|雨の作業小屋/, /畑の一日/, /長押しで持つ|持っている/, /小さな道ができました/, /特製スパイスカレー/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
+    for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
       check(`${tag} 変わったところ ${i + 1}`, want[i].test(txt) && !(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
