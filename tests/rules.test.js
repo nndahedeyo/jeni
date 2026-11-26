@@ -229,3 +229,19 @@ test("プロジェクトの「求めているもの」と状態：状態を変�
   const S = reduce([...base(), pj, ev(B, 11, {t: "pjstate", project: pj.id, state: "done"}), ev(A, 12, {t: "pjstate", project: pj.id, state: "prep"}), ev(A, 13, {t: "pjstate", project: pj.id, state: "へん"})], 20, opt);
   assert.equal(S.cards[pj.id].want, "写真"); assert.equal(S.cards[pj.id].state, "prep");
 });
+test("イベント：定員（数）がないと出せない。日時・場所が残り、持つ＝参加券（定員まで）", () => {
+  const noCap = ev(A, 10, {t: "card", kind: "event", title: "定員なし", price: 10, when: "12月14日"});
+  const evt = ev(A, 11, {t: "card", kind: "event", title: "収穫体験", price: 10, supply: 1, when: "12月14日 9:00", place: "千葉の畑"});
+  const S = reduce([...base(), noCap, evt, ev(B, 12, {t: "hold", card: evt.id}), ev(C, 13, {t: "hold", card: evt.id})], 20, opt);
+  assert.ok(!S.cards[noCap.id]); assert.equal(S.cards[evt.id].when, "12月14日 9:00"); assert.equal(S.cards[evt.id].place, "千葉の畑");
+  assert.equal(S.cards[evt.id].copies.length, 1); assert.equal(S.cards[evt.id].left, 0);
+});
+test("お店・会社や団体：つなげるのは作った人の自分のカードだけ。プロジェクトはだれでも自分のカードを", () => {
+  const shop = ev(A, 10, {t: "card", kind: "shop", title: "Aの店", price: 0, when: "火〜土", place: "東京"});
+  const org = ev(A, 11, {t: "card", kind: "org", title: "Aの会", price: 0});
+  const a1 = ev(A, 12, {t: "card", kind: "rwa", title: "パン", price: 10, supply: 3}), b1 = ev(B, 13, {t: "card", kind: "picture", title: "Bの写真", price: 0});
+  const S = reduce([...base(), shop, org, a1, b1, ev(A, 14, {t: "attach", project: shop.id, card: a1.id}), ev(B, 15, {t: "attach", project: shop.id, card: b1.id}),
+    ev(A, 16, {t: "attach", project: org.id, card: shop.id}), ev(B, 17, {t: "attach", project: org.id, card: b1.id}), ev(A, 18, {t: "attach", project: shop.id, card: shop.id})], 30, opt);
+  assert.deepEqual(S.cards[shop.id].items.map(x => x.card), [a1.id]); assert.deepEqual(S.cards[org.id].items.map(x => x.card), [shop.id]);
+  assert.equal(S.cards[shop.id].place, "東京");
+});

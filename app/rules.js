@@ -24,7 +24,9 @@
     redeemMax: 600,     // 現物を引き換える QR が使える長さ（秒）の上限
     commentMax: 500,
   };
-  const KINDS = ["rwa", "music", "video", "picture", "text", "project", "app", "other"];   // app：持つと使えるアプリ（持っているかは、アプリの側が署名で確かめる）
+  const KINDS = ["rwa", "event", "music", "video", "picture", "text", "app", "shop", "org", "project", "other"];
+  // つなぐカード：ほかのカードを束ねる。プロジェクトはだれでも自分のカードをつなげる。お店・会社や団体は、作った人だけが自分のカードをつなぐ
+  const BUNDLE = ["project", "shop", "org"];   // app：持つと使えるアプリ（持っているかは、アプリの側が署名で確かめる）
   const isHex = (s, n) => typeof s === "string" && new RegExp(`^[0-9a-f]{${n}}$`).test(s);
   const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
@@ -129,6 +131,8 @@
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.kind === "project") { card.want = str(c.want, 200); card.state = "doing"; }
+        if (c.kind === "event") { if (supply == null) continue; card.when = str(c.when, 60); card.place = str(c.place, 100); }   // イベントは定員（数）がいる。持つ＝参加券
+        if (c.kind === "shop") { card.when = str(c.when, 60); card.place = str(c.place, 100); }   // お店：営業の日と時間・場所
         if (c.lock !== undefined) {
           if (!isHex(c.lock, 64) || !int(c.until, t, t + R.saleMax) || supply !== 1) continue;
           card.lock = c.lock; card.until = c.until; card.handover = true;
@@ -139,7 +143,8 @@
       // プロジェクトを育てる：自分のカードを、プロジェクトのカードにつなぐ。外すのは、つないだ人かプロジェクトを作った人
       if (c.t === "attach" || c.t === "detach") {
         const pj = S.cards[c.project], it = S.cards[c.card];
-        if (!pj || !it || pj.kind !== "project" || pj.hidden || it.hidden || !me.member || pj.id === it.id) continue;
+        if (!pj || !it || !BUNDLE.includes(pj.kind) || pj.hidden || it.hidden || !me.member || pj.id === it.id) continue;
+        if (c.t === "attach" && pj.kind !== "project" && pj.by !== e.pubkey) continue;
         if (pj.circle && !S.circles[pj.circle].members.includes(e.pubkey)) continue;
         if (c.t === "attach") { if (it.by !== e.pubkey || pj.items.some(x => x.card === it.id)) continue; pj.items.push({card: it.id, by: e.pubkey, at: t}); }
         else { const i = pj.items.findIndex(x => x.card === it.id); if (i < 0 || (pj.by !== e.pubkey && pj.items[i].by !== e.pubkey)) continue; pj.items.splice(i, 1); }
@@ -247,6 +252,6 @@
     return S;
   }
 
-  const api = {R, KINDS, reduce, sha256hex};
+  const api = {R, KINDS, BUNDLE, reduce, sha256hex};
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.JeniRules = api;
 })(typeof self !== "undefined" ? self : this);
