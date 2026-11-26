@@ -57,18 +57,16 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .menu-w .make{flex:0 0 auto;width:max(34px, calc((100% - 28px) / 7.5));aspect-ratio:1;border:0;border-radius:12px;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;padding:0}
 .me-r{margin-left:auto;display:grid;justify-items:end;gap:4px}
 .me-line{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media (max-width:360px){.me{padding:12px 12px 8px;gap:4px}.pmark svg{width:42px;height:auto}.cb{width:26px;height:26px}.comm{gap:2px}.me-top .av{width:34px;height:34px}.me-name{font-size:15px}.bal{font-size:15px}}
+@media (max-width:360px){.mods span{display:none}.mods button{padding:0 7px}.me{padding:12px 12px 8px;gap:4px}.pmark svg{width:42px;height:auto}.cb{width:26px;height:26px}.comm{gap:2px}.me-top .av{width:34px;height:34px}.me-name{font-size:15px}.bal{font-size:15px}}
 .me-r .bal{margin-left:0}
 .comm{display:flex;gap:6px}
 .cb{position:relative;width:30px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}.cb svg.i{width:17px;height:17px}
 .cb b{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:#e0604f}
 .menu button{aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}
 .menu button[aria-pressed="true"]{background:var(--leaf);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
-.mrow{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:-4px;min-width:0}
-.mcap{font-size:10px;line-height:1.2;color:var(--mute);opacity:.85;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.mods{display:flex;gap:4px;flex:none}.mods button{width:22px;height:18px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}.mods svg.i{width:12px;height:12px}
-.mods button[aria-pressed="true"]{background:var(--gold);border-color:transparent;color:var(--gold-ink)}.mods button[data-mod="fav"][aria-pressed="true"] svg.i{fill:currentColor}
-.menu button{position:relative}.menu.m-fav button::after,.menu.m-near button::after{content:"";position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--gold)}.mcap b{color:var(--leaf);font-weight:700}
+.mcap{font-size:10px;line-height:1.2;color:var(--mute);opacity:.85;padding:0 2px;margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mods{display:flex;gap:4px;align-self:end;margin-right:auto;min-width:0;flex-wrap:nowrap}.mods button{display:inline-flex;align-items:center;gap:3px;height:24px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--mute);padding:0 8px 0 6px;font:inherit;font-size:11px;white-space:nowrap}.mods svg.i{width:13px;height:13px}
+.mods button[aria-pressed="true"]{background:var(--leaf);border-color:transparent;color:#fff}.mods button[data-mod="fav"][aria-pressed="true"] svg.i{fill:currentColor}
 .dist{flex:none;font-weight:700;color:var(--leaf);font-size:11px;margin-right:2px;white-space:nowrap}
 .fv svg.i{fill:#e0a92e;stroke:#e0a92e}
 .cap{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);padding:0 4px}
@@ -205,7 +203,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .recv{display:flex;flex-wrap:wrap;gap:8px}
 .basic{display:grid;gap:4px}.basic .bl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;font-weight:600}.basic .bl .coin{width:15px;height:15px;vertical-align:-3px;margin-right:2px}.basic .fline{margin:0}
 .tipc{display:inline-flex;align-items:stretch;border-radius:999px;overflow:hidden;border:1px solid var(--line)}.tipc .tipamt{border:0;background:var(--card);color:var(--ink);font:inherit;font-weight:700;min-width:40px;padding:0 10px;border-right:1px solid var(--line)}.tipc .lp{border-radius:0;border:0}
-.more{border-top:1px solid var(--line);padding-top:6px}.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);padding:6px 2px}.more>summary::-webkit-details-marker{display:none}.more>summary::after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);margin-left:2px;transition:transform .2s}.more[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}.more[open]{display:grid;gap:10px}
+.more{padding-top:2px}.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);padding:6px 2px}.more>summary::-webkit-details-marker{display:none}.more>summary::after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);margin-left:2px;transition:transform .2s}.more[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}.more[open]{display:grid;gap:10px}
 .own{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .minor{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12px;color:var(--mute)}
 button.link{border:0;background:none;color:var(--leaf);text-decoration:underline;text-underline-offset:3px;padding:6px 0;font:inherit;font-size:13px;cursor:pointer}
@@ -521,7 +519,7 @@ function holdBtn(c) {
 // 項目：1枚のもの → つなぐもの → 仲間の輪（見える範囲）。作る画面も同じ並び
 // 項目：よく見るもの（メディア）を手前に。☆（お気に入り）と 近く は項目ではなく、どの項目にも重ねてかけられる「しぼり」
 const FIELDS = [["all", "すべて"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["rwa", "現物"], ["event", "イベント"], ["service", "体験・サービス"], ["app", "アプリ"], ["shop", "お店"], ["org", "会社・団体"], ["project", "プロジェクト"], ["circle", "仲間の輪"]];
-const MOD = {fav: false, near: false};
+const MOD = {mine: false, fav: false, near: false};   // しぼり：持っている・お気に入り・近く（いくつでも重ねられる）
 // 現在地（見本は東京駅のあたり）。本物では端末の位置を使い、どこにも送らない
 const HERE = [35.681, 139.767], NEAR_KM = 60;
 const kmTo = g => { const r = Math.PI / 180, x = (g[1] - HERE[1]) * r * Math.cos((g[0] + HERE[0]) / 2 * r), y = (g[0] - HERE[0]) * r; return Math.sqrt(x * x + y * y) * 6371; };
@@ -530,7 +528,7 @@ function visibleCards(all = false) {
   return Object.values(S.cards).filter(c => !c.gone).filter(canSee).filter(c => !c.lock || c.by === me || mine(c).length || c.copies.some(x => x.owner === me))
     .filter(c => !c.hidden || c.by === me || c.copies.some(x => x.owner === me))
     .filter(c => all || field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field)
-    .filter(c => all || ((!MOD.fav || isFav(c.id)) && (!MOD.near || (c.geo && kmTo(c.geo) <= NEAR_KM))))
+    .filter(c => all || ((!MOD.mine || c.copies.some(x => x.owner === me)) && (!MOD.fav || isFav(c.id)) && (!MOD.near || (c.geo && kmTo(c.geo) <= NEAR_KM))))
     .sort((a, b) => !all && MOD.near ? kmTo(a.geo) - kmTo(b.geo) : b.at - a.at);
 }
 visibleCards.all = () => visibleCards(true);
@@ -545,16 +543,15 @@ function home() {
         <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc((S.users[me] && S.users[me].line) || p.line) : "まだ参加していません"}</div></div>
         <div class="me-r"><button type="button" class="bal" data-rules title="jeni のきまり">${coin()}<span id="balv">${u.bal.toLocaleString("ja-JP")}</span><small>jeni</small></button>
           ${u.member ? `<div class="comm">${FX.map(f => { const n = f.dot(); return `<button type="button" class="cb" data-fx="${f.k}" aria-label="${f.l}${n ? "（新しい知らせあり）" : ""}" title="${f.l}">${icon(f.i)}${n ? `<b aria-hidden="true"></b>` : ""}</button>`; }).join("")}</div>` : ""}</div></div>
-      <div class="me-mid"><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
-      <div class="menu-w"><nav class="menu${MOD.fav ? " m-fav" : ""}${MOD.near ? " m-near" : ""}" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav><button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></div>
-      <div class="mrow"><div class="mcap" aria-live="polite">${FIELDS.find(f => f[0] === field)[1]}${MOD.fav ? "・☆" : ""}${MOD.near ? "・近い順" : ""}・${list.length}枚${field === "circle" ? "・輪の人だけ" : ""}</div>
-        <div class="mods"><button type="button" data-mod="fav" aria-pressed="${MOD.fav}" aria-label="お気に入りだけ（あなただけに見えます）" title="お気に入りだけ">${icon("fav")}</button><button type="button" data-mod="near" aria-pressed="${MOD.near}" aria-label="近くだけ・近い順（現在地はどこにも送りません）" title="近く">${icon("near")}</button></div></div>
+      <div class="me-mid"><div class="mods" role="group" aria-label="しぼり（いくつでも重ねられます）">${[["mine", "hold", "持っている"], ["fav", "fav", "お気に入り"], ["near", "near", "近く"]].map(([k, i, l]) => `<button type="button" data-mod="${k}" aria-pressed="${MOD[k]}">${icon(i)}<span>${l}</span></button>`).join("")}</div><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
+      <div class="menu-w"><nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav><button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></div>
+      <div class="mcap" aria-live="polite">${FIELDS.find(f => f[0] === field)[1]}${MOD.mine ? "・持っている" : ""}${MOD.fav ? "・お気に入り" : ""}${MOD.near ? "・近い順" : ""}・${list.length}枚${field === "circle" ? "・輪の人だけ" : ""}</div>
     </section>
     ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
     <main class="list">${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
       ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
-      : `<p class="empty">${(MOD.fav ? "カードの右上の☆で、お気に入りに入れられます" : MOD.near ? "近くに場所のあるカードはありません" : field === "circle" ? "入っている仲間の輪のカードはありません" : "まだカードがありません")}</p>`}</main>`;
+      : `<p class="empty">${(MOD.mine && !MOD.fav && !MOD.near ? "持っているカードはまだありません" : MOD.fav ? "カードの右上の☆で、お気に入りに入れられます" : MOD.near ? "近くに場所のあるカードはありません" : field === "circle" ? "入っている仲間の輪のカードはありません" : "まだカードがありません")}</p>`}</main>`;
   // 横に滑る並び：前の位置を保ち、選んだ項目が隠れていたら見える所まで滑らせる
   const m = document.querySelector("#home .menu"); if (m) { m.scrollLeft = mx; const sb = m.querySelector('[aria-pressed="true"]');
     if (sb && (sb.offsetLeft < m.scrollLeft || sb.offsetLeft + sb.offsetWidth > m.scrollLeft + m.clientWidth - 18)) m.scrollTo({left: sb.offsetLeft - (m.clientWidth - sb.offsetWidth) / 2, behavior: m0 ? "smooth" : "auto"}); }
@@ -670,14 +667,15 @@ function pageHtml(c) {
     <div class="acts2"><button type="button" class="who" data-person="${c.by}" aria-label="${esc(nameOf(c.by))} さんのカード">${avatar(c.by)}<span>${isMe ? "わたし" : esc(nameOf(c.by))}</span></button>${tip}${main}</div>
     <div class="basic"><div class="bl">${basic.map(x => `<span>${x}</span>`).join("")}</div>
       ${isMe ? "" : `<p class="fline">${flowLine(c)}</p>`}
-      <div class="minor"><button type="button" class="link" data-rec="${c.id}">記録</button>${my.length ? `<span>・持っている ${my.length}</span>` : ""}${my.length && my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : my.length ? `<span>・${VIS.lock}</span>` : ""}</div></div>
+      ${my.length ? `<div class="minor"><span>持っている ${my.length}</span>${my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : `<span>・${VIS.lock}</span>`}</div>` : ""}</div>
     ${recv ? `<div class="recv">${recv}</div>` : ""}
     ${own}
-    ${special ? `<details class="more" data-more="${c.id}" ${OPENED.has(c.id) ? "open" : ""}><summary>くわしく</summary>${special}</details>` : ""}
+    <details class="more" data-more="${c.id}" ${OPENED.has(c.id) ? "open" : ""}><summary>くわしく・記録</summary>${special}${OPENED.has(c.id) ? `<div class="recb">${recBody(c.id)}</div>` : ""}</details>
   </section>`;
 }
 const OPENED = new Set(); let RETIRE = null;
-document.addEventListener("toggle", e => { const d = e.target; if (d.dataset && d.dataset.more) { if (d.open) OPENED.add(d.dataset.more); else OPENED.delete(d.dataset.more); } }, true);
+document.addEventListener("toggle", e => { const d = e.target; if (!d.dataset || !d.dataset.more) return; const id = d.dataset.more;
+  if (d.open) { OPENED.add(id); if (!d.querySelector(".recb")) d.insertAdjacentHTML("beforeend", `<div class="recb">${recBody(id)}</div>`); } else OPENED.delete(id); }, true);
 // 直す：作った人だけ。題・説明・日時・場所・地図の点・求めているもの・画像（値段・数・種類は直せない）
 function editSheet(id) {
   const c = S.cards[id], m = MEDIA[id] || {}; ED.id = id; ED.img = m.img || ""; ED.geo = c.geo || null;
@@ -728,7 +726,7 @@ function holdersHtml(c) {
   const extra = (hide.length ? `<div class="who-row"><span>ほか ${hide.length}人（画面に出さない）</span></div>` : "") + (lock ? `<div class="who-row"><span>${icon("lock")} 鍵をかけて持っている人は、人数に入りません</span></div>` : "");
   return rows || extra ? rows + extra : `<div class="who-row"><span>まだいません</span></div>`;
 }
-function recSheet(id) {
+function recBody(id) {
   const c = S.cards[id], m = MEDIA[id] || {}, my = mine(c);
   const rec = [["作った人", whoTag(c.by)], ["持っている人", c.holders + "人"], ["投げ銭", `${c.tipped}回・${c.tips} jeni`]];
   if (c.supply != null) rec.push(["残り", `${c.left} / ${c.supply}`]);
@@ -740,12 +738,13 @@ function recSheet(id) {
   rec.push(["刻んだ記録", pf && pf.ok ? `ビットコインに刻んだ ${pf.a.day}日目の要約に入っています（証明 ${pf.n}段）` : "次の要約で刻まれます"]);
   const acts = my.length && !KEEP[c.kind] ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
   const u2 = S.users[me] || {}, canFlag = u2.member && u2.deals >= 1 && c.by !== me && !c.flags.includes(me);
-  openOver(`<h2 class="rh">${esc(c.title || "その場のカード")}</h2>${acts}
+  return `${acts}
     <section class="box"><h3>${KEEP[c.kind] ? KEEP[c.kind][0] + "の人" : "持っている人"}</h3>${holdersHtml(c)}</section>
     <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>
-    ${canFlag ? `<button type="button" class="link warnc" data-flagcard="${id}">危ないカードとして知らせる</button><p class="sub" style="font-size:11px">実績のある別々の人${RULE.flagsToHide}人から知らせが届くと、カードが隠れます。</p>` : c.flags.includes(me) ? `<p class="sub">知らせました（${c.flags.length}/${RULE.flagsToHide}）</p>` : ""}`);
-  sel = id;
+    ${canFlag ? `<button type="button" class="link warnc" data-flagcard="${id}">危ないカードとして知らせる</button><p class="sub" style="font-size:11px">実績のある別々の人${RULE.flagsToHide}人から知らせが届くと、カードが隠れます。</p>` : c.flags.includes(me) ? `<p class="sub">知らせました（${c.flags.length}/${RULE.flagsToHide}）</p>` : ""}`;
 }
+// 記録は「くわしく」の中（開いて、そこまで動かす）
+function recSheet(id) { OPENED.add(id); sel = id; detail(id); const d = document.querySelector(`#pg-${id} .more`); if (d) { d.open = true; d.scrollIntoView({block: "start"}); } }
 /* ---- 会話（カードの公開の会話） ---- */
 function talkSheet(id) {
   const c = S.cards[id], u = S.users[me] || {}, canFlag = u.member && u.deals >= 1;
@@ -1109,9 +1108,9 @@ player.addEventListener("ended", () => { const id = playing; playing = ""; if ($
 const AS = name => P[name].pk;
 const cardBy = t => Object.values(S.cards).find(c => c.title === t);
 const GUIDE = [
-  ["☆と近くは、どの項目にもかけられる", "アイコンの下の右の☆（お気に入りだけ）と、場所の印（近くだけ・近い順）。かけているあいだは、どのアイコンにも小さな印が付きます。", () => { me = AS("kenji"); field = "all"; MOD.fav = false; MOD.near = true; closeSheet(); }],
-  ["よく見るものを手前に", "並びは すべて・音楽・動画・写真・文章 → 現物・イベント・体験 → アプリ・お店・会社や団体・プロジェクト → 仲間の輪。", () => { me = AS("kenji"); MOD.near = false; field = "music"; closeSheet(); }],
-  ["カードのページ", "どのカードも同じ並び：カード → 作った人・投げ銭・持つ → 値段・残り・持っている人・jeni の行き先・記録 → 受け取る。そのカードだけの話は「くわしく」に。", () => { me = AS("kenji"); detail(cardBy("畑の収穫体験").id); }],
+  ["しぼり：持っている・お気に入り・近く", "アイコンの上の3つ。いくつでも重ねられ、どの項目にもかかります（例：持っている×音楽、お気に入り×近く×現物）。", () => { me = AS("kenji"); field = "all"; MOD.mine = true; MOD.fav = false; MOD.near = false; closeSheet(); }],
+  ["よく見るものを手前に", "並びは すべて・音楽・動画・写真・文章 → 現物・イベント・体験 → アプリ・お店・会社や団体・プロジェクト → 仲間の輪。", () => { me = AS("kenji"); MOD.mine = MOD.near = false; field = "music"; closeSheet(); }],
+  ["カードのページ", "どのカードも同じ並び：カード → 作った人・投げ銭・持つ → 値段・残り・持っている人・jeni の行き先 → 受け取る →「くわしく・記録」（そのカードだけの話と、持っている人・譲る・贈る・記録）。", () => { me = AS("kenji"); detail(cardBy("畑の収穫体験").id); }],
   ["投げ銭は1か所で", "額を押すと 1→5→10→20 と変わり（最初に届く 1,000 jeni に合わせた段）、となりを長押しで贈ります。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["全画面", "カードのページの右上「全画面」。写真・動画は画面いっぱいに、1枚ずつめくれます。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
   ["裏のQRは、カードを開くだけ", "読んだだけで jeni が動くことはありません。持つ・投げ銭は、カードを開いてから長押しで。", () => { me = AS("kenji"); detail(cardBy("朝採り大根 3本セット").id); }],
@@ -1122,8 +1121,8 @@ const GUIDE = [
   ["話す・電話・お知らせ", "残高の下に 受話器・吹き出し・鈴。知らせは小さな赤い印。相手への連絡は、相手のカードの右下から（お互いに友達のとき）。", () => { me = AS("kenji"); personCard(AS("farmer")); }],
   ["記録の控えとウォレットの場所", "わたしのカード：記録の書き出し・毎日の要約をビットコインに刻む（見本）。裏にウォレットの場所（暗号資産・開発中）。", () => { me = AS("kenji"); meCard(); }],
   ["現物・イベント・体験の受け取り", "持っている人が一度きりのQRを出し、作った人が読むと「使った」に。", () => { me = AS("kenji"); detail(cardBy("天然酵母カンパーニュ").id); }],
-  ["記録は下から", "持っている人・譲る・贈る・返す・危ないものを知らせる・刻んだ要約。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); recSheet(cardBy("天然酵母カンパーニュ").id); }],
-  ["仲間の輪", "輪の中のカードは輪の人にしか見えません。抜ける・外すは、わたしのカードから。", () => { me = AS("kenji"); MOD.near = false; field = "circle"; closeSheet(); }],
+  ["記録は「くわしく・記録」の中", "持っている人・譲る・贈る・返す・危ないものを知らせる・刻んだ要約。", () => { me = AS("haru"); recSheet(cardBy("天然酵母カンパーニュ").id); }],
+  ["仲間の輪", "輪の中のカードは輪の人にしか見えません。抜ける・外すは、わたしのカードから。", () => { me = AS("kenji"); MOD.mine = MOD.fav = MOD.near = false; field = "circle"; closeSheet(); }],
   ["jeni のきまり", "残高を押すと開きます。", () => { me = AS("kenji"); rules(); }],
 ];
 function guide() {
@@ -1142,7 +1141,7 @@ function pickMedia(src) {
 }
 document.addEventListener("change", e => {
   if (e.target.id === "m-media" && e.target.files[0]) { readMK(); return pickMedia(URL.createObjectURL(e.target.files[0])); }
-  if (e.target.id === "who") { me = e.target.value; field = "all"; MOD.fav = MOD.near = false; playing = ""; player.pause(); return home(); }
+  if (e.target.id === "who") { me = e.target.value; field = "all"; MOD.mine = MOD.fav = MOD.near = false; playing = ""; player.pause(); return home(); }
   if (e.target.id === "m-photo" && e.target.files[0]) {
     readMK(); const fr = new FileReader();
     fr.onload = () => { const im = new Image(); im.onload = () => {
@@ -1153,13 +1152,14 @@ document.addEventListener("change", e => {
   }
 });
 document.addEventListener("click", e => {
+  { const pg = e.target.closest && e.target.closest(".pg"); if (pg) sel = pg.dataset.pg; }
   const q = s => e.target.closest(s);
   let b;
   if (q("[data-reset]")) { seed(); me = P.kenji.pk; field = "all"; if (!$("sheet").hidden) closeSheet(); home(); return toast("最初の状態に戻しました"); }
   if (q("[data-guide]")) return guide();
   if ((b = q("[data-go]"))) { const g = GUIDE[+b.dataset.go]; closeSheet(); g[2](); home(); return; }
   if ((b = q("[data-f]"))) { field = b.dataset.f; return home(); }
-  if ((b = q("[data-mod]"))) { const k = b.dataset.mod; MOD[k] = !MOD[k]; home(); return toast(MOD[k] ? (k === "fav" ? "お気に入りだけ（あなただけに見えます）" : "近くだけ・近い順（見本の現在地：東京駅のあたり）") : (k === "fav" ? "お気に入りのしぼりを外しました" : "近くのしぼりを外しました")); }
+  if ((b = q("[data-mod]"))) { const k = b.dataset.mod; MOD[k] = !MOD[k]; home(); if (MOD[k] && k === "near") toast("近い順（見本の現在地：東京駅のあたり。本物では端末の位置をどこにも送りません）"); return; }
   if ((b = q("[data-fx]"))) return FX.find(f => f.k === b.dataset.fx).open();
   if (q("[data-make]")) { if (!U().member) return toast("参加すると作れます"); MK.mode = "make"; return make(); }
   if ((b = q("[data-mk]"))) { readMK(); MK.mode = b.dataset.mk;  return make(); }
