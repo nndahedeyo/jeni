@@ -175,3 +175,10 @@ test("譲ったり贈ったりしても、作った人からの残りは戻ら�
   S = reduce([...base(), card2, ev(B, 31, {t: "hold", card: card2.id}), ev(A, 32, {t: "refund", card: card2.id, holder: B}), ev(C, 33, {t: "hold", card: card2.id})], 40, opt);
   assert.equal(S.cards[card2.id].copies[0].owner, C);       // 返すと残りが戻り、ほかの人が持てる
 });
+test("見せ方を変える：見せる⇔画面に出さないは変えられる。鍵をかけたものは変えられない", () => {
+  const card = ev(A, 10, {t: "card", kind: "music", title: "曲", price: 10});
+  const S = reduce([...base(), card, ev(B, 11, {t: "hold", card: card.id}), ev(C, 12, {t: "hold", card: card.id, vis: "lock"}),
+    ev(B, 13, {t: "vis", card: card.id, vis: "hide"}), ev(C, 14, {t: "vis", card: card.id, vis: "show"}), ev(D, 15, {t: "vis", card: card.id, vis: "hide"})], 20, opt);
+  assert.equal(S.cards[card.id].copies.find(x => x.owner === B).vis, "hide");
+  assert.equal(S.cards[card.id].copies.find(x => x.owner === C).vis, "lock");
+});

@@ -5,7 +5,7 @@ import golden
 here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = os.path.join(here, "app")
 tpl = open(os.path.join(app, "test.tpl.html"), encoding="utf-8").read()
-coin = open(os.path.join(app, "coin.svg"), encoding="utf-8").read()
+coin = open(os.path.join(app, "shell.svg"), encoding="utf-8").read()
 coin = re.sub(r"<!--.*?-->", "", coin, flags=re.S)
 coin = re.sub(r'\s(width|height)="\d+"', "", coin, count=2)
 coin = " ".join(coin.split()).replace("`", "")

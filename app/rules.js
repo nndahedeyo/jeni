@@ -70,7 +70,7 @@
       // 最初の人たちは、何か出来事を出した時点で参加
       if (!me.member && founders.has(e.pubkey)) join(e.pubkey, t, null);
 
-      if (c.t === "profile") { me.name = str(c.name, 40); continue; }
+      if (c.t === "profile") { me.name = str(c.name, 40); me.line = str(c.line, 60); continue; }
 
       // 1 はじまり：参加している人が、まだの人を認める（1人3人まで）
       if (c.t === "vouch") {
@@ -138,6 +138,13 @@
         pay(to, e.pubkey, card.price);
         Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t, vis: "show"});
         card.queue = card.queue.filter(p => p !== to); ok(e, "pass"); continue;
+      }
+
+      // 見せ方を変える：みんなに見せる ⇔ 画面に出さない（鍵をかけて持ったものは変えられない。鍵を外すと何を持ったかが分かってしまうため）
+      if (c.t === "vis") {
+        if (!["show", "hide"].includes(c.vis)) continue;
+        const xs = holdsOf(card, e.pubkey).filter(x => x.vis !== "lock"); if (!xs.length) continue;
+        for (const x of xs) x.vis = c.vis; continue;
       }
 
       // 贈る：持っているカードを、参加している人へ（jeni は動かない）

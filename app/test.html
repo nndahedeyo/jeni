@@ -18,6 +18,7 @@
   --gold:#a87a1e; --gold-ink:#fffaf0; --leaf:#3f7a4c; --leaf-soft:#dde9da; --warn:#b4552a;
   --t-rwa:#e9ecdc; --t-media:#e3e4ea; --t-text:#efe3d1; color-scheme:light;}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 48px}
 .wrap{max-width:440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
@@ -152,6 +153,46 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--sunk);color:var(--ink);
   border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1}
+/* 1枚ずつ上下にめくる */
+.sheet.feed{scroll-snap-type:y mandatory;padding-top:0;padding-bottom:0}
+.sheet.feed>.wrap{gap:0}
+.ftop{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top,0px)) 0 6px;background:linear-gradient(var(--bg) 70%,transparent)}
+.ftop .sub{font-size:11px}
+.pg{min-height:calc(100dvh - 52px);scroll-snap-align:start;scroll-margin-top:52px;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:8px 0 28px}
+.pg .acts2{min-height:48px}
+.fline{margin:0 2px;font-size:12px;color:var(--mute);line-height:1.6}
+.note1{margin:0 2px;font-size:14px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pg .body{margin:0;padding:12px 14px;border-radius:14px;background:var(--t-text);font-size:14px;line-height:1.9;max-height:34dvh;overflow:auto}
+.minor{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12px;color:var(--mute)}
+.minor .link{border:0;background:none;padding:6px 0;color:var(--leaf);font-size:12px;text-decoration:underline;text-underline-offset:3px;min-height:32px}
+.tipbox{display:grid;gap:8px;padding:10px 12px;border-radius:14px;background:var(--sunk)}
+.lp{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:44px;padding:0 16px;font-weight:700;font-size:15px;white-space:nowrap;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.lp.go{background:var(--leaf);border-color:var(--leaf);color:var(--bg)}
+.lp small{font-size:11px;font-weight:600;opacity:.8}
+.lp i{position:absolute;inset:0;background:rgba(255,255,255,.35);transform:scaleX(0);transform-origin:left;transition:transform .15s ease-out;pointer-events:none}
+.lp.pressing i{transform:scaleX(1);transition:transform .7s linear}
+.tipbox .lp{justify-self:start}
+.jc2 .cplay{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:14cqw;height:14cqw;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center}
+.jc2 .cplay svg.i{width:6cqw;height:6cqw;fill:currentColor;stroke:none}
+.jc2 .cplay.on{background:rgba(226,182,78,.85);color:#1a1608}
+.jc2 .cview{position:absolute;inset:0 30% 30% 0;border:0;background:none;padding:0}
+.jc2 .cbar{position:absolute;left:0;right:0;bottom:0;height:.9cqw;background:rgba(255,255,255,.15)}
+.jc2 .cbar i{display:block;height:100%;width:0;background:#e2b64e}
+.jc2 video.inplay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* 下から出る記録 */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25}
+.over{position:fixed;left:0;right:0;bottom:0;z-index:26;max-height:82dvh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;display:grid;gap:10px;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 30px -10px rgba(0,0,0,.5)}
+.over>*{max-width:440px;width:100%;justify-self:center}
+.over .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
+.over .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
+.bigimg{width:100%;border-radius:14px;display:block}
+.form{display:grid;gap:10px}
+/* 貝が降る */
+.rain{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.rain span{position:absolute;top:-40px;width:var(--w);animation:fall var(--d) cubic-bezier(.3,.1,.6,1) forwards}
+.rain span svg{width:100%;height:auto;display:block}
+@keyframes fall{0%{transform:translateY(0) rotate(0)}80%{opacity:1}100%{transform:translateY(105dvh) rotate(var(--r));opacity:0}}
 .guide{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;border:1px dashed var(--gold);background:var(--card);color:var(--gold);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;min-height:34px;box-shadow:0 6px 18px -8px rgba(0,0,0,.6)}
 .gl{display:grid;gap:8px}
 .gi{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
@@ -198,7 +239,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .jc2 .bk dt{color:#7a705d} .jc2 .bk dd{margin:0;overflow-wrap:anywhere}
 .jc2 .pav{position:absolute;left:6cqw;top:12cqw;width:15cqw;height:15cqw;border-radius:50%;display:grid;place-items:center;background:#3f7a4c;color:#fff;font-weight:700;font-size:6cqw}
 .jc2 .circ{position:absolute;right:6cqw;top:4.6cqw;font-size:2.8cqw;padding:.6cqw 2cqw;border-radius:99cqw;background:rgba(0,0,0,.45);color:#fff;letter-spacing:.06em}
-@media (prefers-reduced-motion: reduce){.jc2 .in,.jc2 .ln,.ring rect{transition:none}.jc2.held .mark svg,.pmark,.done .coin{animation:none}.toast{transition:none}}
+@media (prefers-reduced-motion: reduce){.lp.pressing i{transition:none}.jc2 .in,.jc2 .ln,.ring rect{transition:none}.jc2.held .mark svg,.pmark,.done .coin{animation:none}.toast{transition:none}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -221,6 +262,8 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 
 <div class="wrap" id="home"></div>
 <div class="sheet" id="sheet" hidden></div>
+<div class="scrim" id="scrim" hidden></div>
+<div class="over" id="over" role="dialog" aria-label="記録" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 <button type="button" class="guide" id="guide" data-guide aria-label="変わったところを見る">変わったところ</button>
 <audio id="player" preload="none"></audio>
@@ -297,7 +340,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
       // 最初の人たちは、何か出来事を出した時点で参加
       if (!me.member && founders.has(e.pubkey)) join(e.pubkey, t, null);
 
-      if (c.t === "profile") { me.name = str(c.name, 40); continue; }
+      if (c.t === "profile") { me.name = str(c.name, 40); me.line = str(c.line, 60); continue; }
 
       // 1 はじまり：参加している人が、まだの人を認める（1人3人まで）
       if (c.t === "vouch") {
@@ -365,6 +408,13 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
         pay(to, e.pubkey, card.price);
         Object.assign(mine[0], {owner: to, fromCreator: false, paid: card.price, at: t, vis: "show"});
         card.queue = card.queue.filter(p => p !== to); ok(e, "pass"); continue;
+      }
+
+      // 見せ方を変える：みんなに見せる ⇔ 画面に出さない（鍵をかけて持ったものは変えられない。鍵を外すと何を持ったかが分かってしまうため）
+      if (c.t === "vis") {
+        if (!["show", "hide"].includes(c.vis)) continue;
+        const xs = holdsOf(card, e.pubkey).filter(x => x.vis !== "lock"); if (!xs.length) continue;
+        for (const x of xs) x.vis = c.vis; continue;
       }
 
       // 贈る：持っているカードを、参加している人へ（jeni は動かない）
@@ -471,7 +521,7 @@ const {reduce, sha256hex, R: RULE} = JeniRules;
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const icon = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
-const COIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"> <circle cx="100" cy="100" r="95" fill="#BC002D"/> <g stroke="#FFFFFF" fill="none" stroke-linecap="round"> <path d="M 115,45 V 140 C 115,170 70,170 70,140" stroke-width="22"/> <line x1="64" y1="82" x2="136" y2="82" stroke-width="18"/> <line x1="64" y1="112" x2="136" y2="112" stroke-width="18"/> </g> </svg>`;
+const COIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M86,154 L13.0,137.8 L13.0,137.8 L11.8,135.3 L10.8,132.7 L10.2,130.1 L10.1,127.6 L10.4,125.2 L11.4,123.0 L12.8,120.9 L14.6,119.0 L16.8,117.3 L19.1,115.8 L18.6,113.1 L18.3,110.3 L18.3,107.7 L18.8,105.3 L19.8,103.0 L21.3,101.1 L23.2,99.5 L25.4,98.1 L28.0,97.0 L30.6,96.1 L30.8,93.3 L31.2,90.6 L32.0,88.1 L33.1,85.9 L34.6,84.0 L36.5,82.5 L38.8,81.4 L41.3,80.7 L44.0,80.3 L46.8,80.1 L47.7,77.5 L48.8,75.0 L50.2,72.7 L51.8,70.8 L53.8,69.4 L56.0,68.4 L58.5,67.9 L61.1,67.9 L63.8,68.2 L66.6,68.7 L68.1,66.4 L69.9,64.3 L71.8,62.5 L73.8,61.1 L76.1,60.2 L78.5,59.9 L81.0,60.0 L83.5,60.7 L86.1,61.7 L88.6,62.9 L90.7,61.1 L92.9,59.4 L95.2,58.2 L97.6,57.4 L100.0,57.1 L102.4,57.4 L104.8,58.2 L107.1,59.4 L109.3,61.1 L111.4,62.9 L113.9,61.7 L116.5,60.7 L119.0,60.0 L121.5,59.9 L123.9,60.2 L126.2,61.1 L128.2,62.5 L130.1,64.3 L131.9,66.4 L133.4,68.7 L136.2,68.2 L138.9,67.9 L141.5,67.9 L144.0,68.4 L146.2,69.4 L148.2,70.8 L149.8,72.7 L151.2,75.0 L152.3,77.5 L153.2,80.1 L156.0,80.3 L158.7,80.7 L161.2,81.4 L163.5,82.5 L165.4,84.0 L166.9,85.9 L168.0,88.1 L168.8,90.6 L169.2,93.3 L169.4,96.1 L172.0,97.0 L174.6,98.1 L176.8,99.5 L178.7,101.1 L180.2,103.0 L181.2,105.3 L181.7,107.7 L181.7,110.3 L181.4,113.1 L180.9,115.8 L183.2,117.3 L185.4,119.0 L187.2,120.9 L188.6,123.0 L189.6,125.2 L189.9,127.6 L189.8,130.1 L189.2,132.7 L188.2,135.3 L187.0,137.8 L114,154 L130,159 Q134,172 122,173 L78,173 Q66,172 70,159 Z" fill="#BC002D"/><path d="M100,152 L21.2,116.7" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L32.4,97.5" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L48.2,81.9" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L67.4,70.9" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L88.9,65.2" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L111.1,65.2" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L132.6,70.9" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L151.8,81.9" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L167.6,97.5" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><path d="M100,152 L178.8,116.7" stroke="#000" stroke-opacity=".10" stroke-width="2.4"/><g transform="translate(100 104) scale(0.56) translate(-100 -103)" stroke="#fff" fill="none" stroke-linecap="round"> <path d="M 115,45 V 140 C 115,170 70,170 70,140" stroke-width="22"/> <line x1="56" y1="82" x2="141" y2="82" stroke-width="18"/><line x1="56" y1="112" x2="141" y2="112" stroke-width="18"/></g></svg>`;
 const coin = (cls = "") => COIN.replace("<svg ", `<svg class="coin ${cls}" aria-hidden="true" `);
 const G = "M0,1.0000 A1.0000,1.0000 0 0 1 1.0000,0.0000 A0.6180,0.6180 0 0 1 1.6180,0.6180 A0.3820,0.3820 0 0 1 1.2361,1.0000 A0.2361,0.2361 0 0 1 1.0000,0.7639 A0.1459,0.1459 0 0 1 1.1459,0.6180 A0.0902,0.0902 0 0 1 1.2361,0.7082 A0.0557,0.0557 0 0 1 1.1803,0.7639 A0.0344,0.0344 0 0 1 1.1459,0.7295 A0.0213,0.0213 0 0 1 1.1672,0.7082 A0.0132,0.0132 0 0 1 1.1803,0.7214 A0.0081,0.0081 0 0 1 1.1722,0.7295 A0.0050,0.0050 0 0 1 1.1672,0.7245", PHI = (1 + Math.sqrt(5)) / 2;
 const KIND = {rwa: "現物", music: "音楽", video: "動画", picture: "写真", text: "文章", other: "そのほか"};
@@ -568,8 +618,8 @@ function holdBtn(c) {
   if (c.by === me) return `<button type="button" class="hold free" data-detail="${c.id}">自分の</button>`;
   if (mine(c).length >= capOf(c)) return `<button type="button" class="hold free" disabled>持っている</button>`;
   if (c.supply != null && !c.left) return `<button type="button" class="hold free" data-detail="${c.id}">${c.queue.includes(me) ? "待っている" : "順番待ち"}</button>`;
-  return c.price ? `<button type="button" class="hold" data-holdask="${c.id}" aria-label="${c.price} jeni で持つ"><span class="lb">持つ</span>${c.price}</button>`
-    : `<button type="button" class="hold free" data-holdask="${c.id}"><span class="lb">持つ</span>無料</button>`;
+  return c.price ? `<button type="button" class="hold" data-detail="${c.id}" aria-label="${c.price} jeni・開く"><span class="lb">持つ</span>${c.price}</button>`
+    : `<button type="button" class="hold free" data-detail="${c.id}"><span class="lb">持つ</span>無料</button>`;
 }
 const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["circle", "仲間の輪"]];
 function visibleCards() {
@@ -583,8 +633,8 @@ function home() {
       <label>見ている人 <select id="who">${Object.values(P).map(x => `<option value="${x.pk}" ${x.pk === me ? "selected" : ""}>${esc(x.name)}${S.users[x.pk] && S.users[x.pk].member ? "" : "（まだ参加していない）"}</option>`).join("")}</select></label>
       <button type="button" class="reset" data-reset>最初に戻す</button></div>
     <section class="me" aria-label="プロフィール">
-      <div class="me-top"><div class="av">${esc(p.name.slice(0, 1))}</div>
-        <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc(p.line) : "まだ参加していません"}</div></div>
+      <div class="me-top"><div class="av" ${PICS[me] ? `style="background:url('${PICS[me]}') center/cover"` : ""}>${PICS[me] ? "" : esc(nameOf(me).slice(0, 1))}</div>
+        <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc((S.users[me] && S.users[me].line) || p.line) : "まだ参加していません"}</div></div>
         <button type="button" class="bal" data-rules title="jeni のきまり">${coin()}<span id="balv">${u.bal.toLocaleString("ja-JP")}</span><small>jeni</small></button></div>
       <div class="me-mid"><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
       <nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}
@@ -607,12 +657,14 @@ function cardHtml(c, held) {
       <div class="jno">jeni No.${cardNo(c.id)}</div>${c.circle ? `<div class="circ">${esc(S.circles[c.circle].name)}</div>` : ""}
       ${c.kind === "text" && !bg ? `<p class="excerpt">${esc(c.body)}</p>` : ""}
       <div class="txt"><div class="k">${KIND[c.kind]}</div><div class="t">${esc(c.title || "その場のカード")}</div><div class="by">${esc(nameOf(c.by))}</div></div>
+      ${(c.kind === "music" || c.kind === "video") && m.src ? `<button type="button" class="cplay${playing === c.id ? " on" : ""}" data-cplay="${c.id}" aria-label="再生・止める">${icon("play")}</button>` : m.img ? `<button type="button" class="cview" data-cplay="${c.id}" aria-label="写真を大きく"></button>` : ""}
+      ${c.kind === "music" && m.src ? `<div class="cbar"><i id="cbar-${c.id}"></i></div>` : ""}
       <button type="button" class="mark" data-flip aria-label="このカードの裏（QR）">${gmark(100, {line: true, halo: true})}</button></div>`;
   const back = `<div class="face back" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
       <div class="qr">${qrSvg(`jeni:card:${c.id}`)}</div>
       <div class="bk"><div class="no">jeni No.${cardNo(c.id)}</div><div class="bt">${esc(c.title || "その場のカード")}</div><div class="how">読むと、このカードが開きます</div>
         <dl><dt>作った人</dt><dd>${esc(nameOf(c.by))}</dd><dt>署名</dt><dd>${c.by.slice(0, 4)}…${c.id.slice(-4)}</dd></dl></div></div>`;
-  return `<div class="jc2${held ? " held" : ""}" id="dcard"><div class="in">${front}${back}</div></div>`;
+  return `<div class="jc2${held ? " held" : ""}"><div class="in">${front}${back}</div></div>`;
 }
 function probe(img) {
   const face = img.closest(".face"); if (!face) return;
@@ -633,143 +685,167 @@ const probeAll = () => document.querySelectorAll("#sheet img[data-probe]").forEa
 /* ---- シート ---- */
 function openSheet(html, keep = false) {
   const top = $("sheet").scrollTop;
+  $("sheet").classList.remove("feed"); closeOver();
   $("sheet").innerHTML = `<div class="wrap">${html}</div>`; $("sheet").hidden = false; document.body.style.overflow = "hidden";
   $("sheet").scrollTop = keep ? top : 0; probeAll();
 }
 function closeSheet() {
   $("sheet").querySelectorAll("video,audio").forEach(m => m.pause());
-  clearInterval(saleTimer); $("sheet").hidden = true; $("sheet").innerHTML = ""; document.body.style.overflow = ""; sel = null; home();
+  clearInterval(saleTimer); $("sheet").classList.remove("feed"); $("sheet").hidden = true; $("sheet").innerHTML = ""; document.body.style.overflow = ""; sel = null; home();
 }
 let tt;
 const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2200); };
 
-/* ---- 詳細：カード、中身（持つと元のデータ）、jeni の行き先、記録 ---- */
-function flowHtml(c) {
-  const by = esc(nameOf(c.by)) + " さんへ", lim = c.supply != null, p = c.price ? `${c.price} jeni` : "0 jeni（無料）", rows = [];
-  if (lim && !c.left) rows.push(["譲り受けると", `${p} → 手放した人へ<small>手放すかは持ち主が決めます。いま${c.queue.length}人が順番待ち</small>`]);
-  else rows.push(["持つと", `${p} → ${by}${lim ? "<small>現物は受け取り先で引き換えます</small>" : ""}`]);
-  const share = c.copies.filter(x => !x.used && x.vis !== "lock").length;
-  rows.push(["投げ銭すると", lim ? `全額 → ${by}<small>数に限りのあるカードは、持っている人への分け前なし</small>` : share ? `半分 → ${by}<br>半分 → 持っている人で分ける（${share}枚）` : `全額 → ${by}<small>まだ分け前を受け取る人がいません</small>`]);
-  return `<dl class="flow">${rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl>`;
+/* ---- 1枚ずつのカード（上下にめくる）：カードと、押すのに要るものだけ ---- */
+const VIS = {show: "みんなに見せる", hide: "画面に出さない", lock: "何を持ったかに鍵"};
+const VISD = {show: "持っている人に名前が出ます", hide: "アプリには出ません（記録を調べれば分かります）", lock: "どのカードかは本人と作った人だけ。投げ銭の分け前はなし"};
+const PREF = {};   // 人ごとの「見せ方」の決まり（プロフィールで変える）
+const PICS = {};   // 人ごとの写真（見本の画面の中だけ）
+const prefVis = c => { const v = PREF[me] || "show"; return v === "lock" && c.supply != null ? "show" : v; };
+function flowLine(c) {
+  const by = esc(nameOf(c.by)), lim = c.supply != null;
+  if (lim && !c.left) return `譲り受けると ${c.price} jeni → 手放した人へ・いま${c.queue.length}人が順番待ち`;
+  const share = c.copies.some(x => !x.used && x.vis !== "lock");
+  return `持つと ${c.price} jeni → ${by} さんへ・投げ銭は${lim || !share ? `全額 ${by} さんへ` : "半分ずつ作った人と持っている人へ"}`;
 }
-function contentHtml(c) {
-  const m = MEDIA[c.id] || {}, have = mine(c).length > 0 || c.by === me || c.copies.some(x => x.owner === me);
-  const lockmsg = t => `<div class="lockmsg">${icon("lock")}${t}</div>`;
-  if (c.kind === "text") {
-    const full = have || c.price === 0 && !c.circle ? c.body : c.body.slice(0, 40) + "…";
-    return `<div class="preview"><p>${esc(full)}</p>${have || (c.price === 0 && !c.circle) ? "" : lockmsg("続きは、持つと読めます")}</div>`;
-  }
-  if (c.kind === "music" && m.src) return `<div class="preview"><audio src="${m.src}" controls preload="none" ${have ? "" : 'data-trial="8"'}></audio>${have ? "" : lockmsg("だれでも最初の8秒。持つと全部聞けます")}</div>`;
-  if (c.kind === "video" && m.src) return `<div class="preview"><video src="${m.src}" poster="${m.img}" controls playsinline ${have ? "" : 'data-trial="3"'}></video>${have ? "" : lockmsg("だれでも最初の3秒。持つと全部見られます")}</div>`;
-  if (m.img && c.kind === "picture") return `<div class="preview${have ? "" : " small"}"><img src="${m.img}" alt="${esc(c.title)}">${have ? "" : lockmsg("小さく見えています。持つと元の大きさの写真")}</div>`;
-  return "";
+// 長押しで決める（押しているあいだ、ボタンが満ちていく）
+const lpBtn = (act, id, label, cls = "") => `<button type="button" class="lp ${cls}" data-lp="${act}" data-id="${id}">${label}<i aria-hidden="true"></i></button>`;
+function pageHtml(c) {
+  const m = MEDIA[c.id] || {}, my = mine(c), isMe = c.by === me, u = U(), lim = c.supply != null;
+  let main = "";
+  if (isMe) main = `<button type="button" class="pill" data-rec="${c.id}">記録・受け取り</button>`;
+  else if (!u.member) main = `<span class="sub">参加すると持てます</span>`;
+  else if (lim && !c.left && !my.length) main = c.queue.includes(me) ? `<button type="button" class="pill" data-unwant="${c.id}">順番待ちをやめる</button>` : lpBtn("want", c.id, "長押しで順番を待つ", "go");
+  else if (my.length >= capOf(c)) main = `<span class="sub">持っている（${capOf(c)}枚まで）</span>`;
+  else main = lpBtn("hold", c.id, `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go");
+  const text = c.kind === "text" ? `<p class="body">${esc(c.body)}</p>` : "";
+  return `<section class="pg" id="pg-${c.id}" data-pg="${c.id}">
+    ${cardHtml(c, my.length > 0)}
+    <div class="acts2"><span class="mine">${isMe ? "自分のカード" : my.length ? `持っている ${my.length}` : ""}</span>
+      ${isMe || !u.member ? "" : `<button type="button" class="pill" data-tipask="${c.id}">投げ銭</button>`}${main}</div>
+    <div class="tipbox" id="tip-${c.id}" hidden></div>
+    ${isMe ? "" : `<p class="fline">${flowLine(c)}</p>`}
+    ${m.note ? `<p class="note1">${esc(m.note)}</p>` : ""}${text}
+    <div class="minor"><button type="button" class="link" data-rec="${c.id}">記録</button>${my.length && my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : my.length ? `<span>・${VIS.lock}</span>` : ""}${my.length ? `<span>・</span><span class="sub">持つと元のデータ（圧縮していないもの）を受け取れます</span>` : ""}</div>
+  </section>`;
 }
+let feedIds = [];
+function feed(id) {
+  feedIds = visibleCards().map(c => c.id); if (!feedIds.includes(id)) feedIds.unshift(id);
+  openSheet(`<div class="ftop"><button type="button" class="back" data-close>${icon("back")}一覧へ</button><span class="sub">上下にめくると次のカード</span></div>
+    ${feedIds.map(x => pageHtml(S.cards[x])).join("")}`);
+  $("sheet").classList.add("feed");
+  const el = $("pg-" + id); if (el) $("sheet").scrollTop = el.offsetTop - 0;
+  sel = id;
+}
+function refreshPage(id, justHeld = false) {
+  const el = $("pg-" + id); if (!el) return feed(id);
+  const tmp = document.createElement("div"); tmp.innerHTML = pageHtml(S.cards[id]); const nu = tmp.firstElementChild;
+  if (justHeld) nu.querySelector(".jc2").classList.remove("held");
+  el.replaceWith(nu); probeAll();
+  if (justHeld) requestAnimationFrame(() => requestAnimationFrame(() => { const d = nu.querySelector(".jc2"); if (d) d.classList.add("held"); }));
+}
+const detail = (id, keep = false, justHeld = false) => { if ($("sheet").classList.contains("feed") && $("pg-" + id)) return refreshPage(id, justHeld); feed(id); };
+function doHold(id) {
+  const c = S.cards[id], before = mine(c).length;
+  if (c.price > U().bal) return toast("jeni が足りません");
+  emit(me, {t: "hold", card: id, vis: prefVis(c)});
+  if (mine(S.cards[id]).length === before) return toast("持てませんでした（きまりに合いません）");
+  refreshPage(id, before === 0); toast(c.price ? `${c.price} jeni → ${nameOf(c.by)} さんへ` : "持ちました");
+}
+function tipAsk(id) {
+  const box = $("tip-" + id); if (!box) return;
+  if (!box.hidden) { box.hidden = true; return; }
+  box.innerHTML = `<div class="chips">${[10, 30, 50, 100].map((n, i) => `<button type="button" data-amt="${n}" data-for="${id}" aria-pressed="${i === 0}">${n}</button>`).join("")}</div>
+    ${lpBtn("tip", id, `${coin()}<span id="tipbtn-${id}">10 jeni</span><small>長押しで贈る</small>`, "go")}`;
+  box.hidden = false;
+}
+// 記録（下から出る）：持っている人、この先の操作（譲る・贈る・受け取り・返す）、数
 function holdersHtml(c) {
-  const by = {}; for (const x of c.copies) if (!x.used || c.handover) (by[x.owner] = by[x.owner] || []).push(x);   // その場で売ったカードは、受け取り済みでも持ち主に残る（レシート）
+  const by = {}; for (const x of c.copies) if (!x.used || c.handover) (by[x.owner] = by[x.owner] || []).push(x);
   const show = [], hide = []; let lock = 0;
   for (const [pk, xs] of Object.entries(by)) { const v = xs[0].vis || "show"; if (v === "lock") lock++; else if (v === "hide" && pk !== me && c.by !== me) hide.push(pk); else show.push([pk, xs.length, v]); }
-  const used = c.handover ? 0 : c.copies.filter(x => x.used).length;
   const rows = show.map(([pk, n, v]) => `<div class="who-row"><span>${esc(nameOf(pk))}${pk === me ? "（わたし）" : ""}${v === "hide" ? "・画面に出さない" : ""}${c.handover ? "・受け取り済み" : ""}</span>${n > 1 ? `${n}枚` : ""}
      ${c.by === me && c.supply != null && !c.handover ? `<button type="button" class="pill" data-used="${pk}">受け取った</button>` : ""}
      ${c.by === me && c.copies.some(x => x.owner === pk && x.fromCreator && (!x.used || c.handover)) ? `<button type="button" class="pill warn" data-refund="${pk}">返す</button>` : ""}</div>`).join("");
   const extra = (hide.length ? `<div class="who-row"><span>ほか ${hide.length}人（画面に出さない）</span></div>` : "") + (lock ? `<div class="who-row"><span>${icon("lock")} 鍵をかけて持っている人は、人数に入りません</span></div>` : "");
-  return `<section class="box"><h3>持っている人</h3>${rows || extra ? rows + extra : `<div class="who-row"><span>まだいません</span></div>`}${used ? `<div class="who-row"><span>受け取り済み・使ったもの ${used}枚</span></div>` : ""}</section>`;
+  return rows || extra ? rows + extra : `<div class="who-row"><span>まだいません</span></div>`;
 }
-function detail(id, keep = false, justHeld = false) {
-  const c = S.cards[id]; if (!c) return;
-  const m = MEDIA[id] || {}, my = mine(c), isMe = c.by === me, u = U();
-  const acts = [];
-  if (!isMe) {
-    acts.push(`<button type="button" class="pill" data-tipask="${id}">投げ銭</button>`);
-    if (my.length < capOf(c) && !(c.supply != null && !c.left)) acts.push(`<button type="button" class="pill go" data-holdask="${id}">${coin()}${c.price ? `${c.price} jeni で持つ` : "無料で持つ"}</button>`);
-    else if (c.supply != null && !c.left && !my.length) acts.push(c.queue.includes(me) ? `<button type="button" class="pill" data-unwant="${id}">順番待ちをやめる</button>` : `<button type="button" class="pill go" data-want="${id}">順番を待つ</button>`);
-  }
-  if (my.length) {
-    if (c.supply != null && c.queue.length) acts.push(`<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>`);
-    acts.push(`<button type="button" class="pill" data-giftask="${id}">贈る</button>`);
-  }
+function recSheet(id) {
+  const c = S.cards[id], m = MEDIA[id] || {}, my = mine(c);
   const rec = [["作った人", esc(nameOf(c.by))], ["持っている人", c.holders + "人"], ["投げ銭", `${c.tipped}回・${c.tips} jeni`]];
   if (c.supply != null) rec.push(["残り", `${c.left} / ${c.supply}`]);
   if (m.where) rec.push(["受け取り", esc(m.where)]);
   if (c.circle) rec.push(["見える人", `${esc(S.circles[c.circle].name)}（${S.circles[c.circle].members.length}人）`]);
   if (c.refunds) rec.push(["返した", c.refunds + "回"]);
-  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
-    ${cardHtml(c, my.length && !justHeld)}
-    <div class="acts2"><span class="mine">${isMe ? "自分のカード" : my.length ? `持っている ${my.length}枚（あと${capOf(c) - my.length}枚まで）` : u.member ? "まだ持っていません" : "参加すると持てます"}</span>${acts.join("")}</div>
-    ${contentHtml(c)}
-    ${isMe ? "" : flowHtml(c)}
-    ${m.note ? `<p class="sub" style="font-size:14px;color:var(--ink)">${esc(m.note)}</p>` : ""}
-    ${holdersHtml(c)}
-    <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>`, keep);
+  const acts = my.length ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
+  openOver(`<h2 class="rh">${esc(c.title || "その場のカード")}</h2>${acts}
+    <section class="box"><h3>持っている人</h3>${holdersHtml(c)}</section>
+    <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>`);
   sel = id;
-  if (justHeld) requestAnimationFrame(() => requestAnimationFrame(() => { const d = $("dcard"); if (d) d.classList.add("held"); }));
-}
-
-/* ---- 持つ：持ち方を選んでから ---- */
-function holdAsk(id) {
-  const c = S.cards[id], u = U();
-  if (!u.member) return toast("参加すると持てます（わたしのカードのQRから）");
-  if (c.price > u.bal) return toast("jeni が足りません");
-  const lim = c.supply != null;
-  const opt = (v, t, d, off = false) => `<label class="opt${off ? " off" : ""}"><input type="radio" name="vis" value="${v}" ${v === "show" ? "checked" : ""} ${off ? "disabled" : ""}><b>${t}</b><small>${d}</small></label>`;
-  openSheet(`<button type="button" class="back" data-detail="${id}">${icon("back")}カードへ</button>
-    <h2 class="rh">持ち方を選ぶ</h2>
-    <div class="opts">
-      ${opt("show", "みんなに見せる", "カードの「持っている人」に名前が出ます。")}
-      ${opt("hide", "画面に出さない", "アプリには出ません。ただし、記録を調べれば分かります。")}
-      ${opt("lock", "何を持ったかに鍵をかける", lim ? "数に限りのあるカードでは選べません（残りの数をみんなで確かめるため）。" : "記録に残るのは「だれに何 jeni 払ったか」だけ。どのカードかは、わたしと作った人にしか分かりません。投げ銭の分け前は受け取りません。", lim)}
-    </div>
-    ${flowHtml(c)}
-    <button type="button" class="big" data-hold="${id}">${coin()}${c.price ? `${c.price} jeni で持つ` : "無料で持つ"}</button>`);
-}
-function doHold(id) {
-  const c = S.cards[id], v = (document.querySelector('input[name="vis"]:checked') || {}).value || "show", before = mine(c).length;
-  emit(me, {t: "hold", card: id, vis: v});
-  const after = mine(S.cards[id]).length;
-  if (after === before) return toast("持てませんでした（きまりに合いません）");
-  detail(id, false, before === 0);
-  toast(c.price ? `${c.price} jeni → ${nameOf(c.by)} さんへ` : "持ちました");
-}
-function tipAsk(id) {
-  const c = S.cards[id];
-  if (!U().member) return toast("参加すると投げ銭できます");
-  openSheet(`<button type="button" class="back" data-detail="${id}">${icon("back")}カードへ</button>
-    <h2 class="rh">投げ銭</h2><p class="sub">カードは持たずに、作った人へ jeni を贈ります。</p>
-    <div class="chips" id="tipamt">${[10, 30, 50, 100].map((n, i) => `<button type="button" data-amt="${n}" aria-pressed="${i === 0}">${n}</button>`).join("")}</div>
-    ${flowHtml(c)}
-    <button type="button" class="big" data-tip="${id}">${coin()}<span id="tipbtn">10 jeni を贈る</span></button>`);
 }
 function pickPerson(title, id, act, people, note) {
-  openSheet(`<button type="button" class="back" data-detail="${id}">${icon("back")}カードへ</button>
-    <h2 class="rh">${title}</h2>${note ? `<p class="sub">${note}</p>` : ""}
+  openOver(`<h2 class="rh">${title}</h2>${note ? `<p class="sub">${note}</p>` : ""}
     <section class="box">${people.length ? people.map(pk => `<div class="who-row"><span>${esc(nameOf(pk))}</span><button type="button" class="pill go" data-${act}="${pk}">${title}</button></div>`).join("") : `<div class="who-row"><span>選べる人がいません</span></div>`}</section>`);
   sel = id;
 }
+function openOver(html) { $("over").innerHTML = `<div class="grab" aria-hidden="true"></div><button type="button" class="x" data-overclose aria-label="閉じる">×</button>${html}`; $("over").hidden = false; $("scrim").hidden = false; }
+function closeOver() { $("over").hidden = true; $("scrim").hidden = true; $("over").innerHTML = ""; }
+// カードの中で再生する（音楽・動画）。写真は大きく、文章は下に全部
+function cplay(id) {
+  const c = S.cards[id], m = MEDIA[id] || {}, pg = $("pg-" + id); if (!pg) return;
+  const face = pg.querySelector(".face");
+  if (c.kind === "video" && m.src) {
+    let v = face.querySelector("video.inplay");
+    if (!v) { v = document.createElement("video"); v.className = "inplay"; v.src = m.src; v.playsInline = true; v.muted = false; face.insertBefore(v, face.querySelector(".gfield")); }
+    if (v.paused) v.play().catch(() => {}); else v.pause();
+    return;
+  }
+  if (c.kind === "music" && m.src) { play(id, true); return; }
+  if (m.img) { openOver(`<img class="bigimg" src="${m.img}" alt="${esc(c.title)}">`); return; }
+}
+function shellRain() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = document.createElement("div"); box.className = "rain"; box.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement("span"); s.innerHTML = coin();
+    s.style.left = (Math.random() * 92) + "%"; s.style.setProperty("--d", (1.4 + Math.random() * 1.2) + "s"); s.style.setProperty("--w", (16 + Math.random() * 20) + "px");
+    s.style.setProperty("--r", (Math.random() * 120 - 60) + "deg"); s.style.animationDelay = (Math.random() * .6) + "s"; box.appendChild(s);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3400);
+}
 
-/* ---- わたしのカード（プロフィール）：裏の QR は「わたし」への入口 ---- */
-function meCard() {
-  const u = U(), p = byPk[me];
+/* ---- わたしのカード（プロフィール）：裏の QR は「わたし」への入口。名前・ひとこと・写真・見せ方をここで変える ---- */
+function meCard(edit = false) {
+  const u = U(), p = byPk[me], line = (S.users[me] && S.users[me].line) || p.line;
   const vouchers = Object.values(S.users).filter(x => x.member && x.vouched.length < RULE.vouchMax && x.pk !== me);
+  const av = PICS[me] ? `<div class="pav" style="background:url('${PICS[me]}') center/cover"></div>` : `<div class="pav">${esc(nameOf(me).slice(0, 1))}</div>`;
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
     <h2 class="rh">わたしのカード</h2>
-    <div class="jc2 held on" id="dcard"><div class="in">
+    <div class="jc2 held" id="dcard"><div class="in">
       <div class="face" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#f3f6ea,#d9e3cc)"></div>${gfield(.7)}<div class="shade"></div>
-        <div class="jno">jeni プロフィール</div><div class="pav">${esc(p.name.slice(0, 1))}</div>
-        <div class="txt"><div class="k">${u.member ? esc(p.line) : "まだ参加していません"}</div><div class="t">${esc(nameOf(me))}</div><div class="by">${u.member ? `認めた人 ${u.vouched.length} / ${RULE.vouchMax}` : "QRを読んでもらうと参加できます"}</div></div>
-        <button type="button" class="mark" data-flip aria-label="裏返す">${gmark(100, {line: true, halo: true})}</button></div>
+        <div class="jno">jeni プロフィール</div>${av}
+        <div class="txt"><div class="k">${u.member ? esc(line) : "まだ参加していません"}</div><div class="t">${esc(nameOf(me))}</div><div class="by">${u.member ? `認めた人 ${u.vouched.length} / ${RULE.vouchMax}` : "裏のQRを読んでもらうと参加できます"}</div></div>
+        <button type="button" class="mark" data-flip aria-label="裏返す（QR）">${gmark(100, {line: true, halo: true})}</button></div>
       <div class="face back" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
         <div class="qr">${qrSvg(`jeni:me:${me}`)}</div>
-        <div class="bk"><div class="no">jeni プロフィール</div><div class="bt">${esc(nameOf(me))}</div><div class="how">${u.member ? "読んだ人が、わたしを友達にできます" : "参加している人に読んでもらうと、わたしを認められます"}</div>
+        <div class="bk"><div class="no">jeni プロフィール</div><div class="bt">${esc(nameOf(me))}</div><div class="how">${u.member ? "参加していない人が読むと、その人を認められます" : "参加している人に読んでもらうと、参加できます"}</div>
           <dl><dt>番号</dt><dd>${me.slice(0, 6)}…</dd></dl></div></div>
     </div></div>
-    <dl class="flow"><dt>まだ参加していない人が読むと</dt><dd>わたしを「認める」<small>認めると、その人に最初の ${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認められるのは${RULE.vouchMax}人まで</small></dd>
-      <dt>お店などで読まれると</dt><dd>何も動きません<small>jeni やカードが動くときは、その場限りの QR を別に出します</small></dd></dl>
-    ${u.member ? "" : `<section class="box"><h3>見本：参加している人に読んでもらう</h3>${vouchers.map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（あと${RULE.vouchMax - x.vouched.length}人認められる）</span><button type="button" class="pill go" data-vouchby="${x.pk}">読んでもらう</button></div>`).join("") || `<div class="who-row"><span>認められる人がいません</span></div>`}</section>`}`);
+    <p class="fline">印を押すと裏のQR。お店などで読まれても、jeni もカードも動きません。</p>
+    ${u.member && !edit ? `<button type="button" class="big ghost" data-editme>編集する</button>` : ""}
+    ${u.member && edit ? `<section class="box form"><label class="fl">名前<input id="p-name" maxlength="40" value="${esc(nameOf(me))}"></label>
+      <label class="fl">ひとこと<input id="p-line" maxlength="60" value="${esc(line)}"></label>
+      <label class="fl">写真<input id="p-pic" type="file" accept="image/*"></label>
+      <label class="fl">カードを持ったときの見せ方<select id="p-vis">${["show", "hide", "lock"].map(v => `<option value="${v}" ${(PREF[me] || "show") === v ? "selected" : ""}>${VIS[v]}（${VISD[v]}）</option>`).join("")}</select></label>
+      <button type="button" class="big" data-saveme>保存する</button></section>` : ""}
+    ${u.member ? "" : `<section class="box"><h3>見本：参加している人に読んでもらう</h3>${vouchers.map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（あと${RULE.vouchMax - x.vouched.length}人）</span><button type="button" class="pill go" data-vouchby="${x.pk}">読んでもらう</button></div>`).join("") || `<div class="who-row"><span>認められる人がいません</span></div>`}</section>`}`);
 }
 function joined() {
   openSheet(`<div class="done">${coin()}<h2 class="rh">${RULE.start.toLocaleString("ja-JP")} jeni が届きました</h2>
     <p class="sub">${esc(nameOf(S.users[me].vouchedBy))} さんに認められて、参加しました。<br>jeni が新しく生まれるのは、このときだけです。</p></div>
     <button type="button" class="big" data-close>カードを見に行く</button>`);
+  shellRain();
 }
 
 /* ---- 作る・その場で売る ---- */
@@ -860,6 +936,7 @@ function pay(pk) {
     <p class="sub">${c.price} jeni が ${esc(nameOf(seller))} さんに届きました。<br>受け取り済みのカードが、レシートとして両方の手元に残ります。</p></div>
     <button type="button" class="big" data-detail="${s.id}">レシート（カード）を見る</button>
     <button type="button" class="back" data-close style="margin:0 auto">${icon("back")}一覧へ</button>`);
+  shellRain();
 }
 function newCircle() {
   readMK();
@@ -888,36 +965,34 @@ function rules() {
 
 /* ---- 再生（一覧の中でそのまま） ---- */
 const player = $("player");
-function play(id) {
+function play(id, inCard = false) {
   const m = MEDIA[id];
-  if (playing === id) { player.pause(); playing = ""; return home(); }
-  playing = id; player.src = m.src; player.play().catch(() => toast("再生できませんでした")); home();
+  if (playing === id) { player.pause(); playing = ""; } else { playing = id; player.src = m.src; player.play().catch(() => toast("再生できませんでした")); }
+  if (!inCard) home();
+  document.querySelectorAll("[data-cplay]").forEach(b => b.classList.toggle("on", b.dataset.cplay === playing));
 }
 player.addEventListener("timeupdate", () => {
-  const b = $("bar" + playing); if (b && player.duration) b.style.width = (player.currentTime / player.duration * 100) + "%";
-  const c = S.cards[playing]; if (c && !(mine(c).length || c.by === me) && player.currentTime >= 8) { player.pause(); playing = ""; home(); toast("ここまで。持つと全部聞けます"); }
+  const k = player.duration ? (player.currentTime / player.duration * 100) + "%" : "0%";
+  const b = $("bar" + playing); if (b) b.style.width = k;
+  const cb = $("cbar-" + playing); if (cb) cb.style.width = k;
 });
-player.addEventListener("ended", () => { playing = ""; home(); });
-document.addEventListener("timeupdate", e => {   // 詳細の試聴・試し見
-  const el = e.target, lim = el.dataset && el.dataset.trial;
-  if (lim && el.currentTime >= +lim) { el.pause(); el.currentTime = 0; toast("ここまで。持つと全部"); }
-}, true);
+player.addEventListener("ended", () => { const id = playing; playing = ""; if ($("sheet").hidden) home(); document.querySelectorAll("[data-cplay]").forEach(b => b.classList.remove("on")); void id; });
 
 /* ---- 変わったところ（前の版から）：押すと、その画面へ ---- */
 const AS = name => P[name].pk;
 const cardBy = t => Object.values(S.cards).find(c => c.title === t);
 const GUIDE = [
-  ["一覧は小さな行に", "ひと目で中身が分かり、音楽は行の中でそのまま聞けます。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
-  ["カードは中身がいっぱいに", "持っているカードには黄金らせんの印が現れて光ります。印を押すと裏返ってQR。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
-  ["持つと中身が全部", "持つ前は、文章は書き出し・音楽は8秒・写真は小さくぼかしたもの。", () => { me = AS("kenji"); detail(cardBy("雨の作業小屋").id); }],
-  ["持ち方を選べる", "みんなに見せる／画面に出さない／何を持ったかに鍵をかける。", () => { me = AS("kenji"); holdAsk(cardBy("雨の作業小屋").id); }],
-  ["jeni の行き先を1行で", "押す前に「何 jeni がだれへ行くか」が出ます。投げ銭は半分ずつ。", () => { me = AS("kenji"); tipAsk(cardBy("Ambient Waves").id); }],
-  ["順番待ちと譲る", "残りのない現物は順番を待ち、持ち主が同じ値段で譲ります。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
-  ["受け取りと返す", "作った人だけが、受け取りの記録と、まだ持っている人への返金ができます。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); }],
+  ["カードは1枚ずつ、上下にめくる", "一覧の行を押すとカードが開き、上下にめくると次のカード。横にスワイプすると戻ります。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
+  ["カードの中で再生", "音楽・動画はカードの再生ボタンで、そのまま。写真は押すと大きく。文章はカードの下に全部。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
+  ["長押しで持つ・投げ銭", "押しているあいだボタンが満ちていき、満ちたら決まります。押しまちがいで jeni が動かないように。", () => { me = AS("kenji"); detail(cardBy("雨の作業小屋").id); }],
+  ["中身はだれでも全部", "持つ前でも全部見られます（旧 jeni と同じ）。持つと、元のデータ（圧縮していないもの）を受け取れます。", () => { me = AS("sound"); detail(cardBy("土を耕すということ").id); }],
+  ["持っている印が光る", "持っているカードにだけ黄金らせんの印。印を押すと裏返ってQR。", () => { me = AS("kenji"); detail(cardBy("特製スパイスカレー").id); }],
+  ["記録は下から", "持っている人・譲る・贈る・受け取り・返すは「記録」にまとめました。", () => { me = AS("haru"); detail(cardBy("天然酵母カンパーニュ").id); recSheet(cardBy("天然酵母カンパーニュ").id); }],
+  ["見せ方はプロフィールで", "持つたびに選ぶのをやめ、プロフィールで決めておく形に。持ったあとも「見せ方」で変えられます。", () => { me = AS("kenji"); meCard(true); }],
   ["その場で売る", "写真と値段で、一度きりのQR。残り時間は数字ではなく金の線で。", () => { me = AS("kenji"); MK.mode = "sale"; make(); }],
-  ["参加（認める）", "まだ参加していない人のQRを読んで認めると、1,000 jeni が届きます。", () => { me = AS("yuzu"); meCard(); }],
+  ["参加すると貝が降る", "まだ参加していない人のQRを読んで認めると、1,000 jeni が届きます。", () => { me = AS("yuzu"); meCard(); }],
   ["仲間の輪", "輪の中のカードは輪の人にしか見えません。SoundArchitect に切り替えると見えません。", () => { me = AS("kenji"); field = "circle"; closeSheet(); }],
-  ["jeni のきまり", "残高を押すと開きます。5つのきまりと、見えるもの・隠れるもの。", () => { me = AS("kenji"); rules(); }],
+  ["jeni のきまり", "残高を押すと開きます。", () => { me = AS("kenji"); rules(); }],
 ];
 function guide() {
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
@@ -960,30 +1035,70 @@ document.addEventListener("click", e => {
   if (q("[data-rules]")) return rules();
   if (q("[data-me]")) return meCard();
   if ((b = q("[data-vouchby]"))) { const before = U().member; emit(b.dataset.vouchby, {t: "vouch", who: me}); if (!before && U().member) return joined(); return toast("認められませんでした"); }
-  if (q("[data-flip]")) { const d = $("dcard"); if (d) d.classList.toggle("on"); return; }
-  if ((b = q("#dcard.on")) && !q(".mark")) { b.classList.remove("on"); return; }
-  if ((b = q("[data-play]"))) return play(b.dataset.play);
-  if ((b = q("[data-holdask]"))) return holdAsk(b.dataset.holdask);
-  if ((b = q("[data-hold]"))) return doHold(b.dataset.hold);
-  if ((b = q("[data-tipask]"))) return tipAsk(b.dataset.tipask);
-  if ((b = q("[data-amt]"))) { document.querySelectorAll("[data-amt]").forEach(x => x.setAttribute("aria-pressed", x === b)); $("tipbtn").textContent = `${b.dataset.amt} jeni を贈る`; return; }
-  if ((b = q("[data-tip]"))) {
-    const id = b.dataset.tip, n = +(document.querySelector('[data-amt][aria-pressed="true"]') || {dataset: {amt: 10}}).dataset.amt;
-    if (n > U().bal) return toast("jeni が足りません");
-    emit(me, {t: "tip", card: id, amount: n}); detail(id); return toast(`${n} jeni を贈りました`);
+  if (q("[data-overclose]") || e.target.id === "scrim") return closeOver();
+  if (q("[data-flip]")) { const d = q(".jc2") || $("dcard"); if (d) d.classList.toggle("on"); return; }
+  if ((b = q(".jc2.on")) && !q(".mark")) { b.classList.remove("on"); return; }
+  if ((b = q("[data-cplay]"))) return cplay(b.dataset.cplay);
+  if ((b = q("[data-rec]"))) return recSheet(b.dataset.rec);
+  if ((b = q("[data-vis]"))) { const c = S.cards[b.dataset.vis], v = mine(c)[0].vis === "hide" ? "show" : "hide"; emit(me, {t: "vis", card: c.id, vis: v}); refreshPage(c.id); return toast(`見せ方：${VIS[v]}`); }
+  if (q("[data-editme]")) return meCard(true);
+  if (q("[data-saveme]")) {
+    const name = ($("p-name").value || "").trim().slice(0, 40) || nameOf(me), line = ($("p-line").value || "").trim().slice(0, 60);
+    PREF[me] = $("p-vis").value; emit(me, {t: "profile", name, line}); toast("保存しました"); return meCard();
   }
-  if ((b = q("[data-want]"))) { emit(me, {t: "want", card: b.dataset.want}); detail(b.dataset.want, true); return toast("順番待ちに並びました"); }
+  if ((b = q("[data-play]"))) return play(b.dataset.play);
+  if ((b = q("[data-tipask]"))) return tipAsk(b.dataset.tipask);
+  if ((b = q("[data-amt]"))) { const id = b.dataset.for; document.querySelectorAll(`[data-amt][data-for="${id}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); $("tipbtn-" + id).textContent = `${b.dataset.amt} jeni`; return; }
   if ((b = q("[data-unwant]"))) { emit(me, {t: "unwant", card: b.dataset.unwant}); detail(b.dataset.unwant, true); return toast("順番待ちをやめました"); }
   if ((b = q("[data-passask]"))) { const c = S.cards[b.dataset.passask]; return pickPerson("譲る", c.id, "passto", c.queue, `順番を待っている人に、同じ値段（${c.price} jeni）で譲ります。jeni はあなたへ戻ります。`); }
-  if ((b = q("[data-passto]"))) { const id = sel; emit(me, {t: "pass", card: id, to: b.dataset.passto}); detail(id); return toast(`${nameOf(b.dataset.passto)} さんに譲りました`); }
+  if ((b = q("[data-passto]"))) { const id = sel; emit(me, {t: "pass", card: id, to: b.dataset.passto}); closeOver(); detail(id); return toast(`${nameOf(b.dataset.passto)} さんに譲りました`); }
   if ((b = q("[data-giftask]"))) { const c = S.cards[b.dataset.giftask]; return pickPerson("贈る", c.id, "giftto", Object.values(S.users).filter(x => x.member && x.pk !== me && x.pk !== c.by && (!c.circle || S.circles[c.circle].members.includes(x.pk))).map(x => x.pk), "jeni は動きません。カードがその人のものになります。"); }
-  if ((b = q("[data-giftto]"))) { const id = sel; emit(me, {t: "gift", card: id, to: b.dataset.giftto}); detail(id); return toast(`${nameOf(b.dataset.giftto)} さんに贈りました`); }
-  if ((b = q("[data-used]"))) { const id = sel; emit(me, {t: "used", card: id, holder: b.dataset.used}); detail(id, true); return toast("受け取りを記録しました"); }
-  if ((b = q("[data-refund]"))) { const id = sel, c = S.cards[id], x = c.copies.find(y => y.owner === b.dataset.refund && y.fromCreator); emit(me, {t: "refund", card: id, holder: b.dataset.refund}); detail(id, true); return toast(`${x ? x.paid : 0} jeni を返しました`); }
-  if (q("[data-close]")) return closeSheet();
+  if ((b = q("[data-giftto]"))) { const id = sel; emit(me, {t: "gift", card: id, to: b.dataset.giftto}); closeOver(); detail(id); return toast(`${nameOf(b.dataset.giftto)} さんに贈りました`); }
+  if ((b = q("[data-used]"))) { const id = sel; emit(me, {t: "used", card: id, holder: b.dataset.used}); refreshPage(id); recSheet(id); return toast("受け取りを記録しました"); }
+  if ((b = q("[data-refund]"))) { const id = sel, c = S.cards[id], x = c.copies.find(y => y.owner === b.dataset.refund && y.fromCreator); emit(me, {t: "refund", card: id, holder: b.dataset.refund}); if ($("pg-" + id)) refreshPage(id); recSheet(id); return toast(`${x ? x.paid : 0} jeni を返しました`); }
+  if (q("[data-close]")) { closeOver(); return closeSheet(); }
   if ((b = q("[data-detail]"))) { player.pause(); playing = ""; return detail(b.dataset.detail); }
 });
+/* 長押し：押しているあいだボタンが満ち、満ちたら決める（はなすと戻る） */
+let lpT = null;
+function lpStart(b) {
+  lpCancel(); b.classList.add("pressing");
+  lpT = setTimeout(() => { b.classList.remove("pressing"); lpT = null; lpDo(b.dataset.lp, b.dataset.id); }, 700);
+}
+function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); }
+function lpDo(act, id) {
+  if (act === "hold") return doHold(id);
+  if (act === "want") { emit(me, {t: "want", card: id}); refreshPage(id); return toast("順番待ちに並びました"); }
+  if (act === "tip") {
+    const n = +(document.querySelector(`[data-amt][data-for="${id}"][aria-pressed="true"]`) || {dataset: {amt: 10}}).dataset.amt;
+    if (n > U().bal) return toast("jeni が足りません");
+    emit(me, {t: "tip", card: id, amount: n}); refreshPage(id); return toast(`${n} jeni を贈りました`);
+  }
+}
+document.addEventListener("pointerdown", e => { const b = e.target.closest("[data-lp]"); if (b && !b.disabled) { e.preventDefault(); lpStart(b); } });
+["pointerup", "pointerleave", "pointercancel"].forEach(t => document.addEventListener(t, e => { if (e.target.closest && e.target.closest("[data-lp]")) lpCancel(); }, true));
+document.addEventListener("contextmenu", e => { if (e.target.closest("[data-lp]")) e.preventDefault(); });
+document.addEventListener("keydown", e => { const b = e.target.closest && e.target.closest("[data-lp]"); if (b && (e.key === "Enter" || e.key === " ") && !e.repeat) { e.preventDefault(); lpStart(b); } });
+document.addEventListener("keyup", e => { if (e.target.closest && e.target.closest("[data-lp]")) lpCancel(); });
+/* 横にスワイプで戻る（どちら向きでも）。上下のめくりとは分ける */
+let sw = null;
+document.addEventListener("touchstart", e => { if (e.touches.length === 1) sw = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now()}; }, {passive: true});
+document.addEventListener("touchend", e => {
+  if (!sw || lpT) return; const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
+  if (Math.abs(dx) < 80 || Math.abs(dy) > 50 || dt > 700) return;
+  if (!$("over").hidden) return closeOver();
+  if (!$("sheet").hidden) { const bk = $("sheet").querySelector(".back"); if (bk) bk.click(); }
+}, {passive: true});
+document.addEventListener("change", e => {
+  if (e.target.id !== "p-pic" || !e.target.files[0]) return;
+  const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => {
+    const k = 240 / Math.min(im.width, im.height), cv = document.createElement("canvas"); cv.width = cv.height = 240;
+    cv.getContext("2d").drawImage(im, (240 - im.width * k) / 2, (240 - im.height * k) / 2, im.width * k, im.height * k);
+    PICS[me] = cv.toDataURL("image/jpeg", .85); toast("写真を変えました（保存を押してください）"); }; im.src = fr.result; };
+  fr.readAsDataURL(e.target.files[0]);
+});
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("over").hidden) return closeOver();
   if (e.key === "Escape" && !$("sheet").hidden) closeSheet();
   if (e.key === "Enter" && e.target.classList && e.target.classList.contains("line")) detail(e.target.dataset.detail);
 });
