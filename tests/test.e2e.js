@@ -15,7 +15,7 @@ const K = c => c.repeat(64);
     const id = t => p.evaluate(t => Object.values(__jt.S.cards).find(c => c.title === t).id, t);
     const bal = () => p.evaluate(() => __jt.S.users[__jt.me].bal);
     const total = () => p.evaluate(() => Object.values(__jt.S.users).reduce((s, u) => s + u.bal, 0) === Object.values(__jt.S.users).filter(u => u.member).length * 1000);
-    const lp = async sel => { const el = await p.$(sel); const bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(900); await p.mouse.up(); await p.waitForTimeout(300); };
+    const lp = async sel => { const el = await p.$(sel); const bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(1300); await p.mouse.up(); await p.waitForTimeout(300); };
     const tap = async sel => { const el = await p.$(sel); const bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(150); await p.mouse.up(); await p.waitForTimeout(250); };
     check(tag + " 横にはみ出さない", !(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
     if (SHOT) await p.screenshot({path: `${SHOT}/home-${w}.png`});
@@ -55,17 +55,38 @@ const K = c => c.repeat(64);
     check(tag + " 記録は下から出る（持っている人）", !(await p.$eval("#over", e => e.hidden)) && (await p.textContent("#over")).includes("持っている人"));
     if (SHOT) await p.screenshot({path: `${SHOT}/rec-${w}.png`});
     await p.click("[data-overclose]");
+    // 押している途中ではなすと、持たない（印も消える）
+    const curry = await id("特製スパイスカレー"), paddy = await id("夜明けの田んぼ");
+    await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), paddy);
+    { const el = await p.$(`#pg-${paddy} [data-lp="hold"]`); const bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(500);
+      check(tag + " 押しているあいだ印が描かれていく", await p.$eval(`#pg-${paddy} .jc2`, e => e.classList.contains("drawing")));
+      await p.mouse.up(); await p.waitForTimeout(300);
+      check(tag + " 途中ではなすと持たない", !(await p.$eval(`#pg-${paddy} .jc2`, e => e.classList.contains("drawing") || e.classList.contains("held")))); }
+    // 全画面：カードだけ
+    await p.click("[data-imm]"); await p.waitForTimeout(200);
+    check(tag + " 全画面ではカードだけ", await p.evaluate(id => document.getElementById("sheet").classList.contains("imm") && getComputedStyle(document.querySelector(`#pg-${id} .acts2`)).display === "none", paddy));
+    if (SHOT) await p.screenshot({path: `${SHOT}/imm-${w}.png`});
+    await p.click("[data-imm]"); void curry;
+    // 左へスワイプしても戻らない（右へスワイプで戻る）
+    await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(300, 400, "touchstart"); s(60, 410, "touchend"); });
+    await p.waitForTimeout(200);
+    check(tag + " 左へスワイプでは戻らない", await p.evaluate(() => !document.getElementById("sheet").hidden));
     // 横にスワイプで戻る
     await p.touchscreen.tap(5, 400).catch(() => {});
     await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(40, 400, "touchstart"); s(260, 410, "touchend"); });
     await p.waitForTimeout(300);
     check(tag + " 横にスワイプすると一覧へ戻る", await p.evaluate(() => document.getElementById("sheet").hidden));
+    // 一覧：左へスワイプすると右どなりの項目（現物）
+    await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(300, 600, "touchstart"); s(80, 610, "touchend"); });
+    await p.waitForTimeout(200);
+    check(tag + " 一覧で左へスワイプすると「現物」", await p.$eval('[data-f="rwa"]', e => e.getAttribute("aria-pressed") === "true"));
+    await p.click('[data-f="all"]');
     // その場で売る（Kenji が売り、Farmer_S が買う）→ 貝が降る
     await p.click("[data-make]"); await p.click('[data-mode="sale"]'); await p.click('[data-sample="media/bread.jpg"]');
     await p.fill("#m-title", "焼きたてのパン"); await p.fill("#m-price", "120"); await p.click("[data-create]"); await p.waitForTimeout(300);
     const kb = await bal();
     await p.click(`[data-buyas="${K("b")}"]`); await p.click("[data-pay]"); await p.waitForTimeout(500);
-    check(tag + " 払い終わり・貝が降る・売った人に 120 jeni", (await p.textContent("#sheet")).includes("払い終わりました") && !!(await p.$(".rain")) && await bal() === kb + 120);
+    check(tag + " 払い終わり・貝が現れる・売った人に 120 jeni", (await p.textContent("#sheet")).includes("払い終わりました") && !!(await p.$(".done .coin")) && await bal() === kb + 120);
     if (SHOT) await p.screenshot({path: `${SHOT}/paid-${w}.png`});
     await p.click('#sheet [data-detail]'); await p.waitForTimeout(300);
     const sale = await p.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "焼きたてのパン").id);
@@ -90,7 +111,7 @@ const K = c => c.repeat(64);
     // 参加：ゆず を Haru に認めてもらう → 貝が降る
     await p.selectOption("#who", K("e")); await p.click("[data-me]"); await p.waitForTimeout(300);
     await p.click(`[data-vouchby="${K("c")}"]`); await p.waitForTimeout(400);
-    check(tag + " 認められると 1,000 jeni・貝が降る", (await p.textContent("#sheet")).includes("1,000 jeni が届きました") && !!(await p.$(".rain")));
+    check(tag + " 認められると 1,000 jeni・貝が現れる", (await p.textContent("#sheet")).includes("1,000 jeni が届きました") && !!(await p.$(".done .coin")));
     if (SHOT) await p.screenshot({path: `${SHOT}/joined-${w}.png`});
     check(tag + " 合計は 参加人数×1000 のまま", await total());
     await p.click("#sheet [data-close]");
