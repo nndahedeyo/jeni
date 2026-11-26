@@ -259,3 +259,11 @@ test("QR の意味：決まった画面だけ選べる。元のデータはデ�
   const S = reduce([...base(), a, b, c, d], 20, opt);
   assert.equal(S.cards[a.id].qr, "orig"); assert.equal(S.cards[b.id].qr, "open"); assert.equal(S.cards[c.id].qr, "open"); assert.equal(S.cards[d.id].qr, "tip");
 });
+test("つなぐカード：無料で数なし。持つ＝常連・会員。投げ銭は全額作った人へ。いつでもやめられる", () => {
+  const paid = ev(A, 10, {t: "card", kind: "shop", title: "有料の店", price: 10}), shop = ev(A, 11, {t: "card", kind: "shop", title: "店", price: 0});
+  let S = reduce([...base(), paid, shop, ev(B, 12, {t: "hold", card: shop.id}), ev(C, 13, {t: "tip", card: shop.id, amount: 10})], 20, opt);
+  assert.ok(!S.cards[paid.id]); assert.equal(S.cards[shop.id].holders, 1);
+  assert.equal(S.users[A].bal, 1010); assert.equal(S.users[B].bal, 1000);
+  S = reduce([...base(), shop, ev(B, 12, {t: "hold", card: shop.id}), ev(B, 13, {t: "leave", card: shop.id}), ev(C, 14, {t: "leave", card: shop.id})], 20, opt);
+  assert.equal(S.cards[shop.id].copies.length, 0);
+});

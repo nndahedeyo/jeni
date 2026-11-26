@@ -56,6 +56,8 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .menu button{flex:0 0 max(34px, calc((100% - 24px) / 6.5))}
 .menu-w .make{flex:0 0 auto;width:max(34px, calc((100% - 28px) / 7.5));aspect-ratio:1;border:0;border-radius:12px;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;padding:0}
 .me-r{margin-left:auto;display:grid;justify-items:end;gap:4px}
+.me-line{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:360px){.me{aspect-ratio:auto;min-height:190px}.cb{width:32px;height:32px}.comm{gap:4px}.me-top .av{width:36px;height:36px}}
 .me-r .bal{margin-left:0}
 .comm{display:flex;gap:6px}
 .cb{position:relative;width:36px;height:36px;border:0;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);display:grid;place-items:center;padding:0}.cb svg.i{width:19px;height:19px}
@@ -320,6 +322,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
   <symbol id="i-data" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="m9 15 2 2 4-4"/></symbol>
   <symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v10"/><path d="m6 17 3.5-4 2.5 3 1.5-1.5L16 17"/></symbol>
   <symbol id="i-talk" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
   <symbol id="i-app" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M10 18h4"/></symbol>
   <symbol id="i-sale" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></symbol>
@@ -353,7 +356,9 @@ const COIN = `/*COIN*/`;
 const coin = (cls = "") => COIN.replace("<svg ", `<svg class="coin ${cls}" aria-hidden="true" `);
 const G = /*G*/, PHI = (1 + Math.sqrt(5)) / 2;
 const KIND = {rwa: "現物", event: "イベント", service: "体験・サービス", music: "音楽", video: "動画", picture: "写真", text: "文章", app: "アプリ", shop: "お店", org: "会社・団体", project: "プロジェクト", place: "場所", other: "そのほか"};
-const BUNDLE = ["project", "shop", "org", "place"];   // つなぐカード（ほかのカードを束ねる）
+const BUNDLE = ["project", "shop", "org", "place"];
+// つなぐカードを持つ＝常連・会員・仲間になる（無料・いつでもやめられる・新しくつながったカードの知らせが届く）
+const KEEP = {shop: ["常連", "常連になる"], org: ["会員", "会員になる"], project: ["仲間", "仲間になる"], place: ["見守る人", "見守る"]};   // つなぐカード（ほかのカードを束ねる）
 
 /* ---- 見本の人たちと、はじめの記録（この画面の中だけ。どこにも送らない） ---- */
 const P = {
@@ -376,7 +381,7 @@ function emit(who, c) {
   EV.push(e); S = reduce(EV, clock, {founders: FOUNDERS}); return e;
 }
 function seed() {
-  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k]; for (const k in CHAT) delete CHAT[k]; for (const k in READ) delete READ[k]; for (const k in CSEEN) delete CSEEN[k]; CALLS.length = 0;
+  EV = []; seq = 0; clock = 1000; for (const k in MEDIA) delete MEDIA[k]; for (const k in CHAT) delete CHAT[k]; for (const k in READ) delete READ[k]; for (const k in NSEEN) delete NSEEN[k]; for (const k in CSEEN) delete CSEEN[k]; CALLS.length = 0;
   const {kenji: A, farmer: B, haru: C, sound: D} = P;
   for (const p of [A, B, C, D]) emit(p.pk, {t: "profile", name: p.name});
   emit(A.pk, {t: "vouch", who: B.pk}); emit(A.pk, {t: "vouch", who: C.pk}); emit(B.pk, {t: "vouch", who: D.pk});
@@ -412,10 +417,12 @@ function seed() {
   card(B, {kind: "event", title: "畑の収穫体験", price: 50, supply: 8, when: "12月14日（日）9:00", place: "千葉県 の畑", geo: [35.6, 140.12], body: "大根を抜いて、その場で味見します。長ぐつがあると安心です。"}, {img: "media/radish.jpg", note: "当日は、参加券のQRで受付します。"});
   const shop = card(C, {kind: "shop", title: "Bakery_Haru", price: 0, when: "火〜土 8:00–17:00", place: "東京都 の店頭", geo: [35.67, 139.77], body: "天然酵母のパン屋。焼きたては朝8時から。"}, {img: "media/bread.jpg"});
   emit(C.pk, {t: "attach", project: shop, card: bread}); emit(C.pk, {t: "attach", project: shop, card: curry});
+  emit(A.pk, {t: "hold", card: shop, vis: "show"});   // Kenji は Bakery_Haru の常連
   const org = card(B, {kind: "org", title: "ちばの畑ネット", price: 0, body: "千葉の小さな畑をつなぐ集まり。体験や直売の案内をしています。"}, {img: "media/paddy.jpg"});
   emit(B.pk, {t: "attach", project: org, card: pj});
   MEDIA[rain].img = "media/field.jpg";   // 音楽にも画像をつけられる
-  card(C, {kind: "service", title: "パンの焼き方を教えます", price: 40, supply: 4, when: "毎週月曜 14:00", place: "東京都 の店頭", geo: [35.69, 139.7], body: "天然酵母の扱い方から。2時間ほど。"}, {img: "media/bread.jpg"});
+  const lesson = card(C, {kind: "service", title: "パンの焼き方を教えます", price: 40, supply: 4, when: "毎週月曜 14:00", place: "東京都 の店頭", geo: [35.69, 139.7], body: "天然酵母の扱い方から。2時間ほど。"}, {img: "media/bread.jpg"});
+  emit(C.pk, {t: "attach", project: shop, card: lesson});   // 常連の Kenji にお知らせが届く
   const plc = card(B, {kind: "place", title: "在来種の畑", price: 0, place: "千葉県 の山あい", geo: [35.42, 140.05], body: "在来の大根と小かぶを育てている畑。ここで撮った写真や記録をつなげてください。"}, {img: "media/paddy.jpg"});
   emit(B.pk, {t: "attach", project: plc, card: paddy});
   // 2人だけの会話（見本。本物では2人の鍵で封をしてから置く）
@@ -458,7 +465,7 @@ let field = "all", opened = -1, playing = "", sel = null, keepScroll = false;
 function sub(c) {
   const by = `<span>${esc(nameOf(c.by))}</span>`, m = MEDIA[c.id] || {};
   const lk = c.circle ? `<span class="lk">${icon("lock")}</span>` : "";
-  if (mine(c).length) return `${lk}${icon(kindIcon(c.kind))}<span class="left">持っている ${mine(c).length}</span>${by}`;
+  if (mine(c).length) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${KEEP[c.kind] ? KEEP[c.kind][0] : `持っている ${mine(c).length}`}</span>${by}`;
   if (c.supply != null) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${c.left ? `残り${c.left}` : "残り0"}</span>${by}`;
   if (m.len) return `${lk}${icon(c.kind)}<span>${m.len}</span>${by}`;
   if (c.kind === "text") return `${lk}${icon("text")}<span>${esc(c.body)}</span>`;
@@ -472,7 +479,8 @@ function thumb(c) {
 }
 function holdBtn(c) {
   if (c.by === me) return `<button type="button" class="hold free" data-detail="${c.id}">自分の</button>`;
-  if (mine(c).length >= capOf(c)) return `<button type="button" class="hold free" disabled>持っている</button>`;
+  if (mine(c).length >= capOf(c)) return `<button type="button" class="hold free" disabled>${KEEP[c.kind] ? KEEP[c.kind][0] : "持っている"}</button>`;
+  if (KEEP[c.kind]) return `<button type="button" class="hold free" data-detail="${c.id}">${KEEP[c.kind][1]}</button>`;
   if (c.supply != null && !c.left) return `<button type="button" class="hold free" data-detail="${c.id}">${c.queue.includes(me) ? "待っている" : "順番待ち"}</button>`;
   return c.price ? `<button type="button" class="hold" data-detail="${c.id}" aria-label="${c.price} jeni・開く">${coin()}${c.price}</button>`
     : `<button type="button" class="hold free" data-detail="${c.id}">無料</button>`;
@@ -569,6 +577,7 @@ const prefVis = c => { const v = PREF[me] || "show"; return v === "lock" && c.su
 function flowLine(c) {
   const by = esc(nameOf(c.by)), lim = c.supply != null;
   if (lim && !c.left) return `譲り受けると ${c.price} jeni → 手放した人へ・いま${c.queue.length}人が順番待ち`;
+  if (KEEP[c.kind]) return `${KEEP[c.kind][1]}と、新しくつながったカードの知らせが届きます。無料で、いつでもやめられます・投げ銭は全額 ${by} さんへ`;
   const share = c.copies.some(x => !x.used && x.vis !== "lock");
   if (c.kind === "app") return `持つと ${c.price} jeni → ${by} さんへ・持っているあいだ、このアプリを使えます`;
   return `持つと ${c.price} jeni → ${by} さんへ・投げ銭は${lim || !share ? `全額 ${by} さんへ` : "半分ずつ作った人と持っている人へ"}`;
@@ -583,6 +592,7 @@ function pageHtml(c) {
   if (isMe) main = "";
   else if (!u.member) main = `<span class="sub">参加すると持てます</span>`;
   else if (lim && !c.left && !my.length) main = c.queue.includes(me) ? `<button type="button" class="pill" data-unwant="${c.id}">順番待ちをやめる</button>` : lpBtn("want", c.id, "長押しで順番を待つ", "go");
+  else if (KEEP[c.kind]) main = my.length ? `<button type="button" class="pill" data-leave="${c.id}">${KEEP[c.kind][0]}をやめる</button>` : lpBtn("hold", c.id, `${KEEP[c.kind][1]}<small>長押し</small>`, "go");
   else if (my.length >= capOf(c)) main = `<span class="sub">持っている（${capOf(c)}枚まで）</span>`;
   else main = lpBtn("hold", c.id, `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go");
   if (c.hidden) main = `<span class="sub warnc">知らせが${RULE.flagsToHide}件あり、隠されました</span>`;
@@ -658,10 +668,10 @@ function recSheet(id) {
   if (m.where) rec.push(["受け取り", esc(m.where)]);
   if (c.circle) rec.push(["見える人", `${esc(S.circles[c.circle].name)}（${S.circles[c.circle].members.length}人）`]);
   if (c.refunds) rec.push(["返した", c.refunds + "回"]);
-  const acts = my.length ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
+  const acts = my.length && !KEEP[c.kind] ? `<div class="acts2">${c.supply != null && c.queue.length ? `<button type="button" class="pill" data-passask="${id}">譲る（${c.queue.length}人待ち）</button>` : ""}<button type="button" class="pill" data-giftask="${id}">贈る</button></div>` : "";
   const u2 = S.users[me] || {}, canFlag = u2.member && u2.deals >= 1 && c.by !== me && !c.flags.includes(me);
   openOver(`<h2 class="rh">${esc(c.title || "その場のカード")}</h2>${acts}
-    <section class="box"><h3>持っている人</h3>${holdersHtml(c)}</section>
+    <section class="box"><h3>${KEEP[c.kind] ? KEEP[c.kind][0] + "の人" : "持っている人"}</h3>${holdersHtml(c)}</section>
     <section class="box"><h3>このカードの記録</h3><dl class="kv">${rec.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></section>
     ${canFlag ? `<button type="button" class="link warnc" data-flagcard="${id}">危ないカードとして知らせる</button><p class="sub" style="font-size:11px">実績のある別々の人${RULE.flagsToHide}人から知らせが届くと、カードが隠れます。</p>` : c.flags.includes(me) ? `<p class="sub">知らせました（${c.flags.length}/${RULE.flagsToHide}）</p>` : ""}`);
   sel = id;
@@ -699,9 +709,27 @@ function personCard(pk) {
 }
 // 残高の下の働き：吹き出し（会話）・受話器（電話）。ウォレットをつないだら、ここに1つ足すだけ（例：{k: "wallet", i: "wallet", l: "ウォレット", dot: …, open: …}）
 const FX = [
+  {k: "news", i: "bell", l: "お知らせ", dot: () => news().filter(n => n.at > (NSEEN[me] || 0)).length, open: () => newsList()},
   {k: "chats", i: "talk", l: "話す", dot: () => unreadChat(), open: () => chatList()},
   {k: "phones", i: "phone", l: "電話", dot: () => missedCalls(), open: () => phoneList()},
 ];
+const NSEEN = {};
+function news() {
+  const out = [];
+  for (const b of Object.values(S.cards)) {
+    if (!KEEP[b.kind] || !canSee(b)) continue;
+    const mineCopy = b.copies.find(x => x.owner === me); if (!mineCopy) continue;
+    for (const it of b.items) { const c = S.cards[it.card]; if (c && it.at > mineCopy.at && it.by !== me && canSee(c) && !c.hidden) out.push({at: it.at, b, c}); }
+  }
+  return out.sort((x, y) => y.at - x.at);
+}
+function newsList() {
+  const ns = news(), seen = NSEEN[me] || 0; NSEEN[me] = clock;
+  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
+    <h2 class="rh">お知らせ</h2>
+    <section class="box">${ns.map(n => `<button type="button" class="mini" data-detail="${n.c.id}">${icon(kindIcon(n.c.kind))}<span>${esc(n.b.title)} に「${esc(n.c.title)}」${n.at > seen ? ` <i class="nb" aria-label="新しい"></i>` : ""}</span><small>${KEEP[n.b.kind][0]}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>
+    <p class="fline">お店の常連・会社や団体の会員・プロジェクトの仲間・場所を見守る人になると、新しくつながったカードがここに届きます。</p>`);
+}
 const unreadOf = pk => (CHAT[pairKey(me, pk)] || []).filter(m => m.by === pk && m.at > (READ[me + ":" + pk] || 0)).length;
 const unreadChat = () => friendsOf(me).reduce((n, pk) => n + unreadOf(pk), 0);
 const missedCalls = () => CALLS.filter(c => c.to === me && c.missed && c.at > (CSEEN[me] || 0)).length;
@@ -965,9 +993,9 @@ function rules() {
     <h2 class="rh">${coin()} jeni のきまり</h2>
     <ol class="rules">
       <li><b>はじまり</b>認められて参加すると、${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認めてあげられるのは${RULE.vouchMax}人まで。</li>
-      <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。データは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回、体験・サービスは受けるのを1回。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
+      <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。データは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回、体験・サービスは受けるのを1回。お店・会社や団体・プロジェクト・場所（つなぐカード）は無料で、持つと常連・会員・仲間になり、いつでもやめられます。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
       <li><b>譲る</b>数に限りのあるカードは、持っている人から同じ値段で譲り受けます。jeni は手放した人へ戻ります。</li>
-      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。受け取るとなくなるもの（現物など数に限りのあるカード）は、全額が作った人へ。</li>
+      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ。受け取るとなくなるもの（現物など数に限りのあるカード）と、つなぐカードは、全額が作った人へ。</li>
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
     </ol>
     <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話は、お互いに友達のときだけ（残高の下の吹き出しと受話器から）。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物は、持っている人が出す一度きりのQRをお店が読んで引き換えます。</p>
@@ -999,7 +1027,8 @@ const GUIDE = [
   ["場所と地図", "「場所」の項目では上に地図。点を押すとそのカード。場所・お店・イベント・体験は、作るときに地図を押して点を置けます。", () => { me = AS("kenji"); field = "place"; closeSheet(); }],
   ["体験・サービス", "持つ＝受ける券。枠の数だけ。当日は券のQRで。", () => { me = AS("kenji"); detail(cardBy("パンの焼き方を教えます").id); }],
   ["裏のQRの意味を選べる", "カードを開く・投げ銭・持つ・元のデータ（データのカード）。外のリンクにはできません。", () => { me = AS("kenji"); MK.mode = "music"; make(); }],
-  ["知らせは小さな赤い印", "残高の下の吹き出し（会話）と受話器（電話）。数は出しません。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
+  ["常連・会員・仲間になる", "お店・会社や団体・プロジェクト・場所は、長押しで常連・会員・仲間・見守る人に（無料・いつでもやめられる）。新しくつながったカードは鈴のお知らせへ。", () => { me = AS("kenji"); newsList(); }],
+  ["知らせは小さな赤い印", "残高の下の鈴（お知らせ）・吹き出し（会話）・受話器（電話）。数は出しません。", () => { me = AS("kenji"); field = "all"; closeSheet(); }],
   ["電話：不在着信と、かけられる人", "お互いに友達の人とだけ（見本・つながない）。", () => { me = AS("kenji"); phoneList(); }],
   ["項目は横に滑らせて選ぶ", "アイコンはまとめず、自分のカードの中で横に滑ります。＋は右はしに固定。", () => { me = AS("kenji"); field = "shop"; closeSheet(); }],
   ["お店・会社や団体", "自分のカードをつなげて並べます（つなげるのは作った人だけ）。プロジェクトと場所はだれでも。", () => { me = AS("kenji"); detail(cardBy("Bakery_Haru").id); }],
@@ -1091,6 +1120,7 @@ document.addEventListener("click", e => {
   if ((b = q("[data-call]"))) return callSheet(b.dataset.call);
   if ((b = q("[data-hang]"))) { clearTimeout(callT); closeOver(); if ($("sheet").querySelector("h2.rh") && /^電話$/.test($("sheet").querySelector("h2.rh").textContent)) phoneList(); return toast("通話を終えました"); }
   if ((b = q("[data-redeem]"))) return redeemSheet(b.dataset.redeem);
+  if ((b = q("[data-leave]"))) { const id = b.dataset.leave, k = KEEP[S.cards[id].kind][0]; emit(me, {t: "leave", card: id}); refreshPage(id); return toast(`${k}をやめました`); }
   if ((b = q("[data-shopread]"))) { const id = b.dataset.shopread, c = S.cards[id]; emit(c.by, {t: "used", card: id, holder: RD.holder, code: RD.code}); const ok = S.cards[id].copies.some(x => x.owner === RD.holder && x.used); closeOver(); refreshPage(id); return toast(ok ? "引き換えました（このカードは「使った」になり、また持てます）" : "引き換えられませんでした"); }
   if ((b = q("[data-attachask]"))) return attachAsk(b.dataset.attachask);
   if ((b = q("[data-attach]"))) { const pid = sel; emit(me, {t: "attach", project: pid, card: b.dataset.attach}); closeOver(); refreshPage(pid); return toast("つなぎました"); }

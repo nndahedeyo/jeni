@@ -244,6 +244,22 @@ const K = c => c.repeat(64);
     await p.click('[data-f="music"]');
     check(tag + " 音楽の項目", /雨の作業小屋/.test(await p.textContent("#home .list")) && !/夜明けの田んぼ/.test(await p.textContent("#home .list")));
     check(tag + " 一覧の外に切り替えの帯を出さない", !(await p.$(".wsub")));
+    // 常連・会員：お知らせ（鈴）に、常連のお店に新しくつながったカード
+    check(tag + " 常連のお店に新しいカード → 鈴に赤い印", !!(await p.$('[data-fx="news"] b')));
+    await p.click('[data-fx="news"]'); await p.waitForTimeout(150);
+    check(tag + " お知らせ：Bakery_Haru に「パンの焼き方を教えます」", /Bakery_Haru に「パンの焼き方を教えます」/.test(await p.textContent("#sheet")));
+    await p.click("#sheet [data-close]");
+    check(tag + " 見たあとは鈴の印が消える", !(await p.$('[data-fx="news"] b')));
+    const shop = await id("Bakery_Haru");
+    await p.evaluate(id => __jt.detail(id), shop); await p.waitForTimeout(150);
+    check(tag + " 常連のお店のページに「常連をやめる」、jeni の値段は出ない", !!(await p.$(`#pg-${shop} [data-leave]`)) && !/jeni →/.test(await p.textContent(`#pg-${shop} .fline`)));
+    const kb1 = await bal(); await p.click(`#pg-${shop} [data-leave]`); await p.waitForTimeout(150);
+    check(tag + " 常連をやめられる（jeni は動かない）", !!(await p.$(`#pg-${shop} [data-lp="hold"]`)) && await bal() === kb1);
+    await lp(`#pg-${shop} [data-lp="hold"]`); await p.waitForTimeout(300);
+    check(tag + " 長押しでまた常連になる", !!(await p.$(`#pg-${shop} [data-leave]`)) && await bal() === kb1);
+    await p.click(`#pg-${shop} [data-rec]`); await p.waitForTimeout(150);
+    check(tag + " 記録は「常連の人」、譲る・贈るは出ない", /常連の人/.test(await p.textContent("#over")) && !(await p.$("#over [data-giftask]")));
+    await p.click("[data-overclose]"); await p.click("#sheet [data-close]");
     await p.click('[data-f="shop"]');
     check(tag + " お店の項目", /Bakery_Haru/.test(await p.textContent("#home .list")) && !/在来種/.test(await p.textContent("#home .list")));
     await p.click('[data-f="project"]');
@@ -264,7 +280,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/定員/, /在来種の畑/, /枠/, /裏のQRを読むと/, /畑の収穫体験/, /不在着信/, /Bakery_Haru/, /お店の品/, /何を作る/, /Ambient Waves/, /冬至のころ/, /夜明けの田んぼ/, /みんなの種の地図/, /アプリを開く/, /雨の作業小屋/, /天然酵母/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
+    const want = [/定員/, /在来種の畑/, /枠/, /裏のQRを読むと/, /お知らせ/, /畑の収穫体験/, /不在着信/, /Bakery_Haru/, /お店の品/, /何を作る/, /Ambient Waves/, /冬至のころ/, /夜明けの田んぼ/, /みんなの種の地図/, /アプリを開く/, /雨の作業小屋/, /天然酵母/, /持っている人/, /見せ方/, /買う人に読んでもらう|QRを出す/, /わたしのカード/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));

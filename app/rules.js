@@ -135,7 +135,8 @@
         if (c.circle !== undefined) { const ci = S.circles[c.circle]; if (!ci || !ci.members.includes(e.pubkey)) continue; card.circle = ci.id; }
         // その場で売る：一度きりの番号（の要約）と期限。番号を知っている人（QR を読んだ人）だけが持てる。持つと同時に受け取り済み
         if (c.kind === "project") { card.want = str(c.want, 200); card.state = "doing"; }
-        if ((c.kind === "event" || c.kind === "service") && supply == null) continue;   // イベントは定員、サービスは枠がいる。持つ＝参加券・受ける券
+        if ((c.kind === "event" || c.kind === "service") && supply == null) continue;
+        if (BUNDLE.includes(c.kind) && (c.price !== 0 || supply != null)) continue;   // つなぐカードは無料・数なし。持つ＝常連・会員・仲間になる（知らせが届く）   // イベントは定員、サービスは枠がいる。持つ＝参加券・受ける券
         if (AT.includes(c.kind)) {
           card.when = str(c.when, 60); card.place = str(c.place, 100);
           if (c.geo !== undefined) { const g = c.geo; if (!Array.isArray(g) || g.length !== 2 || !g.every(Number.isFinite) || Math.abs(g[0]) > 90 || Math.abs(g[1]) > 180) continue; card.geo = [Math.round(g[0] * 1e5) / 1e5, Math.round(g[1] * 1e5) / 1e5]; }
@@ -236,11 +237,18 @@
         card.copies.splice(i, 1); card.issued--; card.refunds++; ok(e, "refund"); continue;
       }
 
-      // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードは全額が作った人へ
+      // つなぐカード（常連・会員・仲間）はいつでもやめられる
+      if (c.t === "leave") {
+        if (!BUNDLE.includes(card.kind)) continue;
+        const i = card.copies.findIndex(x => x.owner === e.pubkey); if (i < 0) continue;
+        card.copies.splice(i, 1); ok(e, "leave"); continue;
+      }
+
+      // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードと、つなぐカード（常連・会員）は全額が作った人へ
       if (c.t === "tip") {
         if (!me.member || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;
         const holders = {};
-        if (card.supply == null) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
+        if (card.supply == null && !BUNDLE.includes(card.kind)) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
         const n = Object.values(holders).reduce((a, b) => a + b, 0);
         me.bal -= c.amount;
         let toCreator = c.amount;
