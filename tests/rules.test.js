@@ -265,3 +265,15 @@ test("つなぐカード：無料で数なし。持つ＝常連・会員。投�
   S = reduce([...base(), shop, ev(B, 12, {t: "hold", card: shop.id}), ev(B, 13, {t: "leave", card: shop.id}), ev(C, 14, {t: "leave", card: shop.id})], 20, opt);
   assert.equal(S.cards[shop.id].copies.length, 0);
 });
+test("きまりの版：版のないもの・今の版は読む。知らない新しい版は読まない", () => {
+  const a = ev(A, 10, {t: "card", kind: "text", title: "版なし", price: 0}), b = ev(A, 11, {t: "card", kind: "text", title: "版1", price: 0, v: 1}), c = ev(A, 12, {t: "card", kind: "text", title: "版99", price: 0, v: 99});
+  const S = reduce([...base(), a, b, c], 20, opt);
+  assert.ok(S.cards[a.id] && S.cards[b.id]); assert.ok(!S.cards[c.id]);
+});
+test("記録の要約：根は並び順によらない。どの出来事も短い証明で根につながる。書き換えると合わない", () => {
+  const { merkleRoot, merkleProof, merkleCheck, sha256hex } = require("../app/rules.js");
+  const ids = [...Array(7)].map((_, i) => sha256hex("e" + i));
+  const root = merkleRoot(ids); assert.equal(root, merkleRoot([...ids].reverse()));
+  for (const id of ids) { const p = merkleProof(ids, id); assert.ok(p.length <= 3); assert.ok(merkleCheck(id, p, root)); }
+  assert.ok(!merkleCheck(sha256hex("にせ"), merkleProof(ids, ids[0]), root));
+});

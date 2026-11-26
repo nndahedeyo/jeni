@@ -11,6 +11,7 @@
 "use strict";
 (function (root) {
   const R = {
+    version: 1,         // きまりの版。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
     start: 1000,        // 参加したときに届く jeni（配る量は使われ方を見て変わることがある。変わるときも全員に同じきまり）
     vouchMax: 3,        // 1人が認められる人数
     capPaid: 3,         // 同じカードを持てる数
@@ -78,6 +79,7 @@
 
     for (const e of evs) {
       let c; try { c = JSON.parse(e.content); } catch (x) { continue; }
+      if (!c || typeof c !== "object" || (c.v !== undefined && !(Number.isInteger(c.v) && c.v >= 1 && c.v <= R.version))) continue;
       if (!c || typeof c !== "object") continue;
       const me = U(e.pubkey), t = e.created_at;
       // 最初の人たちは、何か出来事を出した時点で参加
@@ -269,6 +271,21 @@
     return S;
   }
 
-  const api = {R, KINDS, BUNDLE, COUNTED, AT, QR, reduce, sha256hex};
+  // 記録の要約（マークルの根）：出来事の番号を並べ、2つずつ合わせて1つになるまで要約する。根だけをビットコインに刻めば、
+  // その中のどの出来事も「この時より前にあった」と、短い証明（となりの要約の並び）で確かめられる
+  const pairHash = (a, b) => sha256hex(a < b ? a + b : b + a);
+  function merkleRoot(ids) {
+    let lv = [...ids].sort(); if (!lv.length) return sha256hex("");
+    while (lv.length > 1) { const nx = []; for (let i = 0; i < lv.length; i += 2) nx.push(i + 1 < lv.length ? pairHash(lv[i], lv[i + 1]) : lv[i]); lv = nx; }
+    return lv[0];
+  }
+  function merkleProof(ids, id) {
+    let lv = [...ids].sort(), i = lv.indexOf(id); if (i < 0) return null; const path = [];
+    while (lv.length > 1) { const nx = []; for (let k = 0; k < lv.length; k += 2) nx.push(k + 1 < lv.length ? pairHash(lv[k], lv[k + 1]) : lv[k]);
+      const sib = i % 2 ? i - 1 : i + 1; if (sib < lv.length) path.push(lv[sib]); i = Math.floor(i / 2); lv = nx; }
+    return path;
+  }
+  const merkleCheck = (id, path, root) => path.reduce((h, s) => pairHash(h, s), id) === root;
+  const api = {R, merkleRoot, merkleProof, merkleCheck, KINDS, BUNDLE, COUNTED, AT, QR, reduce, sha256hex};
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.JeniRules = api;
 })(typeof self !== "undefined" ? self : this);
