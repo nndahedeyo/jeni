@@ -50,10 +50,13 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .pmark svg{display:block;overflow:visible}
 .pmark .halo{stroke:transparent}
 @keyframes glow2{0%,100%{filter:drop-shadow(0 0 1px rgba(226,182,78,.3))}50%{filter:drop-shadow(0 0 6px rgba(226,182,78,.9))}}
-.menu{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:2px;align-self:end}
+.menu{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-self:end}
+.menu button.make{background:var(--gold);color:var(--gold-ink)}
+.wsub{display:flex;gap:6px;flex-wrap:wrap;padding:0 2px}.wsub button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:12px}.wsub button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf);border-color:transparent;font-weight:700}
+.chatb{margin-right:auto;border:0;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);width:44px;height:44px;display:grid;place-items:center;position:relative}.chatb svg.i{width:22px;height:22px}.chatb b{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--leaf);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 4px}
+.list.slide{transition:transform .22s ease-out,opacity .22s}
 .menu button{aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--mute);display:grid;place-items:center;padding:0}
 .menu button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf)}
-.me-mid .make{margin-right:auto;border:0;border-radius:999px;background:var(--gold);color:var(--gold-ink);display:flex;align-items:center;gap:4px;padding:8px 14px 8px 10px;font:700 14px/1 inherit;min-height:40px}
 .cap{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);padding:0 4px}
 .notice{background:var(--leaf-soft);color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
 .notice b{color:var(--leaf)}
@@ -131,6 +134,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .tabs button[aria-pressed="true"]{background:var(--card);color:var(--ink)}
 .ph-pick{position:relative;display:grid;place-items:center;aspect-ratio:1.586;border-radius:18px;border:2px dashed var(--line);background:var(--sunk) var(--img,none) center/cover;color:var(--mute);font-weight:700;cursor:pointer;overflow:hidden}
 .ph-pick.has{border-style:solid}
+.ph-pick:not(.has){aspect-ratio:3}
 .ph-pick.mp{aspect-ratio:auto;min-height:64px}
 .ph-pick.mp.has span{background:none;color:var(--leaf);align-self:center;margin:0}
 .ph-pick.has span{background:rgba(0,0,0,.55);color:#fff;padding:6px 12px;border-radius:999px;font-size:13px;align-self:end;margin-bottom:12px}
@@ -159,7 +163,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
   border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1}
 /* 1枚ずつ上下にめくる */
-.sheet.feed{scroll-snap-type:y mandatory;padding-top:0;padding-bottom:0}
+.sheet.feed{scroll-snap-type:y proximity;padding-top:0;padding-bottom:0}
 .sheet.feed>.wrap{gap:0}
 .ftop{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top,0px)) 0 6px;background:linear-gradient(var(--bg) 70%,transparent)}
 .ftop .imm-b{border:0;background:none;color:var(--mute);font-size:12px;text-decoration:underline;text-underline-offset:3px;min-height:36px}
@@ -201,9 +205,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .over .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
 .warnc{color:var(--warn)!important}
-.kinds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.kd{display:grid;gap:4px;justify-items:start;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;min-height:92px}
-.kd svg.i{width:24px;height:24px;color:var(--leaf)} .kd b{font-size:15px} .kd small{font-size:11px;color:var(--mute);line-height:1.5}
+.mk-top{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.mk-top button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 1px;display:grid;justify-items:center;gap:3px;font:inherit;font-size:clamp(9px,2.8vw,11px);letter-spacing:-.04em;white-space:nowrap;overflow:hidden;color:var(--mute)}.mk-top button svg.i{width:20px;height:20px}.mk-top button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf);border-color:transparent;font-weight:700}
 .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .who{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;margin-right:auto;min-width:0;font-size:13px;color:var(--ink)}
 .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:9em}
@@ -215,6 +217,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .pjk dd .link{border:0;background:none;padding:0;color:var(--leaf);font-size:inherit;text-decoration:underline}
 .minor .pill{min-height:36px;font-size:13px;margin-right:6px}
 .talk{display:grid;gap:8px;max-height:46dvh;overflow:auto;align-content:start}
+.crow{flex:1;min-width:0;border:0;background:none;text-align:left;display:grid;gap:2px;padding:4px 0;font:inherit;color:inherit}.crow small{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cm{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:14px}
 .cm b{font-size:13px} .cm p{margin:2px 0 0;line-height:1.7;overflow-wrap:anywhere}
 .cm .hb{font-size:10px;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf)}
@@ -294,13 +297,14 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
   <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></symbol>
   <symbol id="i-picture" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 6-5 4 3 3-2 4 3"/></symbol>
   <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 19l1-4L16 5l3 3L9 18Z"/><path d="M14 7l3 3"/></symbol>
-  <symbol id="i-project" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="20" r="2"/><path d="M7 7l3 3M17 7l-3 3M12 15v3"/></symbol>
+  <symbol id="i-project" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 13c0-4-3-6-7-6 0 4 3 6 7 6Z"/><path d="M12 10c0-3.5 2.5-5.5 7-5.5 0 3.5-2.5 5.5-7 5.5Z"/><path d="M7 21h10"/></symbol>
+  <symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v10"/><path d="m6 17 3.5-4 2.5 3 1.5-1.5L16 17"/></symbol>
   <symbol id="i-talk" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
   <symbol id="i-app" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M10 18h4"/></symbol>
   <symbol id="i-sale" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></symbol>
   <symbol id="i-other" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></symbol>
-  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="6.5" r="2"/><circle cx="7" cy="15" r="2"/><circle cx="17" cy="15" r="2"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.3c3 .1 5.5 2.2 5.5 5.7"/></symbol>
   <symbol id="i-mine" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M14 15.5a2.6 2.6 0 1 0 0-5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5Z"/></symbol>
@@ -439,11 +443,13 @@ function holdBtn(c) {
   return c.price ? `<button type="button" class="hold" data-detail="${c.id}" aria-label="${c.price} jeni・開く">${coin()}${c.price}</button>`
     : `<button type="button" class="hold free" data-detail="${c.id}">無料</button>`;
 }
-const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["music", "音楽"], ["video", "動画"], ["picture", "写真"], ["text", "文章"], ["project", "プロジェクト"], ["app", "アプリ"], ["circle", "仲間の輪"]];
+const FIELDS = [["all", "すべて"], ["rwa", "現物"], ["work", "作品"], ["project", "プロジェクト"], ["app", "アプリ"], ["circle", "仲間の輪"]];
+const WORKS = ["music", "video", "picture", "text"];
+let wsub = "";   // 作品の中の絞り込み（なし＝作品すべて）
 function visibleCards() {
   return Object.values(S.cards).filter(canSee).filter(c => !c.lock || c.by === me || mine(c).length || c.copies.some(x => x.owner === me))
     .filter(c => !c.hidden || c.by === me || c.copies.some(x => x.owner === me))
-    .filter(c => field === "all" ? true : field === "circle" ? !!c.circle : c.kind === field).sort((a, b) => b.at - a.at);
+    .filter(c => field === "all" ? true : field === "circle" ? !!c.circle : field === "work" ? (wsub ? c.kind === wsub : WORKS.includes(c.kind)) : c.kind === field).sort((a, b) => b.at - a.at);
 }
 function home() {
   const u = U(), p = byPk[me], list = visibleCards();
@@ -455,11 +461,12 @@ function home() {
       <div class="me-top"><div class="av" ${PICS[me] ? `style="background:url('${PICS[me]}') center/cover"` : ""}>${PICS[me] ? "" : esc(nameOf(me).slice(0, 1))}</div>
         <div><div class="me-name">${esc(nameOf(me))}</div><div class="me-line">${u.member ? esc((S.users[me] && S.users[me].line) || p.line) : "まだ参加していません"}</div></div>
         <button type="button" class="bal" data-rules title="jeni のきまり">${coin()}<span id="balv">${u.bal.toLocaleString("ja-JP")}</span><small>jeni</small></button></div>
-      <div class="me-mid"><button type="button" class="make" data-make title="カードを作る・その場で売る">${icon("plus")}作る</button><button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
-      <nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}</nav>
+      <div class="me-mid">${u.member ? `<button type="button" class="chatb" data-chats aria-label="話す（友達との会話・通話）" title="話す">${icon("talk")}</button>` : ""}<button type="button" class="pmark" data-me aria-label="わたしのカード（QR）">${gmark(56, {halo: true})}</button></div>
+      <nav class="menu" aria-label="表示するカード">${FIELDS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${field === k}" aria-label="${l}" title="${l}">${icon(k)}</button>`).join("")}<button type="button" class="make" data-make aria-label="カードを作る・その場で売る" title="カードを作る・その場で売る">${icon("plus")}</button></nav>
     </section>
     ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
-    <div class="cap"><span>${FIELDS.find(f => f[0] === field)[1]}・${list.length}枚</span><span>${field === "circle" ? "輪の中は、輪の人にしか見えません" : ""}</span></div>
+    ${field === "work" ? `<div class="wsub">${[["", "作品すべて"], ...WORKS.map(k => [k, KIND[k]])].map(([k, l]) => `<button type="button" data-ws="${k}" aria-pressed="${wsub === k}">${l}</button>`).join("")}</div>` : ""}
+    <div class="cap"><span>${field === "work" && wsub ? KIND[wsub] : FIELDS.find(f => f[0] === field)[1]}・${list.length}枚</span><span>${field === "circle" ? "輪の中は、輪の人にしか見えません" : ""}</span></div>
     <main class="list">${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
       ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
@@ -650,6 +657,16 @@ function personCard(pk) {
     <section class="box"><h3>${esc(nameOf(pk))} さんのカード ${theirs.length}</h3>${theirs.map(c => `<button type="button" class="mini" data-detail="${c.id}">${icon(kindIcon(c.kind))}<span>${esc(c.title)}</span><small>${c.price ? c.price + " jeni" : "無料"}</small></button>`).join("") || `<p class="sub">まだありません</p>`}</section>
     ${iFriend ? `<button type="button" class="link" data-unfriend="${pk}" style="justify-self:start;color:var(--mute);font-size:12px">友達をやめる</button>` : ""}`);
 }
+const friendsOf = pk => { const u = S.users[pk] || {}; return (u.friends || []).filter(x => ((S.users[x] || {}).friends || []).includes(pk)); };
+function chatList() {
+  const fs = friendsOf(me), last = pk => (CHAT[pairKey(me, pk)] || []).slice(-1)[0];
+  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
+    <h2 class="rh">話す</h2>
+    <section class="box">${fs.map(pk => `<div class="who-row"><button type="button" class="who" data-person="${pk}" aria-label="${esc(nameOf(pk))} さんのカード">${avatar(pk)}</button>
+      <button type="button" class="crow" data-chat="${pk}"><b>${esc(nameOf(pk))}</b><small>${last(pk) ? esc(last(pk).text) : "まだ話していません"}</small></button>
+      <button type="button" class="pill" data-call="${pk}" aria-label="${esc(nameOf(pk))} さんと通話">${icon("phone")}</button></div>`).join("") || `<div class="who-row"><span>まだ話せる人がいません</span></div>`}</section>
+    <p class="fline">お互いに友達の人とだけ、2人で話せる・通話できます（鍵つき）。友達になるのは、その人のプロフィールカードから。</p>`);
+}
 function chatSheet(pk) {
   const k = pairKey(me, pk), msgs = CHAT[k] || [];
   openOver(`<h2 class="rh">${esc(nameOf(pk))} さんと</h2><p class="sub" style="font-size:11px">${icon("lock")} 2人の鍵で封をして置きます。ほかの人には読めません（この見本の画面では、どこにも送りません）。</p>
@@ -749,19 +766,23 @@ function readMK() {
   if (v("m-want") != null) MK.want = v("m-want").trim().slice(0, 200);
   if (v("m-url") != null) MK.url = v("m-url").trim().slice(0, 300);
 }
-const MAKE_KINDS = [["rwa", "現物", "数に限りのあるもの。持った人に1回渡す"], ["music", "音楽", ""], ["video", "動画", ""], ["picture", "写真", ""], ["text", "文章", ""], ["project", "プロジェクト", "カードをつなげて育てる"], ["app", "アプリ", "持っている人が使える"], ["sale", "その場で売る", "写真と値段で一度きりのQR"]];
+// 作る：上に小さな選び（項目と同じ並び）、下にそのカードに要る欄だけ。選び直しても同じ画面
+const MAKE_TOP = [["rwa", "現物"], ["work", "作品"], ["project", "プロジェクト"], ["app", "アプリ"], ["sale", "その場で売る"]];
 function make() {
   const circles = Object.values(S.circles).filter(ci => ci.members.includes(me));
-  if (!MK.mode || MK.mode === "make") {   // 1. 何をカードにするか
+  const top = WORKS.includes(MK.mode) ? "work" : MK.mode;
+  const pick = `<div class="mk-top" role="group" aria-label="何をカードにする？">${MAKE_TOP.map(([k, l]) => `<button type="button" data-mk="${k === "work" ? (WORKS.includes(MK.mode) ? MK.mode : "picture") : k}" aria-pressed="${top === k}">${icon(k === "sale" ? "sale" : k)}<span>${l}</span></button>`).join("")}</div>
+    ${top === "work" ? `<div class="wsub">${["picture", "music", "video", "text"].map(k => `<button type="button" data-mk="${k}" aria-pressed="${MK.mode === k}">${KIND[k]}</button>`).join("")}</div>` : ""}`;
+  if (!MK.mode || MK.mode === "make") {
     return openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
-      <h2 class="rh">何をカードにする？</h2>
-      <div class="kinds">${MAKE_KINDS.map(([k, l, d]) => `<button type="button" class="kd" data-mk="${k}">${icon(k === "sale" ? "sale" : k)}<b>${l}</b>${d ? `<small>${d}</small>` : ""}</button>`).join("")}</div>
-      <button type="button" class="link" data-newcircle style="justify-self:start;border:0;background:none;color:var(--leaf);text-decoration:underline;padding:8px 0">仲間の輪をつくる</button>`);
+      <h2 class="rh">何をカードにする？</h2>${pick}
+      <button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>`);
   }
   const k = MK.mode, sale = k === "sale", photo = ["rwa", "picture", "sale", "project", "app"].includes(k), media = k === "music" || k === "video";
   const bodyL = {text: "本文", project: "何をめざすか", app: "どんなアプリか"}[k];
-  openSheet(`<button type="button" class="back" data-mk="make">${icon("back")}選びなおす</button>
-    <h2 class="rh">${sale ? "その場で売る" : KIND[k] + "のカード"}</h2>
+  const hint = {rwa: "数に限りのあるもの。持った人に1回渡します", project: "カードをつなげて育てます", app: "持っている人が使えます", sale: "写真と値段で、一度きりのQR"}[k];
+  openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
+    <h2 class="rh">何をカードにする？</h2>${pick}${hint ? `<p class="sub" style="margin:0">${hint}</p>` : ""}
     ${photo ? `<label class="ph-pick${MK.img ? " has" : ""}" ${MK.img ? `style="--img:url('${MK.img}')"` : ""}><input type="file" id="m-photo" accept="image/*" ${sale ? 'capture="environment"' : ""}><span>${MK.img ? "写真を変える" : sale || k === "picture" ? "写真を撮る・選ぶ" : "写真（なくてもよい）"}</span></label>
       <div class="chips"><span class="sub">見本：</span>${[["media/bread.jpg", "パン"], ["media/radish.jpg", "大根"], ["media/paddy.jpg", "田んぼ"]].map(([u, l]) => `<button type="button" data-sample="${u}">${l}</button>`).join("")}</div>` : ""}
     ${media ? `<label class="ph-pick mp${MK.src ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}"><span>${MK.src ? `${k === "music" ? "音" : "動画"}を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ" : "動画を選ぶ"}</span></label>
@@ -773,6 +794,7 @@ function make() {
     <div class="row2"><label class="fl">値段（jeni）<input id="m-price" type="number" inputmode="numeric" min="0" max="99999" value="${sale ? MK.price || 80 : MK.price}"></label>
       ${k === "rwa" ? `<label class="fl">数<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>
     ${!sale && circles.length ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
+    ${!sale ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
     <button type="button" class="big" data-create ${(sale && !MK.img) || (media && !MK.src) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
 }
 function create() {
@@ -841,7 +863,7 @@ function pay(pk) {
 function newCircle() {
   readMK();
   const others = Object.values(S.users).filter(x => x.member && x.pk !== me);
-  openSheet(`<button type="button" class="back" data-mk="make">${icon("back")}作る画面へ</button>
+  openSheet(`<button type="button" class="back" data-mk="${MK.mode || "make"}">${icon("back")}作る画面へ</button>
     <h2 class="rh">仲間の輪をつくる</h2>
     <p class="sub">輪の中に出したカードは、輪の人にしか見えません。本物では、中身を輪の鍵で封をしてから置くので、外からは読めない文字の固まりにしか見えません。</p>
     <label class="fl">輪の名前<input id="c-name" maxlength="40" placeholder="例：週末の畑"></label>
@@ -883,10 +905,11 @@ player.addEventListener("ended", () => { const id = playing; playing = ""; if ($
 const AS = name => P[name].pk;
 const cardBy = t => Object.values(S.cards).find(c => c.title === t);
 const GUIDE = [
-  ["話す・通話は、その人のカードから", "名前を押すと、その人のプロフィールカード。お互いに友達なら、カードのすぐ下に「話す」「通話」（見本）。", () => { me = AS("kenji"); personCard(AS("farmer")); }],
+  ["話す・通話は、自分のプロフィールカードから", "一覧の上の自分のカードにある吹き出し。お互いに友達の人と、2人で話す・通話（見本）。", () => { me = AS("kenji"); chatList(); }],
+  ["項目をまとめました", "音楽・動画・写真・文章は「作品」に。作品の中で小さく切り替え。プロジェクトは芽、仲間は2人のしるし。＋は並びの最後。", () => { me = AS("kenji"); field = "work"; wsub = ""; closeSheet(); }],
+  ["左右・上下とも、指の勢いのまま滑る", "カードは勢いよくめくると何枚も進みます。一覧は指について横に動き、強くはらうと2つ先の項目へ。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["名前から、その人のカードへ", "作った人・持っている人・会話を書いた人・関わった人。どの名前を押しても同じカードが開きます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); talkSheet(cardBy("夜明けの田んぼ").id); }],
-  ["項目にプロジェクトとアプリ", "上の並びに、プロジェクトとアプリを別々に。左右のスワイプでも切り替わります。", () => { me = AS("kenji"); field = "app"; closeSheet(); }],
-  ["作るは「何をカードにする？」から", "項目と同じ並び（現物・音楽・動画・写真・文章・プロジェクト・アプリ）と、その場で売る。選んだものに要る欄だけが出ます。", () => { me = AS("kenji"); MK.mode = "make"; make(); }],
+  ["作るは1つの画面で", "上に小さな選び（項目と同じ並び＋その場で売る）、下にそのカードに要る欄だけ。", () => { me = AS("kenji"); MK.mode = "picture"; make(); }],
   ["カードの会話", "カードの右上の吹き出しから。だれでも読めて、参加している人が書けます。", () => { me = AS("kenji"); detail(cardBy("夜明けの田んぼ").id); }],
   ["プロジェクトを育てる", "自分のカードをつなげ、会話で進めます。状態・求めているもの・関わった人。", () => { me = AS("haru"); detail(cardBy("みんなの種の地図").id); }],
   ["アプリのカード", "持っている人には「アプリを開く」。", () => { me = AS("kenji"); detail(cardBy("在来種の地図（アプリ）").id); }],
@@ -915,7 +938,7 @@ function pickMedia(src) {
 }
 document.addEventListener("change", e => {
   if (e.target.id === "m-media" && e.target.files[0]) { readMK(); return pickMedia(URL.createObjectURL(e.target.files[0])); }
-  if (e.target.id === "who") { me = e.target.value; field = "all"; playing = ""; player.pause(); return home(); }
+  if (e.target.id === "who") { me = e.target.value; field = "all"; wsub = ""; playing = ""; player.pause(); return home(); }
   if (e.target.id === "m-photo" && e.target.files[0]) {
     readMK(); const fr = new FileReader();
     fr.onload = () => { const im = new Image(); im.onload = () => {
@@ -931,7 +954,9 @@ document.addEventListener("click", e => {
   if (q("[data-reset]")) { seed(); me = P.kenji.pk; field = "all"; if (!$("sheet").hidden) closeSheet(); home(); return toast("最初の状態に戻しました"); }
   if (q("[data-guide]")) return guide();
   if ((b = q("[data-go]"))) { const g = GUIDE[+b.dataset.go]; closeSheet(); g[2](); home(); return; }
-  if ((b = q("[data-f]"))) { field = b.dataset.f; return home(); }
+  if ((b = q("[data-f]"))) { field = b.dataset.f; wsub = ""; return home(); }
+  if ((b = q("[data-ws]"))) { wsub = b.dataset.ws; return home(); }
+  if (q("[data-chats]")) return chatList();
   if (q("[data-make]")) { if (!U().member) return toast("参加すると作れます"); MK.mode = "make"; return make(); }
   if ((b = q("[data-mk]"))) { readMK(); MK.mode = b.dataset.mk; return make(); }
   if ((b = q("[data-sample]"))) { readMK(); MK.img = b.dataset.sample; return make(); }
@@ -1015,17 +1040,34 @@ document.addEventListener("pointerdown", e => { const b = e.target.closest("[dat
 document.addEventListener("contextmenu", e => { if (e.target.closest("[data-lp]")) e.preventDefault(); });
 document.addEventListener("keydown", e => { const b = e.target.closest && e.target.closest("[data-lp]"); if (b && (e.key === "Enter" || e.key === " ") && !e.repeat) { e.preventDefault(); lpStart(b); } });
 document.addEventListener("keyup", e => { if (e.target.closest && e.target.closest("[data-lp]")) lpCancel(); });
-/* 右へスワイプで戻る（ふつうのアプリと同じ）。一覧では項目を切り替える。上下のめくりとは分ける */
+/* 右へスワイプで戻る（ふつうのアプリと同じ）。一覧は指について横に動き、項目を切り替える。上下のめくりとは分ける */
 let sw = null;
-document.addEventListener("touchstart", e => { if (e.touches.length === 1) sw = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now()}; }, {passive: true});
+const homeList = () => $("sheet").hidden && $("over").hidden ? document.querySelector("#home .list") : null;
+document.addEventListener("touchstart", e => { if (e.touches.length === 1) sw = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), h: null}; }, {passive: true});
+document.addEventListener("touchmove", e => {
+  if (!sw || lpT) return; const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+  if (sw.h == null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) sw.h = Math.abs(dx) > Math.abs(dy) * 1.3;
+  const L = homeList(); if (sw.h && L) { L.classList.remove("slide"); L.style.transform = `translateX(${dx}px)`; L.style.opacity = String(1 - Math.min(.5, Math.abs(dx) / innerWidth)); }
+}, {passive: true});
+function slideTo(j, dir) {
+  const L = homeList(); field = FIELDS[j][0]; wsub = ""; toast(FIELDS[j][1]);
+  if (!L) return home();
+  L.classList.add("slide"); L.style.transform = `translateX(${dir * innerWidth}px)`; L.style.opacity = "0";
+  setTimeout(() => { home(); const N = homeList(); if (!N) return; N.style.transform = `translateX(${-dir * innerWidth * .6}px)`; N.style.opacity = "0";
+    requestAnimationFrame(() => requestAnimationFrame(() => { N.classList.add("slide"); N.style.transform = ""; N.style.opacity = ""; })); }, 180);
+}
 document.addEventListener("touchend", e => {
-  if (!sw || lpT) return; const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
-  if (Math.abs(dx) < 80 || Math.abs(dy) > 50 || dt > 700) return;
+  if (!sw || lpT) { sw = null; return; } const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Math.max(1, Date.now() - sw.t), h = sw.h != null ? sw.h : Math.abs(dx) > Math.abs(dy) * 1.3; sw = null;
+  const L = homeList();
+  const back = () => { if (L) { L.classList.add("slide"); L.style.transform = ""; L.style.opacity = ""; } };
+  if (!h || Math.abs(dx) < 60 || Math.abs(dy) > 80) return back();
   if (!$("over").hidden) { if (dx > 0) closeOver(); return; }
   if (!$("sheet").hidden) { if (dx > 0) { const bk = $("sheet").querySelector(".back"); if (bk) bk.click(); } return; }
-  // 一覧：左へスワイプで右どなりの項目、右へスワイプで左どなりの項目
-  const i = FIELDS.findIndex(f => f[0] === field), j = Math.max(0, Math.min(FIELDS.length - 1, i + (dx < 0 ? 1 : -1)));
-  if (j !== i) { field = FIELDS[j][0]; home(); toast(FIELDS[j][1]); }
+  // 一覧：左へはらうと右どなり、右へはらうと左どなり。速く大きくはらうと2つ先
+  const v = Math.abs(dx) / dt, n = v > 1.4 && Math.abs(dx) > innerWidth * .5 ? 2 : 1;
+  const i = FIELDS.findIndex(f => f[0] === field), j = Math.max(0, Math.min(FIELDS.length - 1, i + (dx < 0 ? n : -n)));
+  if (j === i) return back();
+  slideTo(j, dx < 0 ? -1 : 1);
 }, {passive: true});
 document.addEventListener("change", e => {
   if (e.target.id !== "p-pic" || !e.target.files[0]) return;
