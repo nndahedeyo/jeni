@@ -1,5 +1,8 @@
 // テスト版（つながない）の画面の確かめ。使い方: node tests/test.e2e.js（どこにも送らない）
 const {chromium} = require("playwright"); const http = require("http"), fs = require("fs"), path = require("path");
+const RECP = []; const RECSET = new Set();
+async function recDump() { if (!process.env.REC) return;
+  const fs2 = require("fs"); let prev = []; try { prev = fs2.readFileSync(process.env.REC, "utf8").split("\n").filter(Boolean); } catch (e) {} fs2.writeFileSync(process.env.REC, [...new Set([...prev, ...RECSET])].sort().join("\n") + "\n"); }
 const root = path.join(__dirname, "..", "app");
 // 置き場と同じく、一部だけの読み込み（Range・206）に応える（動画の途中へ飛ぶのに要る）
 const TYPES = {".mp4": "video/mp4", ".mp3": "audio/mpeg", ".jpg": "image/jpeg", ".html": "text/html; charset=utf-8", ".js": "text/javascript"};
@@ -26,7 +29,7 @@ async function routeMB(p) {
 (async () => {
   const b = await chromium.launch();
   for (const [w, cs] of [[390, "dark"], [320, "light"]]) {
-    const p = await b.newPage({viewport: {width: w, height: 844}, colorScheme: cs, deviceScaleFactor: SHOT ? 2 : 1, hasTouch: true}); const errs = [];
+    const p = await b.newPage({viewport: {width: w, height: 844}, colorScheme: cs, deviceScaleFactor: SHOT ? 2 : 1, hasTouch: true}); const errs = []; if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); });
     // 「くわしく」の中にあるものを押すときは、人と同じように先に「くわしく」を開く
     const click0 = p.click.bind(p);
     const rec = async id => { await p.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (!d.open) d.querySelector("summary").click(); }, id); await p.waitForTimeout(150); };
@@ -505,5 +508,5 @@ async function routeMB(p) {
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }
-  console.log(ok, "OK", ng, "NG"); await b.close(); srv.close(); process.exit(ng ? 1 : 0);
+  await recDump(); console.log(ok, "OK", ng, "NG"); await b.close(); srv.close(); process.exit(ng ? 1 : 0);
 })();

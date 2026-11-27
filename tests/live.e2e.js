@@ -310,7 +310,7 @@ async function relay(page) {
     const key = await a.evaluate(() => JSON.parse(localStorage.getItem("jeni.me")).sk);
     const key0 = key;
     const D = await b.newContext({locale: "ja-JP"}); const d = await open(D);
-    await d.click('[data-story="3"]'); await d.click("#sheet details.more summary"); await d.fill("#st-key", key); await d.click("[data-startkey]"); await wait(500);
+    await d.click('[data-story="3"]'); await d.click("#st-old summary"); await d.fill("#st-key", key); await d.click("[data-startkey]"); await wait(500);
     check("控えた鍵で続けたときは、鍵の控えの画面を出さない", !/鍵を守る/.test(await d.textContent("#sheet").catch(() => "")) && !(await d.$(".pmark .kdot")));
     check("書き出した鍵で、別の端末でも同じ人・同じ残高", await until(d, bal => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].bal === bal, 10000, (await st(a)).bal));
     // ---- 参加していない人の QR（#me=）を、参加している人が読んで認める ----
@@ -318,6 +318,13 @@ async function relay(page) {
     check("招待なしで始めた人にも、すぐ鍵の控えの画面", /鍵を守る/.test(await cp.textContent("#sheet"))); await cp.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
     const cpk = (await st(cp)).me;
     check("招待なしで始めた人は、まだ参加していない", !(await st(cp)).member);
+    { const link2 = await a.evaluate(() => { document.querySelector("[data-close]") && document.querySelector("[data-close]").click(); return null; });
+      await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-me]"); await a.click("[data-invite]"); await wait(800);
+      const inv = await a.$eval("#over [data-copy]", b => b.dataset.copy); await a.click("[data-overclose]").catch(() => {}); void link2;
+      const C3 = await b.newContext({locale: "ja-JP"}); const g3 = await open(C3); await g3.click('[data-story="3"]');
+      await g3.click("#sheet details.more summary"); await g3.fill("#st-inv", inv); await g3.fill("#st-name", "とおく"); await g3.click("[data-start]");
+      check("ホーム画面のアイコンから：届いた招待のリンクを貼って始めると参加できる", await until(g3, () => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].member, 12000));
+      await C3.close(); }
     { const C2 = await b.newContext({locale: "ja-JP"}); const e2 = await open(C2); await e2.click('[data-story="3"]'); await e2.fill("#st-name", "べつのばしょ"); await e2.click("[data-start]"); await wait(800);
       await e2.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
       await e2.click("[data-me]"); await e2.click("#sheet details.more summary"); await e2.fill("#st-key", key0); await e2.click("[data-startkey]");

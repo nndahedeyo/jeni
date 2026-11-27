@@ -47,7 +47,7 @@ let ok = 0, ng = 0; const check = (n, c) => { if (c) ok++; else ng++; console.lo
     check("パスキーで守ると、封をした控えが中継に置かれ（鍵そのものは出ない）、赤い印が消える", store.some(e => e.kind === 7745 && e.pubkey === pk0) && !store.some(e => e.content.includes(sk0)) && !(await p.$(".pmark .kdot")));
     // 端末をなくした・記録を消した → パスキーで戻す
     await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(1000);
-    await p.click('[data-story="3"]'); await p.waitForTimeout(150); await p.click("#sheet details.more summary"); await p.click("[data-pkrestore]"); await p.waitForTimeout(2500);
+    await p.click('[data-story="3"]'); await p.waitForTimeout(150); await p.click("#st-old summary"); await p.click("[data-pkrestore]"); await p.waitForTimeout(2500);
     check("記録を消しても、Face ID・パスキーで同じ人に戻る", await p.evaluate(() => window.JeniLive.me && window.JeniLive.me.pk) === pk0 && /そと/.test(await p.textContent("body")));
     check("画面のエラーなし", errs.length === 0); if (errs.length) console.log(errs);
   } catch (e) { check("例外: " + e.message.split("\n")[0], false); }
