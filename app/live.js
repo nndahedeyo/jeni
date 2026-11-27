@@ -59,6 +59,14 @@
     })();
     return ev;
   }
+  // 置き場（Blossom）に見せる許可など、中継には出さない署名
+  async function sign(kind, content, tags = []) {
+    if (!me) throw new Error("鍵がありません");
+    const ev = {kind, created_at: now(), tags, content: String(content), pubkey: me.pk};
+    ev.id = Rules().sha256hex(JSON.stringify([0, ev.pubkey, ev.created_at, ev.kind, ev.tags, ev.content]));
+    ev.sig = Sig.hex(await Sig.sign(Sig.unhex(ev.id), Sig.unhex(me.sk), crypto.getRandomValues(new Uint8Array(32))));
+    return ev;
+  }
   function flush() {
     const os = sockets.filter(s => s.readyState === 1); if (!os.length) return;
     const ready = outbox.filter(e => e.sig);
@@ -97,7 +105,7 @@
   root.JeniLive = {
     K, TAG, RELAYS, store, now,
     get me() { return me; }, newMe, importKey,
-    get events() { return events; }, publish, start, online, flush,
+    get events() { return events; }, publish, sign, start, online, flush,
     sealTo, openFrom, sealWith, openWith, randHex: n => Sig.hex(crypto.getRandomValues(new Uint8Array(n))),
   };
 })(typeof globalThis !== "undefined" ? globalThis : this);

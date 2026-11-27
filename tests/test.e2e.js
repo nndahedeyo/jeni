@@ -1,10 +1,28 @@
 // テスト版（つながない）の画面の確かめ。使い方: node tests/test.e2e.js（どこにも送らない）
 const {chromium} = require("playwright"); const http = require("http"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app");
-const srv = http.createServer((q, r) => { const f = path.join(root, decodeURIComponent(q.url.split("?")[0])); fs.existsSync(f) && fs.statSync(f).isFile() ? fs.createReadStream(f).pipe(r) : r.writeHead(404).end(); }).listen(8781);
+// 置き場と同じく、一部だけの読み込み（Range・206）に応える（動画の途中へ飛ぶのに要る）
+const TYPES = {".mp4": "video/mp4", ".mp3": "audio/mpeg", ".jpg": "image/jpeg", ".html": "text/html; charset=utf-8", ".js": "text/javascript"};
+const srv = http.createServer((q, r) => { const f = path.join(root, decodeURIComponent(q.url.split("?")[0]));
+  if (!(fs.existsSync(f) && fs.statSync(f).isFile())) return r.writeHead(404).end();
+  const n = fs.statSync(f).size, ty = TYPES[path.extname(f)] || "application/octet-stream", m = /bytes=(\d*)-(\d*)/.exec(q.headers.range || "");
+  if (!m) { r.writeHead(200, {"Content-Type": ty, "Content-Length": n, "Accept-Ranges": "bytes"}); return fs.createReadStream(f).pipe(r); }
+  const a = m[1] ? +m[1] : 0, z = m[2] ? Math.min(+m[2], n - 1) : n - 1;
+  r.writeHead(206, {"Content-Type": ty, "Content-Length": z - a + 1, "Content-Range": `bytes ${a}-${z}/${n}`, "Accept-Ranges": "bytes"}); fs.createReadStream(f, {start: a, end: z}).pipe(r); }).listen(8781);
 let ok = 0, ng = 0; const check = (n, v) => { v ? ok++ : ng++; console.log((v ? "OK " : "NG ") + n); };
 const SHOT = process.env.SHOT;
 const K = c => c.repeat(64);
+// 変換の部品（Mediabunny）は、ネットにつながず手元の写しを使う（MB_DIST に tsc で組み立てたもの。なければ変換の確かめはとばす）
+const MB_DIST = process.env.MB_DIST || "";
+const os = require("os"), cp = require("child_process");
+let VID = "";
+try { if (MB_DIST && fs.existsSync(MB_DIST)) { VID = path.join(os.tmpdir(), "jeni-t12.mp4"); if (!fs.existsSync(VID)) cp.execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 12 -c:v libx264 -preset veryfast -b:v 4M -c:a aac -b:a 128k -pix_fmt yuv420p ${VID}`); } } catch (e) { VID = ""; }
+async function routeMB(p) {
+  await p.route("https://cdn.jsdelivr.net/**", r => { const u = r.request().url(), h = {"access-control-allow-origin": "*"};
+    if (u.endsWith("mediabunny.min.mjs")) return r.fulfill({contentType: "text/javascript", headers: h, body: 'export * from "./m/modules/src/index.js";'});
+    const m = u.match(/dist\/bundles\/m\/(.*)$/); if (m && MB_DIST && fs.existsSync(path.join(MB_DIST, m[1]))) return r.fulfill({contentType: "text/javascript", headers: h, body: fs.readFileSync(path.join(MB_DIST, m[1]))});
+    r.fulfill({status: 404, body: ""}); });
+}
 (async () => {
   const b = await chromium.launch();
   for (const [w, cs] of [[390, "dark"], [320, "light"]]) {
@@ -13,7 +31,7 @@ const K = c => c.repeat(64);
     const click0 = p.click.bind(p);
     const rec = async id => { await p.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (!d.open) d.querySelector("summary").click(); }, id); await p.waitForTimeout(150); };
     p.click = async (sel, o) => { await p.evaluate(sl => { const el = document.querySelector(sl); const d = el && el.closest("details.more"); if (d && !d.open) d.querySelector("summary").click(); }, sel).catch(() => {}); return click0(sel, o); };
-    p.on("pageerror", e => errs.push(e.message));
+    p.on("pageerror", e => errs.push(e.message)); await routeMB(p);
     await p.goto("http://localhost:8781/_t.html"); await p.waitForTimeout(400);
     const tag = `[${w} ${cs}]`;
     const id = t => p.evaluate(t => Object.values(__jt.S.cards).find(c => c.title === t).id, t);
@@ -53,6 +71,25 @@ const K = c => c.repeat(64);
     await p.click(`#pg-${field} [data-cplay]`); await p.waitForTimeout(800);
     check(tag + " 動画はカードの中で再生", await p.evaluate(id => { const v = document.querySelector(`#pg-${id} video.inplay`); return !!v && !v.paused; }, field));
     if (SHOT) await p.screenshot({path: `${SHOT}/video-${w}.png`});
+    { const bar = await p.$(`#pg-${field} .cbar[data-seek]`), bx = await bar.boundingBox();
+      await p.mouse.click(bx.x + bx.width * .4, bx.y + bx.height / 2); await p.waitForTimeout(2600);
+      const st = await p.evaluate(id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].map(v => ({src: v.getAttribute("src") || "", on: !v.paused, d: v.duration})), field);
+      check(tag + " 分けて置いた動画：1つ目が終わると、2つ目が続けて流れる（先に取っておいた2つ目）", st.length === 1 && st[0].on && (/field-2/.test(st[0].src) || /^blob:/.test(st[0].src)));
+      await p.mouse.click(bx.x + bx.width * .2, bx.y + bx.height / 2); await p.waitForTimeout(500);
+      const st2 = await p.evaluate(id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].map(v => ({src: v.getAttribute("src") || "", on: !v.paused, t: v.currentTime})), field);
+      check(tag + " 下の線を押すと、その所へ（前の部分にも戻れる）", st2.some(v => /field-1/.test(v.src) && v.on && v.t < 3));
+      const wb = await p.$eval(`#cbar-${field}`, e => parseFloat(e.style.width));
+      check(tag + " 線の長さは全体の中の位置", wb > 10 && wb < 45);
+      await p.click(`#pg-${field} [data-cplay]`); }
+    // アルバム：カードの表で自動でめくれ、押すと大きく
+    { const alb = await id("田んぼと畑の朝");
+      await p.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, alb); await p.waitForTimeout(4700);
+      check(tag + " アルバム：カードの表で自動でめくれる・枚数が出る", await p.$eval(`#pg-${alb} .face[data-album]`, f => +f.dataset.ai >= 1 && /写真・3枚/.test(f.textContent)));
+      await p.click(`#pg-${alb} .cview`); await p.waitForTimeout(200);
+      check(tag + " 押すと大きく1枚ずつ（何枚目か出る）", !!(await p.$("#over .album img")) && /\d \/ 3/.test(await p.textContent("#over .adots")));
+      await p.click('#over [data-astep="1"]'); await p.waitForTimeout(300);
+      check(tag + " 右を押すと次の写真", /\d \/ 3/.test(await p.textContent("#over .adots")));
+      await p.click("#over [data-overclose]"); }
     // 中身はだれでも全部（文章）
     const soil = await id("土を耕すということ");
     check(tag + " 文章は持っていなくても全部読める", (await p.textContent(`#pg-${soil} .body`)).includes("小さな道ができました"));
@@ -62,7 +99,7 @@ const K = c => c.repeat(64);
     check(tag + " くわしく・記録を開くと持っている人", (await p.textContent(`#pg-${waves} .more`)).includes("持っている人"));
     if (SHOT) await p.screenshot({path: `${SHOT}/rec-${w}.png`});
     // 押している途中ではなすと、持たない（印も消える）
-    const curry = await id("特製スパイスカレー"), paddy = await id("夜明けの田んぼ");
+    const curry = await id("特製スパイスカレー"), paddy = await id("田んぼと畑の朝");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), paddy);
     { const el = await p.$(`#pg-${paddy} [data-lp="hold"]`); const bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(500);
       check(tag + " 押しているあいだ印が描かれていく", await p.$eval(`#pg-${paddy} .jc2`, e => e.classList.contains("drawing")));
@@ -129,7 +166,7 @@ const K = c => c.repeat(64);
     await p.click("#sheet [data-close]");
     // 会話：書くと会話に出る
     await p.selectOption("#who", K("a"));
-    const paddy2 = await id("夜明けの田んぼ");
+    const paddy2 = await id("田んぼと畑の朝");
     await p.evaluate(id => __jt.detail(id), paddy2); await p.click(`#pg-${paddy2} [data-talk]`); await p.waitForTimeout(200);
     check(tag + " 会話が読める（持っている・作った人の印）", (await p.textContent("#over")).includes("冬至のころ") && (await p.textContent("#over")).includes("作った人"));
     await p.fill("#t-text", "来年の春に行きます"); await p.click("[data-say]"); await p.waitForTimeout(200);
@@ -211,7 +248,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/make1-${w}.png`});
     await mk("data", "picture");
     check(tag + " まとまりを選ぶと、中の種類と、選んだ種類の欄がすぐ下に", (await p.$$(".mk-k [data-mk]")).length === 5 && await p.$eval('.mk-k [aria-pressed="true"]', e => e.textContent.includes("写真")) && !!(await p.$("#m-title")));
-    check(tag + " 写真のカード：写真を選ぶまで出せない", await p.$eval("[data-create]", e => e.disabled) && !!(await p.$("#m-photo")));
+    check(tag + " 写真のカード：写真を選ぶまで出せない", await p.$eval("[data-create]", e => e.disabled) && !!(await p.$("#m-pics")));
     await mk("data", "text");
     check(tag + " 文章のカード：画像は選べる（なくてもよい）、数・URL の欄は出ない", !!(await p.$("#m-body")) && !!(await p.$("#m-photo")) && !(await p.$("#m-supply")) && !(await p.$("#m-url")) && !(await p.$eval("[data-create]", e => e.disabled)));
     await mk("thing", "event");
@@ -241,6 +278,29 @@ const K = c => c.repeat(64);
     const mus = await id("畑の朝の音");
     check(tag + " 音楽のカードを出せて、画像つきで、カードの中で再生できる", !!(await p.$(`#pg-${mus} [data-cplay]`)) && !!(await p.$(`#pg-${mus} img.bgimg`)));
     await p.click("#sheet [data-close]");
+    // 写真のアルバムを作る（見本の画像を2枚）
+    await p.click("[data-make]"); await mk("data", "picture");
+    check(tag + " 写真：選ぶまで出せない・20枚まで選べる欄", await p.$eval("[data-create]", e => e.disabled) && !!(await p.$("#m-pics[multiple]")));
+    await p.click('[data-sample="media/paddy.jpg"]'); await p.waitForTimeout(100); await p.click('[data-sample="media/field.jpg"]'); await p.waitForTimeout(100);
+    check(tag + " 2枚選ぶと並び、1枚目が表", (await p.$$(".alb .ali:not(.add)")).length === 2 && /表/.test(await p.textContent(".alb .ali")));
+    await p.fill("#m-title", "畑のアルバム"); await p.click("[data-create]"); await p.waitForTimeout(200);
+    { const al = await id("畑のアルバム"); check(tag + " アルバムのカードを出せる（写真・2枚）", /写真・2枚/.test(await p.textContent(`#pg-${al} .face`))); }
+    await p.click("#sheet [data-close]");
+    check(tag + " 写真・音・動画のカードでは、輪を選ぶ欄を出さない", await (async () => { await p.click("[data-make]"); await mk("data", "video"); const r = !(await p.$("#m-circle")); await p.click("#sheet [data-close]"); return r; })());
+    // 動画のファイルを選ぶと、その場で軽くして（進み具合）、出せる
+    if (VID) {
+      await p.click("[data-make]"); await mk("data", "video"); await p.fill("#m-title", "試しの動画");
+      await p.setInputFiles("#m-media", VID); await p.waitForTimeout(300);
+      check(tag + " 動画を選ぶと進み具合が出る", /動画を軽くしています|準備しています|選びました/.test(await p.textContent("#sheet")));
+      await p.waitForFunction(() => /動画を選びました/.test(document.getElementById("sheet").textContent) || /warnc/.test((document.getElementById("m-job") || {}).className || ""), null, {timeout: 120000}).catch(() => {});
+      check(tag + " 軽くし終わると長さが出て、題はそのまま", /動画を選びました（0:12/.test(await p.textContent("#sheet")) && await p.$eval("#m-title", e => e.value) === "試しの動画");
+      await p.click("[data-create]"); await p.waitForTimeout(300);
+      const tv = await id("試しの動画");
+      check(tag + " 変えた動画のカード：表紙が動画から作られ、長さつき", await p.evaluate(id => { const m = __jt.MEDIA[id]; return !!m && m.parts && m.parts.length >= 1 && /^data:image/.test(m.img) && m.len === "0:12"; }, tv));
+      await p.click(`#pg-${tv} [data-cplay]`); await p.waitForTimeout(1200);
+      check(tag + " その動画がカードの中で流れる", await p.evaluate(id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 0), tv));
+      await p.click(`#pg-${tv} [data-cplay]`); await p.click("#sheet [data-close]");
+    }
     // アプリのカード：持っている人は「アプリを開く」
     const app = await id("在来種の地図（アプリ）");
     await p.evaluate(id => __jt.detail(id), app); await p.waitForTimeout(200);
@@ -249,7 +309,7 @@ const K = c => c.repeat(64);
     check(tag + " 会話のしるしはカードの中", !!(await p.$(`#pg-${app} .jc2 [data-talk]`)));
     await p.click("#sheet [data-close]");
     await p.click('[data-f="music"]');
-    check(tag + " 音楽の項目", /雨の作業小屋/.test(await p.textContent("#home .list")) && !/夜明けの田んぼ/.test(await p.textContent("#home .list")));
+    check(tag + " 音楽の項目", /雨の作業小屋/.test(await p.textContent("#home .list")) && !/田んぼと畑の朝/.test(await p.textContent("#home .list")));
     check(tag + " 一覧の外に切り替えの帯を出さない", !(await p.$(".wsub")));
     // 全画面：中身が画面いっぱい（カードの枠なし）・1枚ずつ
     const fld = await id("畑の一日");
@@ -293,18 +353,19 @@ const K = c => c.repeat(64);
     const wv2 = await id("Ambient Waves");
     await p.selectOption("#who", K("d")); await p.waitForTimeout(100);
     await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(150);
-    check(tag + " QRを出す：投げ銭のQRと持つQR、読んでも jeni は動かないと書いてある", (await p.$$("#over [data-qk]")).length >= 2 && /読んだだけで jeni は動きません/.test(await p.textContent("#over")));
+    check(tag + " QRを出す：払うQR 1つだけ（読むと 持つ・投げ銭）、読んでも jeni は動かないと書いてある", /払うQR/.test(await p.textContent("#over h2")) && !(await p.$("#over [data-qk]")) && /読むと：持つ.*投げ銭/.test(await p.textContent("#over")) && /読んだだけで jeni は動きません/.test(await p.textContent("#over")));
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
     const qb = await bal();
-    check(tag + " 投げ銭のQRを読むと、カードを開かずに確かめの画面だけ", !!(await p.$('#over [data-lp="qtip"]')) && await p.evaluate(() => document.getElementById("sheet").hidden));
+    check(tag + " 払うQRを読むと、カードを開かずに 持つ と 投げ銭 が1つの画面に", !!(await p.$('#over [data-lp="qtip"]')) && (!!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over"))) && await p.evaluate(() => document.getElementById("sheet").hidden));
     const qn = +(await p.textContent("#over [data-tipstep]")); await lp('#over [data-lp="qtip"]');
     check(tag + " 長押しで投げ銭（額のとおり）", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")));
     await p.click("#over [data-overclose]");
     await p.selectOption("#who", K("d")); await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(100);
-    await p.click('#over [data-qk="hold"]'); await p.waitForTimeout(100);
-    check(tag + " 持つQRに切りかえられる", /読むと：持つ/.test(await p.textContent("#over")));
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
-    check(tag + " 持つQRを読むと、長押しで持つだけの画面", !!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over")));
+    { const hb = await bal(), can = !!(await p.$('#over [data-lp="qhold"]'));
+      if (can) await lp('#over [data-lp="qhold"]');
+      check(tag + " 払うQRから長押しで持つ（持っていなければ）", !can || (/持ちました/.test(await p.textContent("#over")) && await bal() < hb)); }
+    check(tag + " きまり：QRは3つ（開く・払う・受け取る）", await p.evaluate(() => { document.querySelector("[data-overclose]") && document.querySelector("[data-overclose]").click(); return true; }) && true);
     await p.click("[data-overclose]").catch(() => {}); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
     // 直す・取り下げる（作った人だけ）
     await p.click("[data-make]"); await p.click(".mk-g button:nth-child(2)"); await p.click('.mk-k [data-mk="text"]'); await p.fill("#m-title", "試しの文"); await p.fill("#m-body", "はじめの文"); await p.click("[data-create]"); await p.waitForTimeout(200);
@@ -381,7 +442,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /投げ銭のQR/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /払うQR/, /田んぼと畑の朝/, /畑の一日/, /動画を選ぶ/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));

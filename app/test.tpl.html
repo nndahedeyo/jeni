@@ -228,8 +228,19 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
   padding:10px max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 30px -10px rgba(0,0,0,.5)}
 .over>*{max-width:440px;width:100%;justify-self:center}
 .over .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
-.over .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
+.over .x{z-index:3;position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
+.jc2 .bgimg.nxt{animation:afade 1.4s ease both}@keyframes afade{from{opacity:0}to{opacity:1}}
+.jc2 .cbar[data-seek]{cursor:pointer}.jc2 .cbar[data-seek]::before{content:"";position:absolute;left:0;right:0;bottom:0;height:6cqw}
+.jc2 iframe.inplay{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:2;background:#000}
+.album{position:relative;border-radius:14px;overflow:hidden;background:#000;height:min(66dvh,92vw);margin-top:30px}.album img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.album img.nxt{animation:afade .8s ease both}
+.album .ab{position:absolute;top:0;bottom:0;width:38%;border:0;background:none;padding:0;z-index:2}.album .ab.p{left:0}.album .ab.n{right:0}
+.adots{text-align:center;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.alb{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}.ali{position:relative;aspect-ratio:1;border-radius:10px;background:var(--sunk) center/cover;border:1px solid var(--line)}
+.ali button{position:absolute;right:2px;top:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:1;padding:0}
+.ali span{position:absolute;left:4px;bottom:4px;font-size:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:1px 5px}
+.ali.add{display:grid;place-items:center;border-style:dashed;color:var(--mute);cursor:pointer}.ali.add input{position:absolute;inset:0;opacity:0;cursor:pointer}.ali.add svg.i{width:22px;height:22px}
+.job{height:4px;border-radius:2px;background:var(--sunk);overflow:hidden}.job i{display:block;height:100%;width:0;background:var(--leaf);transition:width .3s}
 .warnc{color:var(--warn)!important}
 .mk-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.mk-g button{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 2px;display:grid;justify-items:center;gap:4px;font:inherit;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}.mk-g button svg.i{width:22px;height:22px}.mk-g button[aria-pressed="true"]{background:var(--leaf);color:#fff;border-color:transparent}
 .mk-k{display:flex;flex-wrap:wrap;gap:6px}.mk-k button{display:flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 11px 6px 8px;font:inherit;font-size:13px}.mk-k button svg.i{width:16px;height:16px}.mk-k button[aria-pressed="true"]{background:var(--leaf-soft);color:var(--leaf);border-color:var(--leaf);font-weight:700}
@@ -371,6 +382,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 
 <script>/*RULES*/</script>
 <script>/*QR*/</script>
+<script>/*MEDIA*/</script>
 <script>
 "use strict";
 const {reduce, sha256hex, R: RULE, COUNTED, AT, merkleRoot, merkleProof, merkleCheck} = JeniRules;
@@ -424,8 +436,8 @@ function seed() {
   const waves = card(D, {kind: "music", title: "Ambient Waves", price: 50}, {src: "media/waves.mp3", len: "0:24", note: "自然と調和する音。作業のあいまに。"});
   const soil = card(B, {kind: "text", title: "土を耕すということ", price: 0, body: "土は、耕すほどやわらかくなるわけではありません。根が通り、虫が通り、水が通る道を、少しだけ手伝うのが耕すということだと思っています。今年は、耕す回数を半分にしてみました。すると、畑の真ん中に小さな道ができました。"}, {note: "畑で考えたことの短い文章。"});
   const bread = card(C, {kind: "rwa", title: "天然酵母カンパーニュ", price: 60, supply: 3}, {img: "media/bread.jpg", note: "自家製の天然酵母で焼いたパン。店頭で受け取り。", where: "東京都 の店頭"});
-  const paddy = card(B, {kind: "picture", title: "夜明けの田んぼ", price: 0}, {img: "media/paddy.jpg", note: "冬の前の、最後の朝焼け。"});
-  const field = card(B, {kind: "video", title: "畑の一日", price: 30}, {src: "media/field.mp4", img: "media/field.jpg", len: "0:08", note: "日の出から日の入りまでを短く。"});
+  const paddy = card(B, {kind: "picture", title: "田んぼと畑の朝", price: 0}, {img: "media/paddy.jpg", pics: [{u: "media/paddy.jpg"}, {u: "media/field.jpg"}, {u: "media/radish.jpg"}], note: "冬の前の朝焼けから、畑、朝採りの大根まで。"});
+  const field = card(B, {kind: "video", title: "畑の一日", price: 30}, {src: "media/field-1.mp4", parts: [{u: "media/field-1.mp4", d: 4}, {u: "media/field-2.mp4", d: 4}], dur: 8, img: "media/field.jpg", len: "0:08", note: "日の出から日の入りまでを短く（2つに分けて置き、続けて流しています）。"});
   const curry = card(C, {kind: "rwa", title: "特製スパイスカレー", price: 120, supply: 1}, {img: "media/curry.jpg", note: "1日1皿だけのカレー。", where: "東京都 の店頭"});
   const rain = card(D, {kind: "music", title: "雨の作業小屋", price: 40}, {src: "media/rain.mp3", len: "0:18", note: "雨の日の小屋で鳴っていた音を元に。"});
   emit(A.pk, {t: "hold", card: curry, vis: "show"});
@@ -505,12 +517,13 @@ function sub(c) {
   if (mine(c).length) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${KEEP[c.kind] ? KEEP[c.kind][0] : `持っている ${mine(c).length}`}</span>${by}`;
   if (c.supply != null) return `${lk}${icon(kindIcon(c.kind))}<span class="left">${c.left ? `残り${c.left}` : "残り0"}</span>${by}`;
   if (m.len) return `${lk}${icon(c.kind)}<span>${m.len}</span>${by}`;
+  if (m.pics && m.pics.length > 1) return `${lk}${icon(c.kind)}<span>${m.pics.length}枚</span>${by}`;
   if (c.kind === "text") return `${lk}${icon("text")}<span>${esc(c.body)}</span>`;
   return `${lk}${icon(kindIcon(c.kind))}${by}`;
 }
 function thumb(c) {
   const m = MEDIA[c.id] || {};
-  if (c.kind === "music" && m.src) return `<button type="button" class="th" data-k="music" data-play="${c.id}" aria-label="${playing === c.id ? "止める" : "聞く"}">${m.img ? `<img src="${m.img}" alt="">` : icon(playing === c.id ? "pause" : "music")}<span class="pl">${icon(playing === c.id ? "pause" : "play")}</span></button>`;
+  if (c.kind === "music" && m.src && !JeniMedia.linkOf(m.src)) return `<button type="button" class="th" data-k="music" data-play="${c.id}" aria-label="${playing === c.id ? "止める" : "聞く"}">${m.img ? `<img src="${m.img}" alt="">` : icon(playing === c.id ? "pause" : "music")}<span class="pl">${icon(playing === c.id ? "pause" : "play")}</span></button>`;
   if (m.img) return `<button type="button" class="th" data-k="${c.kind}" data-detail="${c.id}" aria-label="開く"><img src="${m.img}" alt="">${c.kind === "video" ? `<span class="pl">${icon("play")}</span>` : ""}</button>`;
   return `<div class="th" data-k="${c.kind}">${icon(kindIcon(c.kind))}</div>`;
 }
@@ -556,7 +569,7 @@ function home() {
     ${u.member ? "" : `<div class="notice">${gmark(28)}<span>まだ参加していません。${LIVE ? "招待のリンクを開くか、" : ""}<b>わたしのカード</b>のQRを、参加している人に読んでもらうと始められます。</span></div>`}
     <main class="list">${list.length ? list.map(c => `<article class="row">
       <div class="line" data-detail="${c.id}" tabindex="0">${thumb(c)}<div class="mid"><div class="t">${esc(c.title || "その場のカード")}</div><div class="s">${sub(c)}</div></div>${holdBtn(c)}</div>
-      ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
+      ${MEDIA[c.id] && MEDIA[c.id].src && c.kind === "music" && !JeniMedia.linkOf(MEDIA[c.id].src) ? `<div class="bar"><i id="bar${c.id}"></i></div>` : ""}</article>`).join("")
       : `<p class="empty">${(MOD.mine && !MOD.fav && !MOD.near ? "持っているカードはまだありません" : MOD.fav ? "カードの右上の☆で、お気に入りに入れられます" : MOD.near ? "近くに場所のあるカードはありません" : field === "circle" ? "入っている仲間の輪のカードはありません" : "まだカードがありません")}</p>`}</main>`;
   // 横に滑る並び：前の位置を保ち、選んだ項目が隠れていたら見える所まで滑らせる
   const m = document.querySelector("#home .menu"); if (m) { m.scrollLeft = mx; const sb = m.querySelector('[aria-pressed="true"]');
@@ -566,16 +579,16 @@ function home() {
 /* ---- カードの見た目 ---- */
 const PAPER = {service: ["#f3efe8", "#e0d5c3", "d"], place: ["#edf2ea", "#cfdcc8", "d"], event: ["#f6f0e6", "#e6d6bd", "d"], shop: ["#f7efe6", "#e8d3bf", "d"], org: ["#eef0f2", "#d3d8de", "d"], app: ["#eef3f1", "#c9ddd5", "d"], project: ["#eef1f6", "#cfd8e6", "d"], music: ["#22283d", "#0f1220", "l"], text: ["#fffdf7", "#efe3d1", "d"], picture: ["#f4f1ea", "#ddd5c4", "d"], rwa: ["#f3f6ea", "#d9e3cc", "d"], video: ["#1b1f2e", "#0d0f18", "l"], other: ["#f4f1ea", "#ddd5c4", "d"]};
 function cardHtml(c, held) {
-  const m = MEDIA[c.id] || {}, bg = m.img ? `<img class="bgimg" src="${m.img}" alt="" data-probe>` : "";
+  const m = MEDIA[c.id] || {}, bg = m.img ? `<img class="bgimg" src="${m.img}" alt="" data-probe>` : "", album = m.pics && m.pics.length > 1;
   const pp = PAPER[c.kind] || PAPER.text, ink = bg ? "l" : pp[2];
-  const front = `<div class="face" data-ink="${ink}">${bg || `<div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,${pp[0]},${pp[1]})"></div>`}${gfield(bg ? 1 : .7)}<div class="shade"></div>
+  const front = `<div class="face" data-ink="${ink}"${album ? ` data-album="${c.id}" data-ai="0"` : ""}>${bg || `<div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,${pp[0]},${pp[1]})"></div>`}${gfield(bg ? 1 : .7)}<div class="shade"></div>
       <div class="jno">jeni No.${cardNo(c.id)}${c.circle ? `<span class="circ">${esc(S.circles[c.circle].name)}</span>` : ""}</div>
       <button type="button" class="cfav${isFav(c.id) ? " on" : ""}" data-fav="${c.id}" aria-pressed="${isFav(c.id)}" aria-label="お気に入り">${icon("fav")}</button>
       <button type="button" class="ctalk" data-talk="${c.id}" aria-label="会話">${icon("talk")}<span>${(c.talk || []).filter(x => !S.comments[x].hidden).length || ""}</span></button>
       ${c.kind === "text" && !bg ? `<p class="excerpt">${esc(c.body)}</p>` : ""}
-      <div class="txt"><div class="k">${KIND[c.kind]}</div><div class="t">${esc(c.title || "その場のカード")}</div><div class="by">${esc(nameOf(c.by))}</div></div>
+      <div class="txt"><div class="k">${KIND[c.kind]}${album ? `・${m.pics.length}枚` : ""}</div><div class="t">${esc(c.title || "その場のカード")}</div><div class="by">${esc(nameOf(c.by))}</div></div>
       ${(c.kind === "music" || c.kind === "video") && m.src ? `<button type="button" class="cplay${playing === c.id ? " on" : ""}" data-cplay="${c.id}" aria-label="再生・止める">${icon("play")}</button>` : m.img ? `<button type="button" class="cview" data-cplay="${c.id}" aria-label="写真を大きく"></button>` : ""}
-      ${c.kind === "music" && m.src ? `<div class="cbar"><i id="cbar-${c.id}"></i></div>` : ""}
+      ${(c.kind === "music" || c.kind === "video") && m.src && !JeniMedia.linkOf(m.src) ? `<div class="cbar" data-seek="${c.id}"><i id="cbar-${c.id}"></i></div>` : ""}
       <button type="button" class="mark" data-flip aria-label="このカードの裏（QR）">${gmark(100, {line: true, halo: true})}</button></div>`;
   const back = `<div class="face back" data-ink="d"><div class="paper" style="background:radial-gradient(120% 90% at 85% 10%,#fffdf7,#efe7d6)"></div>${gfield(.6)}
       <div class="qr">${qrSvg(`${BASE}#card=${c.id}`)}</div>
@@ -603,16 +616,48 @@ let vobs = null;
 function vidObserve() {
   if (!("IntersectionObserver" in window)) return;
   if (!vobs) vobs = new IntersectionObserver(es => es.forEach(en => {
-    const pg = en.target, id = pg.dataset.pg, c = S.cards[id], m = MEDIA[id] || {}; if (!c || c.kind !== "video" || !m.src) return;
-    const face = pg.querySelector(".face"); let v = face && face.querySelector("video.inplay");
-    if (en.isIntersecting) { if (!v && face) { v = document.createElement("video"); v.className = "inplay"; v.preload = "metadata"; v.playsInline = true; if (m.img) v.poster = m.img; v.src = m.src; v.style.opacity = "0"; face.insertBefore(v, face.querySelector(".gfield")); v.addEventListener("play", () => { v.style.opacity = "1"; }); } }
-    else if (v) { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); }
+    const pg = en.target, id = pg.dataset.pg, c = S.cards[id], m = MEDIA[id] || {}; if (!c || c.kind !== "video" || !m.src || JeniMedia.linkOf(m.src)) return;
+    const face = pg.querySelector(".face"); const v = face && face.querySelector("video.inplay");
+    if (en.isIntersecting) { if (!v && face) vidEl(face, m); }
+    else vidRelease(id, face);
   }), {root: $("sheet"), rootMargin: "100% 0px"});
   document.querySelectorAll("#sheet .pg").forEach(pg => vobs.observe(pg));
-  if (!vobs.pause) vobs.pause = new IntersectionObserver(es => es.forEach(en => { if (!en.isIntersecting) { const v = en.target.querySelector("video.inplay"); if (v && !v.paused) v.pause(); } }), {root: $("sheet"), threshold: .2});
+  if (!vobs.pause) vobs.pause = new IntersectionObserver(es => es.forEach(en => { if (!en.isIntersecting) { const ch = VCH[en.target.dataset.pg]; if (ch) ch.pause(); en.target.querySelectorAll("video.inplay").forEach(v => v.pause()); } }), {root: $("sheet"), threshold: .2});
   document.querySelectorAll("#sheet .pg").forEach(pg => vobs.pause.observe(pg));
 }
 const probeAll = () => { probeAll0(); vidObserve(); };
+const VCH = {};   // カードの中の動画（分けて置いたものを続けて流す）
+function vidEl(face, m) {
+  const v = document.createElement("video"); v.className = "inplay"; v.preload = "metadata"; v.playsInline = true; if (m.img) v.poster = m.img;
+  const p = partsOf(m)[0]; if (p) { v.dataset.u = 0; v.src = p.us[0]; v.addEventListener("error", function nxt() { if (v.dataset.chain) return v.removeEventListener("error", nxt); const k = +v.dataset.u + 1; if (k < p.us.length) { v.dataset.u = k; v.src = p.us[k]; } }); } v.style.opacity = "0"; face.insertBefore(v, face.querySelector(".gfield")); v.addEventListener("play", () => { v.style.opacity = "1"; }); return v;
+}
+function vidRelease(id, face) {
+  if (VCH[id]) { VCH[id].dispose(); delete VCH[id]; }
+  if (face) face.querySelectorAll("video.inplay").forEach(v => { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); });
+}
+/* ---- アルバム：カードの表で、ゆっくり自動でめくる（見えているカードだけ）。押すと大きく ---- */
+const ALBUM_MS = 4200;
+function albumStep(box, id, dir = 1) {
+  const m = MEDIA[id] || {}, n = (m.pics || []).length; if (n < 2) return;
+  const i = ((+box.dataset.ai || 0) + dir + n) % n; box.dataset.ai = i;
+  const cur = box.querySelector("img.bgimg, .album img"), im = document.createElement("img");
+  im.className = (cur ? cur.className.replace(/\bnxt\b/, "").trim() + " nxt" : "bgimg nxt"); im.alt = ""; im.src = picUrl(m, i);
+  im.onload = () => { if (cur && cur.parentNode) { cur.after(im); setTimeout(() => { cur.remove(); im.classList.remove("nxt"); }, 1500); } };
+  im.onerror = () => { const us = JeniMedia.urlsOf(m.pics[i]), k = us.indexOf(im.src) + 1; if (k > 0 && k < us.length) im.src = us[k]; };
+  const dots = box.parentNode && box.parentNode.querySelector(".adots"); if (dots) dots.textContent = `${i + 1} / ${n}`;
+  const nx = new Image(); nx.src = picUrl(m, (i + 1) % n);   // 次の1枚を先に
+}
+const picUrl = (m, i) => { const p = (m.pics || [])[i]; return p ? (i === 0 && m.img && !p.u ? m.img : p.u || m.img) : m.img; };
+setInterval(() => {
+  if (document.hidden) return;
+  const H = innerHeight;
+  document.querySelectorAll("#sheet .face[data-album]").forEach(f => { const r = f.getBoundingClientRect(); if (r.bottom > 0 && r.top < H && !f.closest(".jc2.flip")) albumStep(f, f.dataset.album); });
+  const a = document.querySelector("#over .album[data-album]"); if (a && !a.dataset.hold) albumStep(a, a.dataset.album);
+}, ALBUM_MS);
+function albumView(id, i = 0) {
+  const c = S.cards[id], m = MEDIA[id] || {}, n = m.pics.length;
+  openOver(`<div class="album" data-album="${id}" data-ai="${i}"><img src="${picUrl(m, i)}" alt="${esc(c.title)}"><button type="button" class="ab p" data-astep="-1" aria-label="前の写真"></button><button type="button" class="ab n" data-astep="1" aria-label="次の写真"></button></div><div class="adots">${i + 1} / ${n}</div>`);
+}
 
 /* ---- シート ---- */
 function openSheet(html, keep = false) {
@@ -622,7 +667,7 @@ function openSheet(html, keep = false) {
   $("sheet").scrollTop = keep ? top : 0; probeAll();
 }
 function closeSheet() {
-  $("sheet").querySelectorAll("video,audio").forEach(m => m.pause());
+  $("sheet").querySelectorAll("video,audio").forEach(m => m.pause()); for (const k in VCH) { VCH[k].dispose(); delete VCH[k]; }
   clearInterval(saleTimer); $("sheet").classList.remove("feed"); $("sheet").hidden = true; $("sheet").innerHTML = ""; document.body.style.overflow = ""; sel = null; home();
 }
 let tt;
@@ -677,7 +722,7 @@ function pageHtml(c) {
   // どのカードも同じ並び：カード → 人・投げ銭・持つ → 受け取る（あれば）→「くわしく」（説明・場所・つながり・記録・直す）
   const own = isMe ? `<div class="own">${RETIRE === c.id
       ? `<span class="sub">${c.copies.length ? "持っている人がいるので、受付を終えます（持っている人のものはそのまま）。" : "だれも持っていないので、カードは消えます。"}</span><button type="button" class="pill warn" data-retire="${c.id}">取り下げる</button><button type="button" class="pill" data-retireno>やめる</button>`
-      : `<button type="button" class="pill" data-edit="${c.id}">直す</button>${c.hidden || c.closed ? "" : `<button type="button" class="pill" data-qrshow="${c.id}">QRを出す</button>`}${c.closed ? `<span class="sub">受付を終えています</span>` : `<button type="button" class="pill" data-retireask="${c.id}">取り下げる</button>`}`}</div>` : "";
+      : `<button type="button" class="pill" data-edit="${c.id}">直す</button>${c.hidden || c.closed ? "" : `<button type="button" class="pill" data-qrshow="${c.id}">払うQR</button>`}${c.closed ? `<span class="sub">受付を終えています</span>` : `<button type="button" class="pill" data-retireask="${c.id}">取り下げる</button>`}`}</div>` : "";
   // どのカードも同じ並び：カード → 人・投げ銭・持つ → 基本（値段・残り・持っている人・jeni の行き先・記録）→ 受け取る → そのカードだけの「くわしく」
   const canTip = !isMe && u.member && !c.hidden;
   const tip = canTip ? `<span class="tipc"><button type="button" class="tipamt" data-tipstep="${c.id}" aria-label="投げ銭の額を変える（いま ${tipAmt(c.id)} jeni）">${tipAmt(c.id)}</button>${lpBtn("tip", c.id, `${coin()}投げ銭<small>長押し</small>`)}</span>` : "";
@@ -878,7 +923,7 @@ function redeemSheet(id) {
   emit(me, {t: "redeem", card: id, lock: sha256hex(code), until: clock + 300});
   RD = {id, code, holder: me};
   const evt = c.kind === "event" || c.kind === "service";
-  openOver(`<h2 class="rh">${evt ? "入る" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
+  openOver(`<h2 class="rh">受け取るQR・${evt ? "入る" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
     <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#used=${id}.${code}`, "q")}</div><b>${esc(c.title)}</b></div>
     ${LIVE ? `<p class="sub" style="text-align:center;font-size:12px">読めないときの番号：<b style="letter-spacing:.08em">${code}</b></p>` : `<button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（${evt ? "受付" : "お店"}）として読む</button>`}`);
 }
@@ -899,15 +944,32 @@ function closeOver() { $("over").hidden = true; $("scrim").hidden = true; $("ove
 function cplay(id) {
   const c = S.cards[id], m = MEDIA[id] || {}, pg = $("pg-" + id); if (!pg) return;
   const face = pg.querySelector(".face");
+  const lk = (c.kind === "video" || c.kind === "music") && m.src && JeniMedia.linkOf(m.src);
+  if (lk) {   // YouTube などのリンク：カードの中で流す（見本の画面では、その場に埋め込めないので開くだけ）
+    pauseMusic();
+    const src = lk.yt ? `https://www.youtube-nocookie.com/embed/${lk.yt}?autoplay=1&playsinline=1&rel=0` : `https://player.vimeo.com/video/${lk.vimeo}?autoplay=1`;
+    if (!LIVE) return openOver(`<h2 class="rh">${esc(c.title)}</h2><p class="sub">本物では、カードの中でそのまま流れます（見本の画面には埋め込めません）。</p><a class="pill go" href="${esc(m.src)}" target="_blank" rel="noopener" style="justify-self:start">${lk.yt ? "YouTube" : "Vimeo"}で開く</a>`);
+    if (!face.querySelector("iframe.inplay")) face.insertAdjacentHTML("beforeend", `<iframe class="inplay" src="${src}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="${esc(c.title)}"></iframe>`);
+    return;
+  }
   if (c.kind === "video" && m.src) {
-    let v = face.querySelector("video.inplay");
-    if (!v) { v = document.createElement("video"); v.className = "inplay"; v.src = m.src; v.playsInline = true; face.insertBefore(v, face.querySelector(".gfield")); }
-    v.muted = false; v.style.opacity = "1";
-    if (v.paused) v.play().catch(() => {}); else v.pause();
+    pauseMusic();
+    let ch = VCH[id];
+    if (!ch) {
+      const v = face.querySelector("video.inplay") || vidEl(face, m);
+      ch = VCH[id] = new Chain(v, partsOf(m), {
+        tick: f => { const b = $("cbar-" + id); if (b) b.style.width = (f * 100) + "%"; },
+        end: () => { const b = pg.querySelector("[data-cplay]"); if (b) b.classList.remove("on"); },
+        fail: () => toast("再生できませんでした（置き場につながりません）")});
+    }
+    ch.el.muted = false; ch.el.style.opacity = "1";
+    if (ch.paused) ch.play().catch(() => {}); else ch.pause();
+    const b = pg.querySelector("[data-cplay]"); if (b) b.classList.toggle("on", !ch.paused);
     return;
   }
   if (c.kind === "music" && m.src) { play(id, true); return; }
-  if (m.img) { openOver(`<img class="bigimg" src="${m.img}" alt="${esc(c.title)}">`); return; }
+  if (m.pics && m.pics.length > 1) return albumView(id, +(face.dataset.ai || 0));
+  if (m.img) { openOver(`<img class="bigimg" src="${(m.pics && m.pics[0] && m.pics[0].u) || m.img}" alt="${esc(c.title)}">`); return; }
 }
 
 /* ---- わたしのカード（プロフィール）：裏の QR は「わたし」への入口。名前・ひとこと・写真・見せ方をここで変える ---- */
@@ -967,7 +1029,52 @@ function joined() {
 }
 
 /* ---- 作る・その場で売る ---- */
-const MK = {mode: "make", want: "", url: "", src: "", len: "", when: "", place: "", geo: null, kind: "text", title: "", body: "", price: 0, limited: false, supply: 1, circle: "", img: "", sale: null};
+const MK = {mode: "make", want: "", url: "", src: "", len: "", when: "", place: "", geo: null, kind: "text", title: "", body: "", price: 0, limited: false, supply: 1, circle: "", img: "", sale: null, media: null, pics: []};
+const MK0 = {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: "", geo: null, media: null, pics: []};
+// 下ごしらえ（軽くする・置き場へ送る）の進み具合。入力の欄はそのまま、進み具合の文字と線だけを書き換える
+const JOB = {on: false, pct: 0, text: "", err: "", kind: ""};
+function jobUI() {
+  const t = $("m-job"), b = $("m-jobbar"); if (t) t.textContent = JOB.on ? `${JOB.text} ${Math.round(JOB.pct)}%` : JOB.err || ""; if (b) b.style.width = JOB.pct + "%";
+  const c = document.querySelector("[data-create]"); if (c && JOB.on) c.disabled = true;
+}
+const setJob = (pct, text) => { JOB.pct = Math.max(0, Math.min(100, pct)); if (text) JOB.text = text; jobUI(); };
+const MEDIA_KINDS = ["picture", "music", "video"];   // 置き場（だれでも見られる）に置くもの。輪のカードには置かない
+async function mediaJob(file, kind) {
+  Object.assign(JOB, {on: true, pct: 0, text: "準備しています", err: "", kind}); MK.media = null; MK.src = ""; make();
+  try {
+    let r;
+    try { r = await JeniMedia.prepare(file, kind, p => setJob(p * (LIVE ? 60 : 100), kind === "music" ? "音を整えています" : "動画を軽くしています")); }
+    catch (e) {
+      if (!/Failed to fetch|import|module/i.test(String(e && e.message))) throw e;
+      // 変換の部品を読み込めないとき：小さな音のファイルだけ、そのまま置く（動画は位置などの情報が入っていることがあるので置かない）
+      if (kind !== "music" || file.size > JeniMedia.LIM.part || !/^audio\/(mpeg|mp4|aac|x-m4a)$/.test(file.type)) throw new Error("変換の部品を読み込めませんでした（回線を確かめて、もう一度）");
+      const d = await new Promise(res => { const el = document.createElement("audio"); el.preload = "metadata"; el.onloadedmetadata = () => res(el.duration || 0); el.onerror = () => res(0); el.src = URL.createObjectURL(file); });
+      r = {parts: [{blob: file, d: Math.round(d * 100) / 100}], dur: d, poster: null};
+    }
+    const parts = [], n = r.parts.length;
+    for (let i = 0; i < n; i++) {
+      const pt = r.parts[i];
+      if (LIVE) { const up = await JeniMedia.upload(pt.blob, LV.sign, p => setJob(60 + 40 * (i + p) / n, `置き場へ送っています${n > 1 ? `（${i + 1}/${n}）` : ""}`)); parts.push({...up, d: pt.d}); }
+      else parts.push({u: URL.createObjectURL(pt.blob), d: pt.d});
+    }
+    const poster = r.poster ? await shrink(URL.createObjectURL(r.poster), 640) : "";
+    MK.media = {parts, dur: Math.round(r.dur), len: JeniMedia.fmtLen(r.dur), poster, mb: r.parts.reduce((s, x) => s + x.blob.size, 0) / 1048576};
+  } catch (e) { JOB.err = (e && e.message) || "できませんでした"; }
+  JOB.on = false; if ($("m-title")) readMK(); if (MK.mode === kind && !$("sheet").hidden && $("m-title")) make();
+}
+async function picsJob(files) {
+  const L = JeniMedia.LIM.pics, list = Array.from(files).slice(0, Math.max(0, L - MK.pics.length));
+  if (!list.length) return toast(`アルバムは${L}枚までです`);
+  Object.assign(JOB, {on: true, pct: 0, text: "写真を整えています", err: "", kind: "picture"}); jobUI();
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const im = await JeniMedia.imageOf(list[i]);
+      const p = LIVE ? await JeniMedia.upload(im.blob, LV.sign, f => setJob(100 * (i + f) / list.length, `写真を置き場へ送っています（${i + 1}/${list.length}）`)) : {u: URL.createObjectURL(im.blob)};
+      MK.pics.push({...p, thumb: im.thumb}); setJob(100 * (i + 1) / list.length, "写真を整えています");
+    }
+  } catch (e) { JOB.err = (e && e.message) || "写真を置けませんでした"; }
+  JOB.on = false; if (MK.pics[0]) MK.img = MK.pics[0].thumb; if ($("m-title")) readMK(); make();
+}
 function readMK() {
   const v = id => $(id) ? $(id).value : null;
   if (v("m-kind") != null) MK.kind = v("m-kind");
@@ -981,7 +1088,7 @@ function readMK() {
   if (v("m-url") != null) MK.url = v("m-url").trim().slice(0, 300);
   if (v("m-when") != null) MK.when = v("m-when").trim().slice(0, 60);
   if (v("m-place") != null) MK.place = v("m-place").trim().slice(0, 100);
-  if (v("m-src") != null) MK.src = v("m-src").trim().slice(0, 300);
+  if (v("m-src") != null && (v("m-src").trim() || /^https:/.test(MK.src || ""))) MK.src = v("m-src").trim().slice(0, 300);
 }
 // 作る：入力の決まりが同じものをまとめて4つ。まとまりの中で種類を選ぶと、すぐ下にその欄だけ
 // 見本の画像：種類ごとに、そのカードとして矛盾しないものだけ（見本の画面だけ。つなぐ版では出さない）
@@ -1028,12 +1135,15 @@ function make() {
   const whenL = {event: "日時", service: "日時・受けられる日", shop: "営業の日・時間"}[k], placeL = {rwa: "受け取る場所", event: "場所", service: "場所", shop: "場所", place: "どこ"}[k];
   openSheet(`<button type="button" class="back" data-close>${icon("back")}一覧へ</button>
     ${top}${kinds}
-    <label class="ph-pick${MK.img ? " has" : ""}" ${MK.img ? `style="--img:url('${MK.img}')"` : ""}><input type="file" id="m-photo" accept="image/*" ${sale ? 'capture="environment"' : ""}><span>${MK.img ? "画像を変える" : needImg ? "写真を撮る・選ぶ" : "カードの画像（なくてもよい）"}</span></label>
+    ${k === "picture" ? `<div class="alb">${MK.pics.map((p, i) => `<div class="ali" style="background-image:url('${p.thumb}')"><button type="button" data-picdel="${i}" aria-label="${i + 1}枚目を外す">×</button>${i === 0 ? "<span>表</span>" : ""}</div>`).join("")}${MK.pics.length < JeniMedia.LIM.pics ? `<label class="ali add" aria-label="写真を足す"><input type="file" id="m-pics" accept="image/*" multiple>${icon("plus")}</label>` : ""}</div>
+      <p class="sub" style="font-size:12px;margin:-2px 0 0">${MK.pics.length ? `${MK.pics.length}枚（${JeniMedia.LIM.pics}枚まで）・1枚目がカードの表。${MK.pics.length > 1 ? "カードの上で自動でゆっくりめくれます。" : "2枚以上で、自動でめくれるアルバムに。"}` : `写真を選ぶ（${JeniMedia.LIM.pics}枚まで・一度に何枚でも）。位置などの情報は消してから置きます。`}</p>`
+      : `<label class="ph-pick${MK.img ? " has" : ""}" ${MK.img ? `style="--img:url('${MK.img}')"` : ""}><input type="file" id="m-photo" accept="image/*" ${sale ? 'capture="environment"' : ""}><span>${MK.img ? "画像を変える" : needImg ? "写真を撮る・選ぶ" : media ? (k === "music" ? "ジャケットの画像（なくてもよい）" : "表紙の画像（なくても、動画の最初から作ります）") : "カードの画像（なくてもよい）"}</span></label>`}
       ${sampleChips(k, "data-sample")}
-    ${media && LIVE ? `<label class="fl">${k === "music" ? "音" : "動画"}のURL（https・ファイルの置き場に置いたもの）<input id="m-src" type="url" maxlength="300" value="${esc(MK.src || "")}" placeholder="https://…"></label>
-      <p class="sub" style="font-size:11px;margin:-4px 0 0">中継には大きなファイルを置けないので、音や動画はファイルの置き場（Blossom など）に置き、そのURLを入れます。</p>` : ""}
-    ${media && !LIVE ? `<label class="ph-pick mp${MK.src ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}"><span>${MK.src ? `${k === "music" ? "音" : "動画"}を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ" : "動画を選ぶ"}</span></label>
-      ${LIVE ? "" : `<div class="chips"><span class="sub">見本：</span><button type="button" data-msample="${k === "music" ? "media/rain.mp3" : "media/field.mp4"}">${k === "music" ? "雨の音" : "畑の動画"}</button></div>`}` : ""}
+    ${media ? `<label class="ph-pick mp${MK.media ? " has" : ""}"><input type="file" id="m-media" accept="${k === "music" ? "audio/*" : "video/*"}" ${JOB.on ? "disabled" : ""}><span>${MK.media ? `${k === "music" ? "音" : "動画"}を選びました（${MK.media.len}${MK.media.parts.length > 1 ? `・${MK.media.parts.length}つに分けて置きました` : ""}）・変える` : MK.src && !/^https:/.test(MK.src) ? `見本を選びました${MK.len ? `（${MK.len}）` : ""}・変える` : k === "music" ? "音を選ぶ（60分まで）" : "動画を選ぶ（10分まで）"}</span></label>
+      ${JOB.on || JOB.err ? `<div class="job"><i id="m-jobbar" style="width:${JOB.pct}%"></i></div><p class="sub${JOB.err ? " warnc" : ""}" id="m-job" style="font-size:12px;margin:-4px 0 0">${JOB.on ? `${JOB.text} ${Math.round(JOB.pct)}%` : esc(JOB.err)}</p>` : ""}
+      ${LIVE ? "" : `<div class="chips"><span class="sub">見本：</span><button type="button" data-msample="${k === "music" ? "media/rain.mp3" : "media/field.mp4"}">${k === "music" ? "雨の音" : "畑の動画"}</button></div>`}
+      <label class="fl">またはリンク（YouTube・${k === "music" ? "音" : "動画"}のファイルの https）<input id="m-src" type="url" maxlength="300" value="${esc(/^https:/.test(MK.src || "") ? MK.src : "")}" placeholder="https://…" ${MK.media ? "disabled" : ""}></label>
+      <p class="sub" style="font-size:11px;margin:-4px 0 0">${k === "music" ? "音は音楽に十分な音質にそろえ、長いものは分けて置きます" : "動画はスマホの画面できれいな画質に軽くし、長いものは分けて置きます"}（無料の置き場・続けて1本として流れます）。置いたものはだれでも見られるので、自分で作ったものか、権利のあるものだけにしてください。</p>` : ""}
     <label class="fl">題${sale ? "（なくてもよい）" : ""}<input id="m-title" maxlength="80" value="${esc(MK.title)}"></label>
     ${bodyL ? `<label class="fl">${bodyL}<textarea id="m-body" maxlength="2000">${esc(MK.body)}</textarea></label>` : ""}
     ${k === "project" ? `<label class="fl">求めているもの<input id="m-want" maxlength="200" value="${esc(MK.want || "")}" placeholder="例：在来種の写真、畑の場所"></label>` : ""}
@@ -1042,9 +1152,10 @@ function make() {
       <div class="fl"><span>地図で示す（${{rwa: "受け取る場所", event: "会場", service: "場所", shop: "お店の場所"}[k]}・なくてもよい）${MK.geo ? ` <button type="button" class="link" data-geoclear style="font-size:12px;padding:0">消す</button>` : ""}</span>${mapSvg(MK.geo ? [{g: MK.geo}] : [], {pick: true})}</div>` : ""}
     ${bundle ? "" : `<div class="row2"><label class="fl">値段（jeni）<input id="m-price" type="number" inputmode="numeric" min="0" max="99999" value="${sale ? MK.price || 80 : MK.price}"></label>
       ${thing ? `<label class="fl">${{rwa: "数", event: "定員", service: "枠"}[k]}<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>`}
-    ${!sale && circles.length ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
-    ${!sale ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
-    <button type="button" class="big" data-create ${(needImg && !MK.img) || (media && !MK.src && !LIVE) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
+    ${!sale && circles.length && !MEDIA_KINDS.includes(k) ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
+    ${!sale && MEDIA_KINDS.includes(k) && circles.length ? `<p class="sub" style="font-size:11px;margin:0">写真・音・動画のカードは、みんなに見えるカードだけです（置き場はだれでも見られるので、輪の人だけには隠せません）。</p>` : ""}
+    ${!sale && !MEDIA_KINDS.includes(k) ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
+    <button type="button" class="big" data-create ${JOB.on || (needImg && !MK.img) || (media && !MK.media && !MK.src) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
 }
 function create() {
   readMK();
@@ -1060,32 +1171,42 @@ function create() {
   }
   const k = MK.mode;
   if (k === "app" && !/^https:\/\/\S+$/.test(MK.url || "")) return toast("アプリのURLは https:// から");
-  if ((k === "music" || k === "video") && !MK.src) return toast(k === "music" ? "音を選んでください" : "動画を選んでください");
-  if (LIVE && (k === "music" || k === "video") && !/^https:\/\/\S+$/.test(MK.src)) return toast("音・動画のURLは https:// から");
+  if (JOB.on) return toast("準備が終わるまで、少し待ってください");
+  if ((k === "music" || k === "video") && !MK.media && !MK.src) return toast(k === "music" ? "音を選んでください" : "動画を選んでください");
+  if ((k === "music" || k === "video") && !MK.media && !/^(https:\/\/\S+|media\/[\w.-]+|blob:\S+)$/.test(MK.src)) return toast("リンクは https:// から");
+  if (MEDIA_KINDS.includes(k)) MK.circle = "";
   const c = {t: "card", kind: k, title: MK.title || "題のないカード", price: MK.price, body: MK.body || ""};
   if (k === "project" && MK.want) c.want = MK.want;
-  if (k === "picture" && !MK.img) return toast("写真を選んでください");
+  if (k === "picture" && !MK.img && !MK.pics.length) return toast("写真を選んでください");
   if (COUNTED.includes(k)) c.supply = MK.supply;
   if (AT.includes(k)) { c.when = MK.when; c.place = MK.place; if (MK.geo) c.geo = MK.geo; }
   if (BUNDLE.includes(k)) c.price = 0;
   if (MK.circle) c.circle = MK.circle;
-  const med = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: MK.src || "", len: MK.len || ""};
+  const med = medOf(k);
   if (LIVE) {
     (async () => {
       if (med.img) med.img = await shrink(med.img, 640);
       const e = c.circle ? await liveCircleCard(c, med) : emit(me, c);
       if (!e || !S.cards[e.id]) return toast("出せませんでした");
       if (!c.circle && (med.img || med.src || med.url)) publishMedia(e.id, med);
-      Object.assign(MK, {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: "", geo: null});
+      Object.assign(MK, MK0, {pics: []});
       liveRecompute(); detail(e.id); toast("カードを出しました");
     })();
     return;
   }
   const e = emit(me, c);
   if (!S.cards[e.id]) return toast("出せませんでした");
-  MEDIA[e.id] = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: MK.src || "", len: MK.len || ""};
-  Object.assign(MK, {mode: "make", title: "", body: "", img: "", price: 0, supply: 1, circle: "", want: "", url: "", src: "", len: "", when: "", place: "", geo: null});
+  MEDIA[e.id] = med;
+  Object.assign(MK, MK0, {pics: []});
   detail(e.id); toast("カードを出しました");
+}
+// カードの中身：表の画像（小さな写し）・音や動画（分けて置いたもの）・アルバム
+function medOf(k) {
+  const mm = MK.media, med = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: "", len: MK.len || ""};
+  if ((k === "music" || k === "video") && mm) { med.parts = mm.parts.map(({u, x, m, e, d}) => ({u, x, m, e, d})); med.src = mm.parts[0].u; med.len = mm.len; med.dur = mm.dur; if (!med.img && mm.poster && k === "video") med.img = mm.poster; }
+  else if (k === "music" || k === "video") med.src = MK.src || "";
+  if (k === "picture" && MK.pics.length) { med.img = MK.pics[0].thumb; med.pics = MK.pics.map(({u, x, m, e}) => ({u, x, m, e})); }
+  return med;
 }
 let saleTimer;
 function saleQR() {
@@ -1148,9 +1269,10 @@ function rules() {
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
     </ol>
     <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話は、お互いに友達のときだけ（残高の下の吹き出しと受話器、または相手のカードから）。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物・イベント・体験は、持っている人が出す一度きりのQRを作った人が読んで、受け取り・参加・受けたことにします。</p>
-    <p class="rnote"><b>QRの使い分け</b>　どのQRも、読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。<br>
-      ・カードの裏のQR：カードを開く（紹介・共有）<br>・投げ銭のQR／持つQR：作った人がカードの「QRを出す」から。読んだ人には確かめの画面だけが出ます（路上ライブ・展示・ポスター・受付など）<br>
-      ・払うQR：その場で売るときに売る人が出す（5分・1回）<br>・受け取りのQR：持っている人が出し、作った人が読む（引き換え・入場）<br>・プロフィールのQR：認める・友達になる／招待のリンクとQR：参加する</p>
+    <p class="rnote"><b>QRは3つ</b>　どのQRも、読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。<br>
+      ・開く：カードの裏・プロフィールのQR。カードや人が開きます（紹介・友達になる・参加を認める）<br>
+      ・払う：作った人・売る人が出すQR。読んだ人の画面に「持つ」と「投げ銭」が出ます（その場で売るときは5分・1回だけ）<br>
+      ・受け取る：持っている人が出し、作った人が読むQR（引き換え・入場）<br>招待は一度きりのリンクで送ります（QRにもできます）。</p>
     <p class="rnote"><b>直す・取り下げる</b>　作った人は、題・説明・日時・場所・画像を直せます（値段・数・種類は直せません）。取り下げると、だれも持っていないカードは消え、持っている人がいるカードは受付を終えます（持っている人のものはそのまま）。自分の書いた会話は消せます。直した・消したことは記録に残ります。</p>
     <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残り、だれでも見られます（番号と、その人が決めた名前で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」（数に限りのないカードだけ）と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身は、輪の人にしか読めません。</p>
     <p class="rnote"><b>配る量について</b>　配る量や配り方は、使われ方を見て変わることがあります。変わるときも全員に同じきまりが同じように当てはまり、前もって知らせます。jeni は円と交換できず、値段は作った人が決めるので、配る量の大きさそのものに意味はありません。</p>
@@ -1158,19 +1280,67 @@ function rules() {
 }
 
 /* ---- 再生（一覧の中でそのまま） ---- */
+// 分けて置いた音・動画を、1本として続けて流す。次の部分を終わる少し前に読み込んでおくので、つなぎ目で止まらない。
+// 置き場が1つ止まっていたら、同じ中身（同じ番号）の写しから取る
+const partsOf = m => (m.parts && m.parts.length ? m.parts : m.src ? [{u: m.src, d: 0}] : []).map(p => ({...p, us: JeniMedia.urlsOf(p)}));
+class Chain {
+  // 1つの再生器で続けて流す（スマホでも、押したあとの再生がそのまま続く）。次の部分は流れているあいだに先に取っておく
+  constructor(el, parts, h) {
+    Object.assign(this, {el, parts, h, i: 0, ev: [], cache: {}, busy: {}});
+    this.total = parts.reduce((s, p) => s + (+p.d || 0), 0);
+    const on = (t, f) => { el.addEventListener(t, f); this.ev.push([t, f]); };
+    on("timeupdate", () => this.tick()); on("ended", () => this.adv()); on("error", () => el.getAttribute("src") && this.fail());
+    el.dataset.chain = "1";
+    const k = parts[0] ? parts[0].us.indexOf(el.getAttribute("src")) : -1;
+    if (k < 0 || el.error) this.load(0); else el.dataset.u = k;
+  }
+  dispose() { for (const [t, f] of this.ev) this.el.removeEventListener(t, f); this.el.pause(); for (const k in this.cache) URL.revokeObjectURL(this.cache[k]); this.cache = {}; this.gone = true; }
+  load(j, t = 0, run = false) {
+    const el = this.el; this.i = j; el.dataset.u = 0; el.src = this.cache[j] || this.parts[j].us[0];
+    if (t || run) { const go = () => { try { if (t) el.currentTime = t; } catch (e) {} if (run) el.play().catch(() => {}); }; if (el.readyState >= 1) go(); else el.addEventListener("loadedmetadata", go, {once: true}); }
+  }
+  async prefetch(j) {
+    if (j >= this.parts.length || this.cache[j] || this.busy[j] || !window.fetch) return; this.busy[j] = true;
+    for (const u of this.parts[j].us) { try { const r = await fetch(u); if (!r.ok) continue; const b = await r.blob(); if (this.gone) return; this.cache[j] = URL.createObjectURL(b); break; } catch (e) {} }
+    for (const k in this.cache) if (+k < this.i) { URL.revokeObjectURL(this.cache[k]); delete this.cache[k]; }
+  }
+  off(i) { let s = 0; for (let k = 0; k < i; k++) s += +this.parts[k].d || 0; return s; }
+  dur() { return this.total || this.el.duration || 0; }
+  time() { return this.off(this.i) + (this.el.currentTime || 0); }
+  tick() { if (this.el.currentTime > 2) this.prefetch(this.i + 1); const d = this.dur(); if (this.h.tick) this.h.tick(d ? Math.min(1, this.time() / d) : 0); }
+  play() { return this.el.play(); }
+  pause() { this.el.pause(); }
+  get paused() { return this.el.paused; }
+  adv() { if (this.i + 1 >= this.parts.length) { if (this.h.end) this.h.end(); return; } this.load(this.i + 1, 0, true); }
+  seek(f) {
+    const d = this.dur(); if (!d) return; let t = f * d, j = 0;
+    if (this.total) { while (j < this.parts.length - 1 && t >= this.off(j + 1)) j++; t -= this.off(j); }
+    if (j === this.i) { try { this.el.currentTime = t; } catch (e) {} if (this.el.paused) this.el.play().catch(() => {}); } else this.load(j, t, true);
+  }
+  fail() {
+    const el = this.el, j = this.i, us = this.parts[j].us, t = el.currentTime || 0;
+    if (this.cache[j] && el.src === this.cache[j]) { URL.revokeObjectURL(this.cache[j]); delete this.cache[j]; el.dataset.u = 0; el.src = us[0]; }
+    else { const k = +el.dataset.u + 1; if (k >= us.length) { if (this.h.fail) this.h.fail(); return; } el.dataset.u = k; el.src = us[k]; }
+    el.addEventListener("loadedmetadata", () => { try { el.currentTime = t; } catch (e) {} el.play().catch(() => {}); }, {once: true});
+  }
+}
 const player = $("player");
+let chain = null;   // いま流している音（1つだけ）
+function musicBars(id, f) { const k = (f * 100) + "%"; const b = $("bar" + id); if (b) b.style.width = k; const cb = $("cbar-" + id); if (cb) cb.style.width = k; }
+function pauseMusic() { if (chain) chain.pause(); playing = ""; document.querySelectorAll("[data-cplay]").forEach(b => { const c = S.cards[b.dataset.cplay]; if (c && c.kind === "music") b.classList.remove("on"); }); }
 function play(id, inCard = false) {
   const m = MEDIA[id];
-  if (playing === id) { player.pause(); playing = ""; } else { playing = id; player.src = m.src; player.play().catch(() => toast("再生できませんでした")); }
+  if (chain && chain.id === id) { if (playing === id) { chain.pause(); playing = ""; } else { playing = id; chain.play().catch(() => toast("再生できませんでした")); } }
+  else {
+    if (chain) chain.dispose();
+    for (const k in VCH) VCH[k].pause();
+    chain = new Chain(player, partsOf(m), {tick: f => musicBars(id, f), end: () => { playing = ""; if ($("sheet").hidden) home(); document.querySelectorAll("[data-cplay]").forEach(b => b.classList.remove("on")); },
+      fail: () => { playing = ""; toast("再生できませんでした（置き場につながりません）"); }});
+    chain.id = id; playing = id; chain.play().catch(() => toast("再生できませんでした"));
+  }
   if (!inCard) home();
   document.querySelectorAll("[data-cplay]").forEach(b => b.classList.toggle("on", b.dataset.cplay === playing));
 }
-player.addEventListener("timeupdate", () => {
-  const k = player.duration ? (player.currentTime / player.duration * 100) + "%" : "0%";
-  const b = $("bar" + playing); if (b) b.style.width = k;
-  const cb = $("cbar-" + playing); if (cb) cb.style.width = k;
-});
-player.addEventListener("ended", () => { const id = playing; playing = ""; if ($("sheet").hidden) home(); document.querySelectorAll("[data-cplay]").forEach(b => b.classList.remove("on")); void id; });
 
 /* ---- 変わったところ（前の版から）：押すと、その画面へ ---- */
 const AS = name => P[name].pk;
@@ -1181,7 +1351,10 @@ const GUIDE = [
   ["カードのページ", "どのカードも同じ並び：カード → 作った人・投げ銭・持つ → 値段・残り・持っている人・jeni の行き先 → 受け取る →「くわしく・記録」（そのカードだけの話と、持っている人・譲る・贈る・記録）。", () => { me = AS("kenji"); detail(cardBy("畑の収穫体験").id); }],
   ["投げ銭は1か所で", "額を押すと 1→5→10→20 と変わり（最初に届く 1,000 jeni に合わせた段）、となりを長押しで贈ります。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["全画面", "カードのページの右上「全画面」。写真・動画は画面いっぱいに、1枚ずつめくれます。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
-  ["QRの使い分け", "裏のQR＝カードを開く。作った人はカードの「QRを出す」から投げ銭のQR・持つQRを出せます（路上ライブ・展示・ポスター・受付）。読んだ人には確かめて長押しだけの画面。読んだだけで jeni は動きません。", () => { me = AS("sound"); detail(cardBy("Ambient Waves").id); qrShowSheet(cardBy("Ambient Waves").id); }],
+  ["QRは3つ：開く・払う・受け取る", "開く＝カードの裏・プロフィール。払う＝作った人のカードの「払うQR」（読んだ人の画面に 持つ と 投げ銭 が1つに出る）・その場で売るQR。受け取る＝持っている人が出し、作った人が読む。読んだだけで jeni は動きません。", () => { me = AS("sound"); detail(cardBy("Ambient Waves").id); qrShowSheet(cardBy("Ambient Waves").id); }],
+  ["アルバム", "写真のカードに20枚まで。カードの表でゆっくり自動でめくれ、押すと大きく1枚ずつ。", () => { me = AS("kenji"); detail(cardBy("田んぼと畑の朝").id); }],
+  ["長い動画・音", "動画は10分、音は60分まで。端末の中で軽くして、長いものは分けて置き、続けて1本として流れます。下の線を押すと、その所へ。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
+  ["動画・音を作る", "＋ → データ → 動画。選ぶと、その場で軽くして（進み具合が出ます）、そのまま出せます。リンク（YouTube など）も入れられます。", () => { me = AS("kenji"); MK.mode = "video"; make(); }],
   ["招待する（身内に）", "わたしのカードの「招待する」。一度きりのリンクとQRを LINE などで送ります（7日間・1人・認められる3人に数える）。", () => { me = AS("kenji"); meCard(); }],
   ["直す・取り下げる", "自分のカードのページから。値段・数・種類は直せません。取り下げると、だれも持っていなければ消え、持っている人がいれば受付を終えます。", () => { me = AS("farmer"); detail(cardBy("朝採り大根 3本セット").id); }],
   ["作るはすぐ入力から", "＋で入力の画面。上の4つ（もの・体験／データ／つなぐ／その場で売る）と種類で欄が切り替わります。どのカードにも画像をつけられます。", () => { me = AS("kenji"); MK.mode = "event"; make(); }],
@@ -1202,14 +1375,15 @@ function guide() {
 
 /* ---- 操作 ---- */
 function pickMedia(src) {
-  MK.src = src; MK.len = ""; make();
+  MK.media = null; JOB.err = ""; MK.src = src; MK.len = ""; make();
   const el = document.createElement(MK.mode === "music" ? "audio" : "video"); el.preload = "metadata";
   el.onloadedmetadata = () => { const d = Math.round(el.duration || 0); if (d && MK.src === src) { if ($("m-title")) readMK(); MK.len = `${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}`; if ($("m-media")) make(); } };
   el.src = src;
 }
 document.addEventListener("change", e => {
-  if (e.target.id === "m-media" && e.target.files[0]) { readMK(); return pickMedia(URL.createObjectURL(e.target.files[0])); }
-  if (e.target.id === "who") { me = e.target.value; field = "all"; MOD.mine = MOD.fav = MOD.near = false; playing = ""; player.pause(); return home(); }
+  if (e.target.id === "m-media" && e.target.files[0]) { readMK(); return mediaJob(e.target.files[0], MK.mode); }
+  if (e.target.id === "m-pics" && e.target.files.length) { readMK(); return picsJob(e.target.files); }
+  if (e.target.id === "who") { me = e.target.value; field = "all"; MOD.mine = MOD.fav = MOD.near = false; pauseMusic(); return home(); }
   if (e.target.id === "m-photo" && e.target.files[0]) {
     readMK(); const fr = new FileReader();
     fr.onload = () => { const im = new Image(); im.onload = () => {
@@ -1238,7 +1412,12 @@ document.addEventListener("click", e => {
   if ((b = q("[data-mappick]"))) { readMK(); const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
     MK.geo = [Math.round((MAPB.n - y * (MAPB.n - MAPB.s)) * 1e4) / 1e4, Math.round((MAPB.w + x * (MAPB.e - MAPB.w)) * 1e4) / 1e4]; return make(); }
   if (q("[data-geoclear]")) { readMK(); MK.geo = null; return make(); }
-  if ((b = q("[data-sample]"))) { readMK(); MK.img = b.dataset.sample; return make(); }
+  if ((b = q("[data-sample]"))) { readMK(); if (MK.mode === "picture") { if (MK.pics.length < JeniMedia.LIM.pics) MK.pics.push({u: b.dataset.sample, thumb: b.dataset.sample}); MK.img = MK.pics[0].thumb; } else MK.img = b.dataset.sample; return make(); }
+  if ((b = q("[data-picdel]"))) { readMK(); MK.pics.splice(+b.dataset.picdel, 1); MK.img = MK.pics[0] ? MK.pics[0].thumb : ""; return make(); }
+  if ((b = q("[data-astep]"))) { const box = b.closest(".album"); box.dataset.hold = "1"; return albumStep(box, box.dataset.album, +b.dataset.astep); }
+  if ((b = q("[data-seek]"))) { const id = b.dataset.seek, r = b.getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    if (chain && chain.id === id) { chain.seek(f); if (playing !== id) { playing = id; document.querySelectorAll("[data-cplay]").forEach(x => x.classList.toggle("on", x.dataset.cplay === id)); } return; }
+    if (VCH[id]) { VCH[id].seek(f); return; } return cplay(id); }
   if ((b = q("[data-msample]"))) { readMK(); return pickMedia(b.dataset.msample); }
   if (q("[data-create]")) return create();
   if (q("[data-newcircle]")) return newCircle();
@@ -1316,8 +1495,8 @@ document.addEventListener("click", e => {
     try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {} return; }
   if (q("[data-editme]")) return meCard(true);
   if (q("[data-invite]")) return inviteSheet();
-  if ((b = q("[data-qas]"))) { const id = b.dataset.qid, k = b.dataset.qk; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(k, id); }
-  if ((b = q("[data-qrshow]"))) return qrShowSheet(b.dataset.qrshow, b.dataset.qk || "tip");
+  if ((b = q("[data-qas]"))) { const id = b.dataset.qid; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(id); }
+  if ((b = q("[data-qrshow]"))) return qrShowSheet(b.dataset.qrshow);
   if (q("[data-scan]")) return scanSheet();
   if (q("[data-scantext]")) { const t = ($("scan-t").value || "").trim(); scanStop(); closeOver(); return /^[0-9a-f]{16}$/.test(t) && sel && S.cards[sel] && S.cards[sel].by === me ? useCode(sel, t) : onScan(t); }
   if ((b = q("[data-vouch]"))) { const pk = b.dataset.vouch; emit(me, {t: "vouch", who: pk}); closeOver(); return toast(S.users[pk] && S.users[pk].member ? `${nameOf(pk)} さんが参加しました` : "認められませんでした（3人まで・もう参加している人は認められません）"); }
@@ -1351,7 +1530,7 @@ document.addEventListener("click", e => {
   if ((b = q("[data-giftto]"))) { const id = sel; emit(me, {t: "gift", card: id, to: b.dataset.giftto}); closeOver(); detail(id); return toast(`${nameOf(b.dataset.giftto)} さんに贈りました`); }
   if ((b = q("[data-refund]"))) { const id = sel, c = S.cards[id], x = c.copies.find(y => y.owner === b.dataset.refund && y.fromCreator); emit(me, {t: "refund", card: id, holder: b.dataset.refund}); if ($("pg-" + id)) refreshPage(id); recSheet(id); return toast(`${x ? x.paid : 0} jeni を返しました`); }
   if (q("[data-close]")) { closeOver(); return closeSheet(); }
-  if ((b = q("[data-detail]"))) { player.pause(); playing = ""; return detail(b.dataset.detail); }
+  if ((b = q("[data-detail]"))) { pauseMusic(); return detail(b.dataset.detail); }
 });
 /* 長押し：押しているあいだボタンが満ち、満ちたら決める（はなすと戻る） */
 let lpT = null;
@@ -1363,32 +1542,26 @@ function lpStart(b) {
   lpT = setTimeout(() => { b.classList.remove("pressing"); lpT = null; lpDo(b.dataset.lp, b.dataset.id); }, LP_MS);
 }
 function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); document.querySelectorAll(".jc2.drawing").forEach(x => x.classList.remove("drawing")); }
-// ---- その場で使う QR：作った人・売る人が出し、読んだ人の画面には「確かめて長押し」だけが出る（カードを開かずに済む）----
-// 裏のQR＝カードを開く（紹介）／投げ銭のQR＝路上ライブ・展示・レジ横／持つQR＝ポスター・チラシ・受付（参加券・会員）／払うQR＝その場で売る（5分・1回）
-const QRUSE = {tip: ["投げ銭のQR", "読んだ人は、額を選んで長押しで投げ銭。路上ライブ・展示・お店のレジ横などに"], hold: ["持つQR", "読んだ人は、長押しで持つ（参加券・会員・品物）。ポスター・チラシ・受付などに"]};
+// ---- QR は3つ：開く（カードの裏・プロフィール）・払う（作った人・売る人が出す）・受け取る（持っている人が出し、作った人が読む）----
+// 払うQR を読んだ人の画面には「持つ」と「投げ銭」が1つに出る。長押ししたときだけ jeni が動く（カードを開かずに済む）
 function canHoldQR(c) { return !c.closed && !c.hidden && !c.lock && (c.supply == null || c.left > 0); }
-function qrShowSheet(id, kind = "tip") {
-  const c = S.cards[id], kinds = ["tip", ...(canHoldQR(c) ? ["hold"] : [])];
-  const label = k => k === "hold" && KEEP[c.kind] ? `${KEEP[c.kind][1]}QR` : QRUSE[k][0];
-  openOver(`<h2 class="rh">QRを出す</h2>
-    <div class="mk-k" role="tablist">${kinds.map(k => `<button type="button" role="tab" data-qrshow="${id}" data-qk="${k}" aria-pressed="${k === kind}">${k === "tip" ? coin() : icon("hold")}${label(k)}</button>`).join("")}</div>
-    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#${kind}=${id}`, "q")}</div><b>${esc(c.title)}</b><small>読むと：${kind === "tip" ? "投げ銭" : KEEP[c.kind] ? KEEP[c.kind][1] : `持つ（${c.price ? c.price + " jeni" : "無料"}）`}</small></div>
-    <p class="sub" style="font-size:12px">${QRUSE[kind][1]}。読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。印刷して貼っても使えます。</p>
-    ${LIVE ? "" : `<section class="box"><h3>見本：読む人として</h3>${Object.values(S.users).filter(x => x.member && x.pk !== me).slice(0, 3).map(x => `<div class="who-row">${whoTag(x.pk)}<button type="button" class="pill go" data-qas="${x.pk}" data-qk="${kind}" data-qid="${id}">読む</button></div>`).join("")}</section>`}`);
+function qrShowSheet(id) {
+  const c = S.cards[id], hold = canHoldQR(c), hl = KEEP[c.kind] ? KEEP[c.kind][1] : `持つ（${c.price ? c.price + " jeni" : "無料"}）`;
+  openOver(`<h2 class="rh">払うQR</h2>
+    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#pay=${id}`, "q")}</div><b>${esc(c.title)}</b><small>読むと：${hold ? `${hl}・` : ""}投げ銭</small></div>
+    <p class="sub" style="font-size:12px">路上ライブ・展示・ポスター・受付・お店のレジ横などに。印刷して貼っても使えます。読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。</p>
+    ${LIVE ? "" : `<section class="box"><h3>見本：読む人として</h3>${Object.values(S.users).filter(x => x.member && x.pk !== me).slice(0, 3).map(x => `<div class="who-row">${whoTag(x.pk)}<button type="button" class="pill go" data-qas="${x.pk}" data-qid="${id}">読む</button></div>`).join("")}</section>`}`);
 }
-function quickSheet(kind, id) {
+function quickSheet(id) {
   const c = S.cards[id]; if (!c) return toast("カードを探しています…");
   const u = U(), m = MEDIA[id] || {};
   const head = `<div class="qhead"><div class="qth" ${m.img ? `style="background-image:url('${m.img}')"` : ""}>${m.img ? "" : icon(kindIcon(c.kind))}</div><div><b>${esc(c.title)}</b><small>${whoTag(c.by)}</small></div></div>`;
-  if (!u.member) return openOver(`<h2 class="rh">${kind === "tip" ? "投げ銭" : "持つ"}</h2>${head}<p class="sub">参加すると使えます。</p>`);
+  if (!u.member) return openOver(`<h2 class="rh">払う</h2>${head}<p class="sub">参加すると使えます。</p>`);
   if (c.by === me) return toast("自分のカードです");
-  let body;
-  if (kind === "tip") body = `<div class="acts2"><span class="tipc"><button type="button" class="tipamt" data-tipstep="${id}" aria-label="投げ銭の額を変える">${tipAmt(id)}</button>${lpBtn("qtip", id, `${coin()}投げ銭<small>長押し</small>`)}</span></div>
-    <p class="fline">${c.supply != null || KEEP[c.kind] ? `全額 ${esc(nameOf(c.by))} さんへ` : `半分は ${esc(nameOf(c.by))} さんへ、半分は持っている人へ`}・額を押すと変わります</p>`;
-  else if (mine(c).length >= capOf(c)) body = `<p class="sub">もう持っています（${capOf(c)}枚まで）。</p>`;
-  else if (!canHoldQR(c)) body = `<p class="sub">いまは持てません（受付終了・残りなし）。</p>`;
-  else body = `<div class="acts2">${lpBtn("qhold", id, KEEP[c.kind] ? `${KEEP[c.kind][1]}<small>長押し</small>` : `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go")}</div><p class="fline">${flowLine(c)}</p>`;
-  openOver(`<h2 class="rh">${kind === "tip" ? "投げ銭" : KEEP[c.kind] ? KEEP[c.kind][1] : "持つ"}</h2>${head}${body}<button type="button" class="link" data-detail="${id}" style="justify-self:start">カードを見る</button>`);
+  const full = mine(c).length >= capOf(c), hold = !full && canHoldQR(c) && !c.hidden;
+  const holdRow = hold ? `<div class="acts2">${lpBtn("qhold", id, KEEP[c.kind] ? `${KEEP[c.kind][1]}<small>長押し</small>` : `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go")}</div>` : `<p class="sub">${full ? `もう持っています（${capOf(c)}枚まで）` : "いまは持てません（受付終了・残りなし）"}</p>`;
+  const tipRow = c.hidden ? "" : `<div class="acts2"><span class="tipc"><button type="button" class="tipamt" data-tipstep="${id}" aria-label="投げ銭の額を変える">${tipAmt(id)}</button>${lpBtn("qtip", id, `${coin()}投げ銭<small>長押し</small>`)}</span></div>`;
+  openOver(`<h2 class="rh">払う</h2>${head}${holdRow}${hold ? `<p class="fline">${flowLine(c)}</p>` : ""}${tipRow}${tipRow && !hold ? `<p class="fline">投げ銭は${c.supply != null || KEEP[c.kind] ? `全額 ${esc(nameOf(c.by))} さんへ` : `半分は ${esc(nameOf(c.by))} さんへ、半分は持っている人へ`}・額を押すと変わります</p>` : ""}<button type="button" class="link" data-detail="${id}" style="justify-self:start">カードを見る</button>`);
 }
 function lpDo(act, id) {
   if (act === "qtip") { const n = tipAmt(id); if (n > U().bal) return toast("jeni が足りません"); emit(me, {t: "tip", card: id, amount: n});
@@ -1472,7 +1645,7 @@ function liveRecompute() {
     if (m.profile) { if (m.pic !== undefined) PICS[e.pubkey] = m.pic; if (m.bg !== undefined) BGS[e.pubkey] = m.bg; continue; }
     const c = S.cards[m.card]; if (!c || c.by !== e.pubkey) continue;
     if (m.sealed) { const d = MEDV[e.id]; if (d) MEDIA[c.id] = d; else if (CK[c.circle]) todo.push(LV.openWith(CK[c.circle], m.sealed, "jeni-m:" + c.circle).then(o => { if (o) { MEDV[e.id] = o; return true; } })); continue; }
-    MEDIA[c.id] = {img: m.img || "", src: m.src || "", len: m.len || "", note: m.note || "", url: m.url || "", where: m.where || ""};
+    MEDIA[c.id] = cleanMedia(m);
   } catch (x) {} }
   // 2人だけの会話：どちらかが自分で、相手が友達のとき
   for (const k in CHAT) delete CHAT[k];
@@ -1490,6 +1663,14 @@ function liveRecompute() {
   }
   READ_LOAD();
   if (todo.length) Promise.all(todo).then(r => { if (r.some(Boolean)) liveRefresh(); });
+}
+const httpsOk = u => typeof u === "string" && /^https:\/\/[^\s"'<>`]+$/.test(u) && u.length < 400;
+const cleanPart = p => p && httpsOk(p.u) ? {u: p.u, x: /^[0-9a-f]{64}$/.test(p.x) ? p.x : "", m: Array.isArray(p.m) ? p.m.filter(httpsOk).slice(0, 3) : [], e: /^\.[a-z0-9]{2,4}$/i.test(p.e || "") ? p.e : "", d: Math.max(0, Math.min(3600, +p.d || 0))} : null;
+function cleanMedia(m) {
+  const o = {img: typeof m.img === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(m.img) ? m.img : "", src: httpsOk(m.src) ? m.src : "", len: String(m.len || "").slice(0, 10), note: String(m.note || "").slice(0, 300), url: httpsOk(m.url) ? m.url : "", where: String(m.where || "").slice(0, 60)};
+  if (Array.isArray(m.parts)) { const ps = m.parts.slice(0, 40).map(cleanPart).filter(Boolean); if (ps.length) { o.parts = ps; o.src = ps[0].u; o.dur = Math.max(0, Math.min(3700, +m.dur || 0)); } }
+  if (Array.isArray(m.pics)) { const ps = m.pics.slice(0, 20).map(cleanPart).filter(Boolean); if (ps.length) o.pics = ps; }
+  return o;
 }
 function openTo(cipher, k, circle) { return LV.openWith(k, cipher, "jeni-c:" + circle).then(o => { if (o) { DEC[cipher] = o; return true; } }); }
 // 読んだところ・お気に入り・見せ方の決まり：この端末の中だけ（記録には出さない）
@@ -1597,7 +1778,7 @@ function rtcEnd(tell = true) {
 /* ---- QR を読む（読めるブラウザではカメラで。読めないときは、スマホのカメラで読むか、番号を入れる） ---- */
 let scanStream = null, scanLoop = null;
 async function scanSheet() {
-  openOver(`<h2 class="rh">QRを読む</h2><p class="sub">参加していない人のプロフィールのQR（認める）・受け取りのQR・その場で売るQR・カードのQRを読めます。</p>
+  openOver(`<h2 class="rh">QRを読む</h2><p class="sub">開く（カード・人）・払う・受け取るのQRを読めます。読んだだけで jeni は動きません。</p>
     <video id="scanv" playsinline muted style="width:100%;border-radius:12px;background:#000;aspect-ratio:1;object-fit:cover"></video>
     <p class="sub" id="scan-m" style="font-size:12px"></p>
     <label class="fl">読めないときは、QRの下の文字を入れる<input id="scan-t" placeholder="https://… または番号"></label><button type="button" class="pill go" data-scantext>読む</button>`);
@@ -1610,7 +1791,7 @@ async function scanSheet() {
   } catch (x) { m.textContent = "カメラを使えません。スマホのカメラアプリで読むか、下に入れてください。"; }
 }
 function scanStop() { clearInterval(scanLoop); scanLoop = null; try { scanStream && scanStream.getTracks().forEach(t => t.stop()); } catch (x) {} scanStream = null; }
-// QR の中身（または開いたリンク）：#me= 人・#card= カード・#pay= その場で売る・#used= 受け取り・#join= 招待・#genesis= はじまり
+// QR の中身（または開いたリンク）：開く（#card= カード・#me= 人）・払う（#pay=カード＝持つ・投げ銭／#pay=カード.番号＝その場で売る）・受け取る（#used=）・招待（#join=）・はじまり（#genesis=）。#tip= と #hold= は前の形（払うと同じ画面）
 function onScan(text) {
   const m = String(text || "").match(/#(me|card|pay|used|join|genesis|tip|hold)=([0-9a-zA-Z.]+)/); if (!m) return toast("jeni のQRではありません");
   return handleLink(m[1], m[2]);
@@ -1619,7 +1800,7 @@ function handleLink(kind, val) {
   if (!LV.me) { PENDING = [kind, val]; return startSheet(); }
   const [a, b2, c3] = val.split(".");
   if (kind === "card") { if (S.cards[a]) return detail(a); return toast("カードを探しています…（まだ届いていません）"); }
-  if (kind === "tip" || kind === "hold") { if (!S.cards[a]) { PENDING = [kind, val]; return toast("カードを探しています…（まだ届いていません）"); } return quickSheet(kind, a); }
+  if (kind === "tip" || kind === "hold" || (kind === "pay" && !b2)) { if (!S.cards[a]) { PENDING = [kind, val]; return toast("カードを探しています…（まだ届いていません）"); } return quickSheet(a); }
   if (kind === "me") {
     if (a === me) return meCard();
     const u = S.users[a];
@@ -1685,5 +1866,5 @@ function liveBoot() {
 }
 
 if (LIVE) liveBoot(); else { seed(); home(); }
-window.__jt = {get S() { return S; }, get EV() { return EV; }, get CHAT() { return CHAT; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK, person: pk => personCard(pk)};
+window.__jt = {MEDIA, get S() { return S; }, get EV() { return EV; }, get CHAT() { return CHAT; }, get me() { return me; }, set me(v) { me = v; home(); }, P, emit, detail, home, closeSheet, MK, person: pk => personCard(pk)};
 </script>

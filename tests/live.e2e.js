@@ -8,6 +8,41 @@ if (!GEN) { console.error("GENESIS が要ります"); process.exit(2); }
 const store = [], subs = new Set(); let down = false;
 const match = (f, e) => (!f.kinds || f.kinds.includes(e.kind)) && (!f["#t"] || e.tags.some(t => t[0] === "t" && f["#t"].includes(t[1]))) && (!f.until || e.created_at <= f.until);
 let realSockets = 0;
+// 置き場（Blossom）のまね：PUT /upload（その人の鍵で署名した kind 24242 の許可を確かめる）・PUT /mirror・GET /<sha256>（Range に応える）
+const crypto = require("crypto"), fs = require("fs"), os = require("os"), cp = require("child_process");
+const U2 = globalThis.URL;
+const BLOB = {"blossom.nostr.build": {}, "blossom.primal.net": {}}, AUTHS = []; let failPrimary = 0;
+const CORS = {"access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, x-sha-256", "access-control-allow-methods": "GET, HEAD, PUT, OPTIONS"};
+async function blossom(page) {
+  await page.route(/^https:\/\/(blossom\.nostr\.build|blossom\.primal\.net)\//, async r => {
+    const q = r.request(), u = new U2(q.url()), host = u.hostname, box = BLOB[host];
+    if (q.method() === "OPTIONS") return r.fulfill({status: 204, headers: CORS});
+    if (q.method() === "PUT") {
+      if (host === "blossom.nostr.build" && failPrimary > 0) { failPrimary--; return r.fulfill({status: 500, headers: {...CORS, "x-reason": "まね：止まっています"}, body: ""}); }
+      let ev = null; try { ev = JSON.parse(Buffer.from(String(q.headers()["authorization"] || "").replace(/^Nostr /, ""), "base64").toString("utf8")); } catch (e) {}
+      if (!ev || ev.kind !== 24242 || !/^[0-9a-f]{128}$/.test(ev.sig || "")) return r.fulfill({status: 401, headers: CORS, body: ""});
+      AUTHS.push(ev);
+      let body = q.postDataBuffer(), type = q.headers()["content-type"] || "application/octet-stream";
+      if (u.pathname === "/mirror") { const from = JSON.parse(body.toString()).url, fu = new U2(from), src = (BLOB[fu.hostname] || {})[fu.pathname.slice(1).split(".")[0]]; if (!src) return r.fulfill({status: 404, headers: CORS, body: ""}); body = src.body; type = src.type; }
+      const x = crypto.createHash("sha256").update(body).digest("hex");
+      if (!ev.tags.some(t => t[0] === "x" && t[1] === x)) return r.fulfill({status: 403, headers: CORS, body: ""});
+      box[x] = {body, type}; const ext = {"video/mp4": ".mp4", "audio/mp4": ".m4a", "image/jpeg": ".jpg"}[type] || "";
+      return r.fulfill({status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify({url: `https://${host}/${x}${ext}`, sha256: x, size: body.length, type})});
+    }
+    const it = box[u.pathname.slice(1).split(".")[0]]; if (!it) return r.fulfill({status: 404, headers: CORS, body: ""});
+    const m = /bytes=(\d*)-(\d*)/.exec(q.headers()["range"] || ""), n = it.body.length;
+    if (!m) return r.fulfill({status: 200, headers: {...CORS, "accept-ranges": "bytes"}, contentType: it.type, body: it.body});
+    const a = m[1] ? +m[1] : 0, z = m[2] ? Math.min(+m[2], n - 1) : n - 1;
+    return r.fulfill({status: 206, headers: {...CORS, "accept-ranges": "bytes", "content-range": `bytes ${a}-${z}/${n}`}, contentType: it.type, body: it.body.subarray(a, z + 1)});
+  });
+  // 変換の部品（Mediabunny）は手元の写し（MB_DIST）
+  const D = process.env.MB_DIST || "";
+  await page.route("https://cdn.jsdelivr.net/**", r => { const u = r.request().url();
+    if (u.endsWith("mediabunny.min.mjs")) return r.fulfill({contentType: "text/javascript", headers: CORS, body: 'export * from "./m/modules/src/index.js";'});
+    const m = u.match(/dist\/bundles\/m\/(.*)$/); if (m && D && fs.existsSync(path.join(D, m[1]))) return r.fulfill({contentType: "text/javascript", headers: CORS, body: fs.readFileSync(path.join(D, m[1]))});
+    r.fulfill({status: 404, headers: CORS, body: ""}); });
+}
+let VID = ""; try { if (process.env.MB_DIST) { VID = path.join(os.tmpdir(), "jeni-live150.mp4"); if (!fs.existsSync(VID)) cp.execSync(`ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 150 -c:v libx264 -preset ultrafast -b:v 3M -c:a aac -b:a 128k -pix_fmt yuv420p ${VID}`); } } catch (e) { VID = ""; }
 async function relay(page) {
   page.on("websocket", () => {});
   await page.routeWebSocket(/.*/, ws => {
@@ -25,6 +60,7 @@ async function relay(page) {
   const check = (l, c) => { if (!c) process.exitCode = 1; log.push((c ? "OK  " : "NG  ") + l); };
   const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); await relay(p);
     await p.route(/^https?:\/\//, r => r.fulfill({status: 404, body: ""}));   // 外へは出さない（刻みの記録の読み込みなど）
+    await blossom(p);
     await p.goto(URL + hash); await p.waitForTimeout(700); return p; };
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const st = p => p.evaluate(() => ({me: __jt.me, bal: (__jt.S.users[__jt.me] || {}).bal, member: !!(__jt.S.users[__jt.me] || {}).member}));
@@ -108,6 +144,46 @@ async function relay(page) {
     await bpT.evaluate(() => document.querySelector('#over [data-lp="qtip"]').dispatchEvent(new PointerEvent("pointerdown", {bubbles: true}))); await wait(1400);
     check("長押しで投げ銭が届く", /贈りました/.test(await bpT.textContent("#over")) && (await st(bpT)).bal < tb && store.some(e => e.pubkey === bpk && e.kind === 7740 && e.content.includes('"t":"tip"')));
     await bpT.close(); void tn;
+    // ---- 払うQR（#pay=カード）：読むと 持つ と 投げ銭 が1つの画面に ----
+    const bpP = await open(B, "#pay=" + cardId); await wait(1200);
+    check("払うQR（#pay=カード）を読むと、持つ・投げ銭が1つの画面", !!(await bpP.$('#over [data-lp="qtip"]')) && (!!(await bpP.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await bpP.textContent("#over"))) && /払う/.test(await bpP.textContent("#over h2")));
+    await bpP.close();
+    // ---- 写真のアルバム：1枚ずつ置き場へ（位置などは消して）、カードには小さな表だけ ----
+    await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-overclose]").catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="picture"]'); await wait(200);
+    await a.setInputFiles("#m-pics", ["paddy.jpg", "field.jpg", "radish.jpg"].map(f => path.resolve(__dirname, "..", "app", "media", f)));
+    check("写真を選ぶと、置き場へ送り、並ぶ", await until(a, () => document.querySelectorAll(".alb .ali:not(.add)").length === 3, 15000));
+    await a.fill("#m-title", "畑のアルバム"); await a.click("[data-create]"); await wait(1200);
+    const albE = store.filter(e => e.kind === 7741 && e.content.includes('"pics"')).pop(), albM = albE && JSON.parse(albE.content);
+    check("アルバムは置き場の3枚（番号つき）と、中継には小さな表だけ", !!albM && albM.pics.length === 3 && albM.pics.every(x => /^https:\/\/blossom\.nostr\.build\/[0-9a-f]{64}\.jpg$/.test(x.u) && x.m.includes("https://blossom.primal.net")) && albE.content.length < 100000);
+    check("置き場への許可は、その人の鍵で署名（kind 24242・中継には出さない）", AUTHS.length >= 3 && AUTHS.every(e => e.pubkey === s.me) && !store.some(e => e.kind === 24242));
+    const albId = albM && albM.card;
+    await until(bp, id => !!__jt.S.cards[id] && !!__jt.MEDIA[id] && (__jt.MEDIA[id].pics || []).length === 3, 10000, albId);
+    await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => __jt.detail(id), albId); await wait(4800);
+    check("相手の画面で、アルバムが自動でめくれる", await bp.$eval(`#pg-${albId} .face[data-album]`, f => +f.dataset.ai >= 1 && [...f.querySelectorAll("img.bgimg")].some(i => /blossom/.test(i.src))));
+    // ---- 長い動画：その場で軽くして、2分ほどずつに分けて置く → 相手の画面で続けて流れる・置き場が1つ消えても写しから ----
+    if (VID) {
+      await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+      await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="video"]'); await wait(200);
+      failPrimary = 1;   // はじめの置き場が1度だけ止まっている
+      await a.fill("#m-title", "畑の2分半"); await a.setInputFiles("#m-media", VID);
+      const done = await until(a, () => /動画を選びました/.test(document.getElementById("sheet").textContent) || /warnc/.test((document.getElementById("m-job") || {}).className || ""), 240000);
+      check("長い動画を軽くして、分けて置き終わる（進み具合の表示のあと）", done && /2:30・2つに分けて置きました/.test(await a.textContent("#sheet")));
+      await a.click("[data-create]"); await wait(1200);
+      const vE = store.filter(e => e.kind === 7741 && e.content.includes('"parts"')).pop(), vM = vE && JSON.parse(vE.content);
+      check("動画は2つ（それぞれ 20MB 未満）・長さ・表紙つき", !!vM && vM.parts.length === 2 && vM.dur === 150 && /^data:image\/jpeg/.test(vM.img) && vM.parts.every(x => (BLOB["blossom.nostr.build"][x.x] || BLOB["blossom.primal.net"][x.x] || {body: {length: 1e9}}).body.length < 20 * 1048576));
+      check("はじめの置き場が止まっていても、もう1つの置き場に置ける", !!vM && vM.parts.some(x => /blossom\.primal\.net/.test(x.u)));
+      const vid = vM && vM.card;
+      await until(bp, id => !!__jt.MEDIA[id] && (__jt.MEDIA[id].parts || []).length === 2, 10000, vid);
+      // 1つ目をはじめの置き場から消す → 相手は写しから流す
+      const p0 = vM.parts[0]; delete BLOB[new U2(p0.u).hostname][p0.x];
+      await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
+      await bp.click(`#pg-${vid} [data-cplay]`);
+      check("相手の画面で流れる（1つ目の置き場が消えていても、写しから）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > .5), 15000, vid));
+      const bx = await (await bp.$(`#pg-${vid} .cbar[data-seek]`)).boundingBox(); await bp.mouse.click(bx.x + bx.width * .9, bx.y + bx.height / 2);
+      check("下の線で後ろの部分へ飛べる（2つ目）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 50), 15000, vid));
+      await bp.click(`#pg-${vid} [data-cplay]`);
+    } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
     // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----
     await a.click("#sheet [data-close]").catch(() => {});
     await a.click("[data-make]"); await a.click('.mk-g button:nth-child(1)'); await a.click('.mk-k [data-mk="rwa"]');
