@@ -373,6 +373,14 @@ async function routeMB(p) {
     const fld = await id("畑の一日");
     await p.evaluate(id => __jt.detail(id), fld); await p.click("[data-imm]"); await p.waitForTimeout(250);
     check(tag + " 全画面：カードが画面いっぱい、写真は全体が見える大きさ", await p.evaluate(id => { const j = document.querySelector("#pg-" + id + " .jc2").getBoundingClientRect(), im = document.querySelector("#pg-" + id + " .bgimg"); return Math.abs(j.width - innerWidth) < 2 && Math.abs(j.height - innerHeight) < 2 && (!im || getComputedStyle(im).objectFit === "contain"); }, fld));
+    await p.click(`#pg-${fld} [data-cplay]`); await p.waitForTimeout(400);
+    check(tag + " 再生すると、操作が少し出て、時間が出る", await p.evaluate(id => { const f = document.querySelector(`#pg-${id} .face`); return f.classList.contains("pl") && f.classList.contains("ui") && /\d:\d\d \/ \d:\d\d/.test(document.getElementById("ct-" + id).textContent); }, fld));
+    await p.waitForTimeout(3300);
+    check(tag + " 再生中は絵だけ（再生ボタン・番号・題・全画面の切り替えは隠れる）", await p.evaluate(id => { const f = document.querySelector(`#pg-${id} .face`), op = sel => +getComputedStyle(f.querySelector(sel)).opacity; return f.classList.contains("pl") && !f.classList.contains("ui") && op(".cplay") === 0 && op(".jno") === 0 && op(".txt") === 0 && +getComputedStyle(document.querySelector("#sheet .ftop")).opacity === 0; }, fld));
+    await p.mouse.click(195, 400); await p.waitForTimeout(300);
+    check(tag + " 画面を押すと操作が出る（止めるボタンに変わっている）", await p.evaluate(id => { const f = document.querySelector(`#pg-${id} .face`); return f.classList.contains("ui") && +getComputedStyle(f.querySelector(".cplay")).opacity > .9 && getComputedStyle(f.querySelector(".cplay .i-pz")).display !== "none"; }, fld));
+    await p.click(`#pg-${fld} [data-cplay]`); await p.waitForTimeout(300);
+    check(tag + " 止めると、カードがもとどおり見える", await p.evaluate(id => { const f = document.querySelector(`#pg-${id} .face`); return !f.classList.contains("pl") && +getComputedStyle(f.querySelector(".txt")).opacity > .9; }, fld));
     await p.click("[data-imm]"); await p.click("#sheet [data-close]");
     // 招待：一度きりのリンクとQR → まだ参加していない人が開くと参加
     await p.click(".me [data-me]"); await p.waitForTimeout(150);
