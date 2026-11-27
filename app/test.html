@@ -230,10 +230,12 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .over .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
 .over .x{z-index:3;position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
-.qth{position:relative}.qth.got{animation:qgot 1.6s ease both}.qth .qc{position:absolute;left:50%;top:0;width:24px;height:24px;pointer-events:none;animation:qdrop 1s cubic-bezier(.3,1.3,.5,1) both}.qth .qc svg{width:100%;height:100%}
-@keyframes qgot{0%{transform:scale(1)}35%{transform:scale(1.14);box-shadow:0 0 0 3px #e2b64e,0 0 22px rgba(226,182,78,.95)}100%{transform:scale(1);box-shadow:0 0 0 2px #e2b64e}}
-@keyframes qdrop{0%{transform:translate(-50%,-30px) scale(.6);opacity:0}55%{opacity:1}100%{transform:translate(-50%,12px) scale(.9);opacity:0}}
-.qdone{margin:0;font-size:15px;font-weight:700;color:var(--ink)}.qwatch .qhead{margin-bottom:4px}
+.qth{position:relative;overflow:visible}.qth.got{animation:qgot 1.6s ease both}
+.qth .qsp{position:absolute;left:50%;top:50%;width:128%;z-index:1;transform:translate(-50%,-50%);color:#e2b64e;opacity:0;pointer-events:none;transition:opacity .2s}.qth .qsp svg{display:block;width:100%;height:auto;overflow:visible}.qth .qsp .halo{stroke:rgba(0,0,0,.35)}
+.qth .ln{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .25s ease}.qth.drawing .qsp,.qth.drawn .qsp{opacity:1}.qth.drawing .ln{stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}.qth.drawn .ln{stroke-dashoffset:0}
+@keyframes qgot{0%{box-shadow:0 0 0 0 rgba(226,182,78,0)}35%{box-shadow:0 0 0 3px #e2b64e,0 0 22px rgba(226,182,78,.95)}100%{box-shadow:0 0 0 2px #e2b64e,0 0 10px rgba(226,182,78,.5)}}
+.qdone{margin:0;font-size:15px;font-weight:700;color:var(--ink)}.qwatch .qhead{margin-bottom:4px}.done.qd{padding-top:4px}
+.visopt{display:grid;gap:6px;border:0;margin:0;padding:0}.visopt legend{font-size:12px;color:var(--mute);margin-bottom:4px;padding:0}.visopt label{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}.visopt label:has(input:checked){border-color:var(--leaf);box-shadow:0 0 0 1px var(--leaf)}.visopt input{margin:3px 0 0;accent-color:var(--leaf)}.visopt b{font-size:14px}.visopt small{grid-column:2;font-size:11px;color:var(--mute);line-height:1.6}
 .vcall{position:relative;border-radius:14px;overflow:hidden;background:#111;height:min(52dvh,110vw);margin:30px auto 0;width:100%}.vcall+.call{padding:10px 0 4px}.vcall+.call .row2{display:flex;gap:8px}.vcall #rtc-v{width:100%;height:100%;object-fit:cover;display:block}.vcall #rtc-me{position:absolute;right:8px;bottom:8px;width:28%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#333;border:1px solid rgba(255,255,255,.4)}.vcall .vnote{position:absolute;inset:auto 0 45% 0;text-align:center;color:#ddd;font-size:13px}
 .gamt{display:flex;align-items:center;gap:8px}.gamt input{width:8em;font:inherit;font-size:18px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .jc2 .bgimg.nxt{animation:afade 1.4s ease both}@keyframes afade{from{opacity:0}to{opacity:1}}
@@ -1293,11 +1295,13 @@ let tt;
 const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2200); };
 
 /* ---- 1枚ずつのカード（上下にめくる）：カードと、押すのに要るものだけ ---- */
-const VIS = {show: "みんなに見せる", hide: "画面に出さない", lock: "何を持ったかに鍵"};
-const VISD = {show: "持っている人に名前が出ます", hide: "画面には出ません。ただ記録は公開なので、調べればだれでも分かります", lock: "どのカードかは本人と作った人だけ。だれに何 jeni 払ったかは記録に出ます。投げ銭の分け前はなし・数に限りのないカードだけ"};
+const VIS = {show: "みんなに見せる", hide: "かくす（分け前あり）", lock: "鍵をかける（分け前なし）"};
+const VISD = {show: "持っている人の一覧に名前が出ます。投げ銭の分け前を受け取れます",
+  hide: "画面には出ません。ただ記録は公開なので、調べれば分かります。投げ銭の分け前を受け取れます",
+  lock: "だれにも分かりません（分かるのは作った人だけ。だれに何 jeni 払ったかは記録に出ます）。分け前が届くと持っていることが分かってしまうので、投げ銭の分け前は受け取りません"};
 const PREF = {};   // 人ごとの「見せ方」の決まり（プロフィールで変える）
 const PICS = {}, BGS = {};   // 人ごとのプロフィールアイコンと、プロフィールカードの背景（見本の画面の中だけ）
-// 鍵は、数に限りのないカード（譲る・引き換えがいらないもの）だけ。それ以外は「画面に出さない」にする
+// 鍵は、数に限りのないカード（譲る・引き換えがいらないもの）だけ。それ以外は「かくす」にする
 const canLock = c => c.supply == null && !KEEP[c.kind] && !c.circle && !c.lock;
 const prefVis = c => { const v = PREF[me] || "show"; return v === "lock" && !canLock(c) ? "hide" : v; };
 // 持つ（つなぐ版で鍵をかけるときは、どのカードかを作った人あての封に入れて出す。記録に出るのは、だれにいくら払ったかだけ）
@@ -1416,9 +1420,9 @@ function holdersHtml(c) {
   const by = {}; for (const x of c.copies) if (!x.used || c.handover) (by[x.owner] = by[x.owner] || []).push(x);
   const show = [], hide = []; let lock = 0;
   for (const [pk, xs] of Object.entries(by)) { const v = xs[0].vis || "show"; if (v === "lock") lock++; else if (v === "hide" && pk !== me && c.by !== me) hide.push(pk); else show.push([pk, xs.length, v]); }
-  const rows = show.map(([pk, n, v]) => `<div class="who-row"><span><button type="button" class="link wt" data-person="${pk}">${avatar(pk, "sm")}${esc(nameOf(pk))}</button>${pk === me ? "（わたし）" : ""}${v === "hide" ? "・画面に出さない" : ""}${c.handover ? "・受け取り済み" : ""}</span>${n > 1 ? `${n}枚` : ""}
+  const rows = show.map(([pk, n, v]) => `<div class="who-row"><span><button type="button" class="link wt" data-person="${pk}">${avatar(pk, "sm")}${esc(nameOf(pk))}</button>${pk === me ? "（わたし）" : ""}${v === "hide" ? "・かくす" : ""}${c.handover ? "・受け取り済み" : ""}</span>${n > 1 ? `${n}枚` : ""}
      ${c.by === me && c.copies.some(x => x.owner === pk && x.fromCreator && (!x.used || c.handover)) ? `<button type="button" class="pill warn" data-refund="${pk}">返す</button>` : ""}</div>`).join("");
-  const extra = (hide.length ? `<div class="who-row"><span>ほか ${hide.length}人（画面に出さない）</span></div>` : "") + (lock ? `<div class="who-row"><span>${icon("lock")} 鍵をかけて持っている人は、人数に入りません</span></div>` : "");
+  const extra = (hide.length ? `<div class="who-row"><span>ほか ${hide.length}人（かくす）</span></div>` : "") + (lock ? `<div class="who-row"><span>${icon("lock")} 鍵をかけて持っている人は、人数に入りません</span></div>` : "");
   return rows || extra ? rows + extra : `<div class="who-row"><span>まだいません</span></div>`;
 }
 function recBody(id) {
@@ -1654,8 +1658,8 @@ function meCard(edit = false) {
     ${u.member && edit ? `<section class="box form"><label class="fl">名前<input id="p-name" maxlength="40" value="${esc(nameOf(me))}"></label>
       <label class="fl">ひとこと<input id="p-line" maxlength="60" value="${esc(line)}"></label>
       <div class="row2"><label class="fl">プロフィールアイコン<input id="p-pic" type="file" accept="image/*"></label><label class="fl">カードの背景<input id="p-bg" type="file" accept="image/*"></label></div>
-      <label class="fl">カードを持ったときの見せ方<select id="p-vis">${["show", "hide", "lock"].map(v => `<option value="${v}" ${(PREF[me] || "show") === v ? "selected" : ""}>${VIS[v]}</option>`).join("")}</select></label>
-      <p class="sub" style="font-size:11px;margin:-4px 0 0;line-height:1.7">${["show", "hide", "lock"].map(v => `・${VIS[v]}：${VISD[v]}`).join("<br>")}<br>数に限りのあるカード・常連などは、鍵をかけられないので「画面に出さない」になります。</p>
+      <fieldset class="visopt"><legend>カードを持ったときの見せ方</legend>${["show", "hide", "lock"].map(v => `<label><input type="radio" name="p-vis" value="${v}" ${(PREF[me] || "show") === v ? "checked" : ""}><b>${VIS[v]}</b><small>${VISD[v]}</small></label>`).join("")}</fieldset>
+      <p class="sub" style="font-size:11px;margin:-2px 0 0">鍵は、数に限りのないカードだけ。数に限りのあるカード・常連などは「かくす」になります。</p>
       <button type="button" class="big" data-saveme>保存する</button></section>` : ""}
     ${u.member ? "" : LIVE ? `<section class="box"><h3>参加するには</h3><p class="sub" style="margin:0">招待のリンクを開くか、参加している人に、このカードの裏のQRを読んでもらいます。</p></section>` : `<section class="box"><h3>見本：参加している人に読んでもらう</h3>${vouchers.map(x => `<div class="who-row"><span>${esc(nameOf(x.pk))}（あと${RULE.vouchMax - x.vouched.length}人認めてあげられる）</span><button type="button" class="pill go" data-vouchby="${x.pk}">読んでもらう</button></div>`).join("") || `<div class="who-row"><span>認められる人がいません</span></div>`}</section>`}`);
 }
@@ -1816,7 +1820,7 @@ function make() {
       ${thing ? `<label class="fl">${{rwa: "数", event: "定員", service: "枠"}[k]}<input id="m-supply" type="number" inputmode="numeric" min="1" max="9999" value="${MK.supply}"></label>` : ""}</div>`}
     ${!sale && circles.length && !MEDIA_KINDS.includes(k) ? `<label class="fl">見せる相手<select id="m-circle"><option value="">みんな</option>${circles.map(ci => `<option value="${ci.id}" ${MK.circle === ci.id ? "selected" : ""}>${esc(ci.name)}（輪の人だけ）</option>`).join("")}</select></label>` : ""}
     ${!sale ? `<button type="button" class="link" data-newcircle style="justify-self:start">仲間の輪をつくる</button>` : ""}
-    <button type="button" class="big" data-create ${JOB.on || (needImg && !MK.img) || (media && !MK.media && !MK.src) ? "disabled" : ""}>${sale ? "QRを出す" : "カードを出す"}</button>`);
+    <button type="button" class="big" data-create ${JOB.on || (needImg && !MK.img) || (media && !MK.media && !MK.src) ? "disabled" : ""}>${sale ? "QRで売る" : "カードを出す"}</button>`);
 }
 function create() {
   readMK();
@@ -1935,7 +1939,7 @@ function rules() {
       ・QRで受け取る：作った人・売る人が出すQR。読んだ人の画面に「持つ」と「投げ銭」が出て、長押しすると jeni が出した人に届きます（その場で売るときは5分・1回だけ）<br>
       ・QRで引き換える（入る・受ける）：持っている人が出し、作った人が読むQR。現物の受け取り・入場・体験に<br>決まると、両方の画面の小さなカードが同じように光ります。招待は一度きりのリンクで送ります（QRにもできます）。</p>
     <p class="rnote"><b>直す・取り下げる</b>　作った人は、題・説明・日時・場所・画像を直せます（値段・数・種類は直せません）。取り下げると、だれも持っていないカードは消え、持っている人がいるカードは受付を終えます（持っている人のものはそのまま）。自分の書いた会話は消せます。直した・消したことは記録に残ります。</p>
-    <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残り、だれでも見られます（番号と、その人が決めた名前で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」（数に限りのないカードだけ）と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身（写真・音・動画も）は、輪の人にしか読めません。ただし、輪の人が自分の端末に保存したり、輪から外れた人がそれまでに見たものを持っていたりすることは防げません。2人だけの会話・通話も同じで、相手の手元に残ることは防げません。</p>
+    <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残り、だれでも見られます（番号と、その人が決めた名前で）。見せ方は3つ：「みんなに見せる」、「かくす（分け前あり）」＝画面に出さないだけで記録を調べれば分かる・投げ銭の分け前を受け取れる、「鍵をかける（分け前なし）」＝どのカードかは本人と作った人にしか分からない（数に限りのないカードだけ・分け前が届くと分かってしまうので受け取らない）。仲間の輪の中身（写真・音・動画も）は、輪の人にしか読めません。ただし、輪の人が自分の端末に保存したり、輪から外れた人がそれまでに見たものを持っていたりすることは防げません。2人だけの会話・通話も同じで、相手の手元に残ることは防げません。</p>
     <p class="rnote"><b>贈る</b>　jeni や持っているカードを、参加している人に直接届けられます（残高の下の贈り物の印か、相手のプロフィールカードから・長押しで決める）。贈ると取り消せません。だれからだれへ何を贈ったかは記録に残ります。</p>
     <p class="rnote"><b>配る量について</b>　配る量や配り方は、使われ方を見て変わることがあります。変わるときも全員に同じきまりが同じように当てはまり、前もって知らせます。jeni は円と交換できず、値段は作った人が決めるので、配る量の大きさそのものに意味はありません。</p>
     <p class="rnote"><b>運営のサーバーはありません</b>　記録は、だれでも立てられる複数の中継（リレー）に置き、それぞれの端末にも写しを持ちます。1か所が止まっても、ほかに残ります。無料の中継は古い記録を消すことがあるので、記録の書き出しと、毎日ビットコインに刻む要約で守ります。</p>`);
@@ -2202,15 +2206,16 @@ document.addEventListener("click", e => {
   }
   if (q("[data-saveme]")) {
     const name = ($("p-name").value || "").trim().slice(0, 40) || nameOf(me), line = ($("p-line").value || "").trim().slice(0, 60);
-    PREF[me] = $("p-vis").value; emit(me, {t: "profile", name, line}); toast("保存しました"); return meCard();
+    PREF[me] = (document.querySelector('[name="p-vis"]:checked') || {}).value || "show"; emit(me, {t: "profile", name, line}); toast("保存しました"); return meCard();
   }
   if ((b = q("[data-play]"))) return play(b.dataset.play);
   if ((b = q("[data-tipstep]"))) { const id = b.dataset.tipstep, st = TIP_STEPS(), i = st.indexOf(tipAmt(id)); TIPS[id] = st[(i + 1) % st.length]; b.textContent = TIPS[id]; b.setAttribute("aria-label", `投げ銭の額を変える（いま ${TIPS[id]} jeni）`); return; }
   if ((b = q("[data-unwant]"))) { emit(me, {t: "unwant", card: b.dataset.unwant}); detail(b.dataset.unwant, true); return toast("順番待ちをやめました"); }
   if ((b = q("[data-passask]"))) { const c = S.cards[b.dataset.passask]; return pickPerson("譲る", c.id, "passto", c.queue, `順番を待っている人に、同じ値段（${c.price} jeni）で譲ります。jeni はあなたへ戻ります。`); }
   if ((b = q("[data-passto]"))) { const id = sel; emit(me, {t: "pass", card: id, to: b.dataset.passto}); closeOver(); detail(id); return toast(`${nameOf(b.dataset.passto)} さんに譲りました`); }
-  if ((b = q("[data-giftask]"))) { const c = S.cards[b.dataset.giftask]; return pickPerson("贈る", c.id, "giftto", Object.values(S.users).filter(x => x.member && x.pk !== me && x.pk !== c.by && (!c.circle || S.circles[c.circle].members.includes(x.pk))).map(x => x.pk), "jeni は動きません。カードがその人のものになります。"); }
-  if ((b = q("[data-giftto]"))) { const id = sel; emit(me, {t: "gift", card: id, to: b.dataset.giftto}); closeOver(); detail(id); return toast(`${nameOf(b.dataset.giftto)} さんに贈りました`); }
+  if ((b = q("[data-giftask]"))) { const c = S.cards[b.dataset.giftask]; return pickPerson("贈る", c.id, "giftto", Object.values(S.users).filter(x => x.member && x.pk !== me && x.pk !== c.by && (!c.circle || S.circles[c.circle].members.includes(x.pk))).map(x => x.pk), "贈る相手を選びます。カードがその人のものになります（jeni は動きません）。"); }
+  if ((b = q("[data-giftto]"))) { const id = sel, pk = b.dataset.giftto;   // 贈る画面と同じく、取り消せないので長押しで決める
+    return openOver(`<h2 class="rh">${esc(nameOf(pk))} さんへ贈る</h2>${qHead(S.cards[id])}<div class="acts2">${lpBtn("gcard", id + ":" + pk, `${icon("gift")}贈る<small>長押し</small>`, "go")}</div><p class="fline">贈ると取り消せません。相手の名前を確かめてから、長押ししてください。jeni は動きません。</p>`); }
   if ((b = q("[data-refund]"))) { const id = sel, c = S.cards[id], x = c.copies.find(y => y.owner === b.dataset.refund && y.fromCreator); emit(me, {t: "refund", card: id, holder: b.dataset.refund}); if ($("pg-" + id)) refreshPage(id); recSheet(id); return toast(`${x ? x.paid : 0} jeni を返しました`); }
   if (q("[data-close]")) { closeOver(); return closeSheet(); }
   if ((b = q("[data-detail]"))) { pauseMusic(); return detail(b.dataset.detail); }
@@ -2222,18 +2227,20 @@ function lpStart(b) {
   lpCancel(); b.classList.add("pressing");
   const card = b.dataset.lp === "hold" && $("pg-" + b.dataset.id) && $("pg-" + b.dataset.id).querySelector(".jc2:not(.held)");
   if (card) card.classList.add("drawing");
+  if (b.dataset.lp === "qhold") { const t = document.querySelector("#over .qth"); if (t) t.classList.add("drawing"); }
   lpT = setTimeout(() => { b.classList.remove("pressing"); lpT = null; lpDo(b.dataset.lp, b.dataset.id); }, LP_MS);
 }
-function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); document.querySelectorAll(".jc2.drawing").forEach(x => x.classList.remove("drawing")); }
+function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); document.querySelectorAll(".jc2.drawing,.qth.drawing").forEach(x => x.classList.remove("drawing")); }
 // ---- QR は3つ：開く（カードの裏・プロフィール）・QRで受け取る（作った人・売る人が出す）・QRで引き換える（持っている人が出し、作った人が読む）----
 // 「QRで受け取る」を読んだ人の画面には「持つ」と「投げ銭」が1つに出る。長押ししたときだけ jeni が動く（カードを開かずに済む）
-const qHead = c => { const m = MEDIA[c.id] || {}; return `<div class="qhead"><div class="qth" ${m.img ? `style="background-image:url('${m.img}')"` : ""}>${m.img ? "" : icon(kindIcon(c.kind))}</div><div><b>${esc(c.title)}</b><small>${whoTag(c.by)}</small></div></div>`; };
-// 決まったとき：小さなカードに jeni が入る動き（読んだ人の画面と、QRを出している人の画面で同じ）
-function qGot(root) { const t = root && root.querySelector(".qth"); if (!t) return; t.classList.remove("got"); void t.offsetWidth; t.classList.add("got"); t.querySelectorAll(".qc").forEach(x => x.remove()); t.insertAdjacentHTML("beforeend", `<span class="qc" aria-hidden="true">${coin()}</span>`); }
-function qDone(text, id) {
-  const o = $("over"); qGot(o);
+const qHead = c => { const m = MEDIA[c.id] || {}; return `<div class="qhead"><div class="qth" ${m.img ? `style="background-image:url('${m.img}')"` : ""}>${m.img ? "" : icon(kindIcon(c.kind))}<span class="qsp">${gmark(100, {line: true, halo: true})}</span></div><div><b>${esc(c.title)}</b><small>${whoTag(c.by)}</small></div></div>`; };
+// 決まったとき：持つは、長押しのあいだ小さなカードの上に黄金螺旋を描き（ふつうのカードと同じ）、描き終わると枠が光る。
+// 下に jeni の印。読んだ人の画面と、QRを出している人の画面で同じ動き
+function qGot(root, held) { const t = root && root.querySelector(".qth"); if (!t) return; if (held) { t.classList.remove("drawing"); t.classList.add("drawn"); } t.classList.remove("got"); void t.offsetWidth; t.classList.add("got"); }
+function qDone(text, id, held = false) {
+  const o = $("over"); qGot(o, held);
   o.querySelectorAll(".acts2,.fline,p.sub,.link").forEach(x => x.remove());
-  o.insertAdjacentHTML("beforeend", `<p class="qdone" role="status">${text}</p><div class="row2"><button type="button" class="big ghost" data-detail="${id}">カードを見る</button><button type="button" class="big" data-overclose>閉じる</button></div>`);
+  o.insertAdjacentHTML("beforeend", `<div class="done qd">${coin()}<p class="qdone" role="status">${text}</p></div><div class="row2"><button type="button" class="big ghost" data-detail="${id}">カードを見る</button><button type="button" class="big" data-overclose>閉じる</button></div>`);
 }
 // QRを出している人の画面：だれかが読んで持った・投げ銭したら、同じ動きで知らせる
 const qCount = c => c.tipped + c.copies.length;
@@ -2241,7 +2248,7 @@ function qrSync() {
   const w = document.querySelector("#over [data-qrwatch]"); if (!w) return; const c = S.cards[w.dataset.qrwatch]; if (!c) return;
   const n = qCount(c), was = +w.dataset.n; if (n <= was) return; w.dataset.n = n;
   const tip = c.tipped > +w.dataset.t; w.dataset.t = c.tipped;
-  qGot(w); const g = $("qr-got"); if (g) g.textContent = tip ? "投げ銭が届きました" : `${KEEP[c.kind] ? KEEP[c.kind][0] + "が増えました" : "持たれました"}${c.price && !tip ? `（${c.price} jeni）` : ""}`;
+  qGot(w, !tip); const g = $("qr-got"); if (g) g.textContent = tip ? "投げ銭が届きました" : `${KEEP[c.kind] ? KEEP[c.kind][0] + "が増えました" : "持たれました"}${c.price && !tip ? `（${c.price} jeni）` : ""}`;
 }
 function canHoldQR(c) { return !c.closed && !c.hidden && !c.lock && (c.supply == null || c.left > 0); }
 let QRBACK = null;   // 見本：読む人として試したあと、QRを出していた人に戻る
@@ -2275,12 +2282,12 @@ function lpDo(act, id) {
     return openOver(`<div class="done">${icon("gift")}<h2 class="rh">贈りました</h2><p class="sub">「${esc(c.title)}」を ${esc(nameOf(pk))} さんへ</p></div><button type="button" class="big" data-overclose>閉じる</button>`); }
   if (act === "qtip") { const n = tipAmt(id); if (n > U().bal) return toast("jeni が足りません"); const t0 = S.cards[id].tipped; emit(me, {t: "tip", card: id, amount: n});
     if (S.cards[id].tipped === t0) return toast("投げ銭できませんでした（きまりに合いません）");
-    return qDone(`${n} jeni を贈りました・${esc(nameOf(S.cards[id].by))} さんへ`, id); }
+    return qDone(`${n} jeni を贈りました・${esc(nameOf(S.cards[id].by))} さんへ`, id, false); }
   if (act === "qhold") { const c = S.cards[id], before = mine(c).length; if (c.price > U().bal) return toast("jeni が足りません");
     return holdEmit(c).then(() => lpDo("qheld", id + ":" + before)); }
   if (act === "qheld") { const [cid, before] = id.split(":"), c = S.cards[cid]; id = cid;
     if (mine(S.cards[id]).length === +before) return toast("持てませんでした（きまりに合いません）");
-    return qDone(`${KEEP[c.kind] ? KEEP[c.kind][0] + "になりました" : "持ちました"}${c.price ? `・${c.price} jeni → ${esc(nameOf(c.by))} さんへ` : ""}${prefVis(c) === "lock" ? "（鍵つき）" : ""}`, id); }
+    return qDone(`${KEEP[c.kind] ? KEEP[c.kind][0] + "になりました" : "持ちました"}${c.price ? `・${c.price} jeni → ${esc(nameOf(c.by))} さんへ` : ""}${prefVis(c) === "lock" ? "（鍵つき）" : ""}`, id, true); }
   if (act === "buy") { const [cid, code] = id.split("."), c = S.cards[cid]; if (c.price > U().bal) return toast("jeni が足りません");
     emit(me, {t: "hold", card: cid, code, vis: "show"}); if (!S.cards[cid].copies.some(x => x.owner === me)) return toast("払えませんでした（期限切れか、もう払われています）");
     return openSheet(`<div class="done">${coin()}<h2 class="rh">払い終わりました</h2><p class="sub">${c.price} jeni が ${esc(nameOf(c.by))} さんに届きました。受け取り済みのカードが、レシートとして手元に残ります。</p></div><button type="button" class="big" data-detail="${cid}">レシート（カード）を見る</button><button type="button" class="back" data-close style="margin:0 auto">${icon("back")}一覧へ</button>`); }

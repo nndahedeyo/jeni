@@ -56,7 +56,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/held-${w}.png`});
     // 見せ方を変える
     await p.click(`#pg-${rain} [data-vis]`); await p.waitForTimeout(200);
-    check(tag + " 見せ方を「画面に出さない」に変えられる", (await p.textContent(`#pg-${rain} .minor`)).includes("画面に出さない"));
+    check(tag + " 見せ方を「かくす（分け前あり）」に変えられる", (await p.textContent(`#pg-${rain} .minor`)).includes("かくす（分け前あり）"));
     // 投げ銭：金額を選んで長押し
     const waves = await id("Ambient Waves");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), waves); await p.waitForTimeout(200);
@@ -144,13 +144,13 @@ async function routeMB(p) {
     check(tag + " 返すと 120 jeni が戻る・合計は変わらない", await bal() === kb && await total());
     await p.click("#sheet [data-close]");
     // プロフィールを編集（名前・ひとこと・見せ方）
-    await p.click("[data-me]"); await p.click("[data-editme]"); await p.fill("#p-name", "けんじ"); await p.fill("#p-line", "畑と音のあいだ"); await p.selectOption("#p-vis", "hide"); await p.click("[data-saveme]"); await p.waitForTimeout(200);
+    await p.click("[data-me]"); await p.click("[data-editme]"); await p.fill("#p-name", "けんじ"); await p.fill("#p-line", "畑と音のあいだ"); await p.check(`[name="p-vis"][value="hide"]`); await p.click("[data-saveme]"); await p.waitForTimeout(200);
     await p.click("#sheet [data-close]");
     check(tag + " プロフィールの名前とひとことが変わる", (await p.textContent("#home .me")).includes("けんじ") && (await p.textContent("#home .me")).includes("畑と音のあいだ"));
     const bread = await id("天然酵母カンパーニュ");
     await p.click(`#home [data-detail="${bread}"].line`); await p.waitForTimeout(300);
     await lp(`#pg-${bread} [data-lp="hold"]`); await p.waitForTimeout(300);
-    check(tag + " 見せ方の決まり（画面に出さない）で持つ", await p.evaluate(id => __jt.S.cards[id].copies.filter(x => x.owner === __jt.me).pop().vis === "hide", bread));
+    check(tag + " 見せ方の決まり（かくす）で持つ", await p.evaluate(id => __jt.S.cards[id].copies.filter(x => x.owner === __jt.me).pop().vis === "hide", bread));
     await p.click("#sheet [data-close]");
     // 仲間の輪
     await p.click('[data-f="circle"]');
@@ -385,14 +385,17 @@ async function routeMB(p) {
     const qb = await bal();
     check(tag + " QRを読んだ人の画面は「QRで払う」：カードを開かずに 持つ と 投げ銭 が1つに", /QRで払う/.test(await p.textContent("#over h2")) && !!(await p.$('#over [data-lp="qtip"]')) && (!!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over"))) && await p.evaluate(() => document.getElementById("sheet").hidden));
     const qn = +(await p.textContent("#over [data-tipstep]")); await lp('#over [data-lp="qtip"]');
-    check(tag + " 長押しで投げ銭（額のとおり）・小さなカードに jeni が入る動き", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")) && !!(await p.$("#over .qth.got .qc")));
+    check(tag + " 長押しで投げ銭（額のとおり）・小さなカードの枠が光り、jeni の印が出る", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")) && !!(await p.$("#over .qth.got")) && !!(await p.$("#over .done .coin")));
     await p.click("#over [data-overclose]"); await p.waitForTimeout(500);
     check(tag + " 閉じると QR を出していた人の画面に戻り、同じ動きで「投げ銭が届きました」", /投げ銭が届きました/.test(await p.textContent("#qr-got")) && !!(await p.$("#over [data-qrwatch] .qth.got")));
     await p.click("#over [data-overclose]");
     await p.selectOption("#who", K("d")); await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(100);
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
     { const hb = await bal(), can = !!(await p.$('#over [data-lp="qhold"]'));
-      if (can) await lp('#over [data-lp="qhold"]');
+      if (can) { const el = await p.$('#over [data-lp="qhold"]'), bx = await el.boundingBox(); await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await p.mouse.down(); await p.waitForTimeout(500);
+        check(tag + " QRから持つ：長押しのあいだ、小さなカードの上に黄金螺旋を描く", !!(await p.$("#over .qth.drawing .qsp")));
+        await p.waitForTimeout(800); await p.mouse.up(); await p.waitForTimeout(300);
+        check(tag + " 描き終わると螺旋が残り、枠が光る", !!(await p.$("#over .qth.drawn.got"))); }
       check(tag + " QRで払う画面から長押しで持つ（持っていなければ）", !can || (/持ちました/.test(await p.textContent("#over")) && await bal() < hb)); }
     await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); });
     await p.click("[data-overclose]").catch(() => {}); await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); }); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
@@ -478,6 +481,16 @@ async function routeMB(p) {
       check(`${tag} 変わったところ ${i + 1}`, want[i].test(txt) && !(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
       await p.evaluate(() => { const o = document.getElementById("over"); if (!o.hidden) document.querySelector("[data-overclose]").click(); });
     }
+    // カードのページから贈る：相手を選ぶ → 長押しで決める（取り消せない）
+    { await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); }); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
+      const gc = await p.evaluate(() => { const c = Object.values(__jt.S.cards).find(c => c.copies.some(x => x.owner === __jt.me && !x.used && x.vis !== "lock") && !["shop", "org", "project"].includes(c.kind)); return c && c.id; });
+      await p.evaluate(id => __jt.detail(id), gc); await p.waitForTimeout(150);
+      await p.evaluate(id => { const d = document.querySelector(`#pg-${id} details.more`); if (d) d.open = true; }, gc);
+      await p.click(`#pg-${gc} [data-giftask]`); await p.waitForTimeout(150);
+      const to = await p.$eval("#over [data-giftto]", b => b.dataset.giftto); await p.click(`#over [data-giftto="${to}"]`); await p.waitForTimeout(150);
+      check(tag + " カードを贈るときも、取り消せないと書いてあり長押しで決める", /取り消せません/.test(await p.textContent("#over")) && !!(await p.$('#over [data-lp="gcard"]')));
+      await lp('#over [data-lp="gcard"]');
+      check(tag + " 長押しでカードが相手のものになる", /贈りました/.test(await p.textContent("#over")) && await p.evaluate(([id, pk]) => __jt.S.cards[id].copies.some(x => x.owner === pk), [gc, to])); }
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }
