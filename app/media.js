@@ -10,16 +10,16 @@
   const MiB = 1024 * 1024;
   const LIM = {
     part: 17.5 * MiB,        // 1つに置く大きさ（無料の置き場は 20MiB まで。余裕をもって）
-    videoSec: 600,           // 動画は10分まで
-    audioSec: 3600,          // 音は1時間まで
+    videoSec: 7200,          // 動画は2時間まで（裏で約2分ずつに分けて置く）
+    audioSec: 7200,          // 音は2時間まで（裏で約12分ずつに分けて置く）
     pics: 20,                // アルバムは20枚まで
     srcBytes: 4096 * MiB,    // 元のファイルの大きさ（この端末で読める目安）
   };
-  // 画質：短い動画（75秒まで）は 720p、長いものは 540p。音は音楽として十分な 128kbps
+  // 画質：短い動画（75秒まで）は 720p、長いものは 540p。音は AAC 192kbps（MP3 の 256〜320kbps と同じくらいの音質）
   const PLAN = {
     short: {sec: 75, long: 1280, v: 2000000, a: 96000},
     long: {long: 960, v: 1100000, a: 96000},
-    music: {a: 128000},
+    music: {a: 192000},
   };
   // 置き場：はじめの1つに送り、もう1つへ写す（同じ中身は同じ番号＝SHA-256 なので、片方が消えても、もう片方から取れる）
   const SERVERS = ["https://blossom.nostr.build", "https://blossom.primal.net"];
@@ -43,7 +43,8 @@
   const fmtLen = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${x}` : `${m}:${x}`; };
 
   // 音・動画を、置ける形（MP4 / M4A）に。返すもの：{parts:[{blob, d}], dur, poster(Blob|null), w, h, note}
-  async function prepare(file, kind, onp = () => {}) {
+  // onPart(blob, i, n, d) を渡すと、1つできるたびに渡して手元には残さない（長いものでも端末の記憶があふれないように）
+  async function prepare(file, kind, onp = () => {}, onPart = null) {
     if (file.size > LIM.srcBytes) throw new Error("ファイルが大きすぎます");
     const M = await lib();
     const open = () => new M.Input({source: new M.BlobSource(file), formats: M.ALL_FORMATS});
@@ -51,7 +52,7 @@
     const dur = await input.computeDuration();
     if (!dur || !isFinite(dur)) throw new Error("長さが読めませんでした");
     const max = kind === "music" ? LIM.audioSec : LIM.videoSec;
-    if (dur > max + 1) throw new Error(kind === "music" ? "音は60分までです" : "動画は10分までです");
+    if (dur > max + 1) throw new Error("2時間までです");
     const vt = kind === "video" ? await input.getPrimaryVideoTrack() : null;
     const at = await input.getPrimaryAudioTrack();
     if (kind === "video" && !vt) throw new Error("動画が入っていません");
@@ -93,7 +94,8 @@
       await conv.execute();
       const blob = new Blob([out.target.buffer], {type: kind === "music" ? "audio/mp4" : "video/mp4"});
       if (blob.size > 19.5 * MiB) throw new Error("分けても大きすぎました");
-      parts.push({blob, d: Math.round((end - start) * 100) / 100});
+      const d = Math.round((end - start) * 100) / 100;
+      if (onPart) parts.push({...(await onPart(blob, i, n, d)), d, size: blob.size}); else parts.push({blob, d, size: blob.size});
     }
     onp(1);
     return {parts, dur, poster, w, h, codec: acodec, copied: copyOK};
@@ -113,6 +115,34 @@
       im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("写真を読めませんでした")); };
       im.src = u;
     });
+  }
+
+  // ---- 封をして置く（仲間の輪のカード）：ファイルごとの鍵（AES-GCM）で中身を封じ、輪の人だけが鍵を知る ----
+  // 置き場が受け取りやすいよう、封をした中身を MP4 の形の箱（ftyp と free）に入れる。置き場の人にも中身は見えない（大きさと置いた時刻は見える）
+  const hex = u8 => Array.from(u8, x => x.toString(16).padStart(2, "0")).join("");
+  const unhex = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
+  function box(type, body) { const b = new Uint8Array(8 + body.length), v = new DataView(b.buffer); v.setUint32(0, b.length); for (let i = 0; i < 4; i++) b[4 + i] = type.charCodeAt(i); b.set(body, 8); return b; }
+  const FTYP = box("ftyp", new Uint8Array([0x69, 0x73, 0x6f, 0x6d, 0, 0, 2, 0, 0x69, 0x73, 0x6f, 0x6d, 0x6d, 0x70, 0x34, 0x31]));
+  async function sealBlob(blob) {
+    const k = crypto.getRandomValues(new Uint8Array(32)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey("raw", k, "AES-GCM", false, ["encrypt"]);
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name: "AES-GCM", iv}, key, await blob.arrayBuffer()));
+    const body = new Uint8Array(12 + ct.length); body.set(iv); body.set(ct, 12);
+    return {blob: new Blob([FTYP, box("free", body)], {type: "video/mp4"}), k: hex(k), t: blob.type || "application/octet-stream"};
+  }
+  async function openBlob(buf, kHex, type) {
+    const u = new Uint8Array(buf), v = new DataView(u.buffer, u.byteOffset);
+    const skip = v.getUint32(0), n = v.getUint32(skip), body = u.subarray(skip + 8, skip + n);
+    const key = await crypto.subtle.importKey("raw", unhex(kHex), "AES-GCM", false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({name: "AES-GCM", iv: body.subarray(0, 12)}, key, body.subarray(12));
+    return new Blob([pt], {type: type || "application/octet-stream"});
+  }
+  // 封をしたものを取って開く（写しのある置き場からも）。開いたものはこの端末の中だけの URL に
+  const OPENED = {};
+  async function openPart(p) {
+    if (OPENED[p.x || p.u]) return OPENED[p.x || p.u];
+    for (const u of urlsOf(p)) { try { const r = await fetch(u); if (!r.ok) continue; const b = await openBlob(await r.arrayBuffer(), p.k, p.t); return (OPENED[p.x || p.u] = URL.createObjectURL(b)); } catch (e) {} }
+    throw new Error("開けませんでした");
   }
 
   // ---- 置き場（Blossom）へ送る ----
@@ -156,5 +186,5 @@
     return null;
   }
 
-  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256};
+  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart};
 })(typeof globalThis !== "undefined" ? globalThis : this);

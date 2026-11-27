@@ -318,3 +318,13 @@ test("はじまりの人：番号を知っている最初の1人だけが、認�
   assert.ok(S.users[D].member); assert.equal(S.users[D].bal, 1000); assert.ok(!S.users[E].member); assert.equal(S.genesis, D);
   assert.ok(!reduce([ev(D, 2, {t: "genesis", code: "はじまり"})], 10, {}).users[D].member);
 });
+test("jeni を贈る：参加している人へ直接。自分へ・参加していない人へ・残高より多くは贈れない。合計は変わらない", () => {
+  const S = reduce([...base(), ev(B, 10, {t: "send", to: C, amount: 30}), ev(B, 11, {t: "send", to: B, amount: 5}), ev(B, 12, {t: "send", to: D, amount: 5}), ev(B, 13, {t: "send", to: C, amount: 5000}), ev(B, 14, {t: "send", to: C, amount: 0})], 20, opt);
+  assert.equal(S.users[B].bal, 970); assert.equal(S.users[C].bal, 1030); assert.equal(S.sends.length, 1);
+  assert.equal(total(S), members(S) * 1000);
+});
+test("鍵をかけて持つ（封）：記録には払った額と相手だけ。残高はどの画面でも同じ", () => {
+  const S = reduce([...base(), ev(C, 10, {t: "phold", to: B, amount: 50, sealed: "x".repeat(100)}), ev(C, 11, {t: "phold", to: C, amount: 5, sealed: "x"}), ev(C, 12, {t: "phold", to: B, amount: 5000, sealed: "x"})], 20, opt);
+  assert.equal(S.users[C].bal, 950); assert.equal(S.users[B].bal, 1050); assert.equal(S.sealed.length, 1);
+  assert.ok(!JSON.stringify(S.sealed).includes("card"));
+});

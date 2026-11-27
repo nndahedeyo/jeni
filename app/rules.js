@@ -18,6 +18,7 @@
     capFree: 1,         // 無料のカードを持てる数
     priceMax: 1000000,
     tipMax: 1000000,
+    sendMax: 1000000,   // jeni を直接贈れる額の上限（1回）
     futureSkew: 600,    // 未来の時刻の出来事は、この秒数より先なら無視する
     saleMax: 600,       // その場で売るカードの QR が使える長さ（秒）の上限
     founders: [],       // 最初の人たち（だれにも認められずに参加できる）。試験のはじめに決める
@@ -63,7 +64,7 @@
     const founders = new Set(opt.founders || R.founders);
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
-    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: [], genesis: null};
+    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: [], genesis: null, sends: [], sealed: []};
     const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: [], invites: []});
     // 実績：持った・持たれた・譲った・譲られたことが1回でもある人（知らせを出せるのはこの人たち）
     const trusted = pk => S.users[pk] && S.users[pk].member && S.users[pk].deals >= 1;
@@ -192,6 +193,20 @@
       // プロジェクトの状態（準備中・進行中・できた）は、作った人だけが変えられる
       if (c.t === "pjstate") { const pj = S.cards[c.project]; if (pj && pj.kind === "project" && pj.by === e.pubkey && ["prep", "doing", "done"].includes(c.state)) pj.state = c.state; continue; }
 
+      // jeni を贈る：参加している人へ、直接（カードはいらない）。だれからだれへ何 jeni かは記録に残る
+      if (c.t === "send") {
+        const to = c.to;
+        if (!me.member || !isHex(to, 64) || to === e.pubkey || !U(to).member || !int(c.amount, 1, R.sendMax) || me.bal < c.amount) continue;
+        pay(e.pubkey, to, c.amount); S.sends.push({id: e.id, from: e.pubkey, to, amount: c.amount, at: t}); ok(e, "send"); continue;
+      }
+      // 鍵をかけて持つ（つなぐ版）：どのカードかは、持った人と作った人だけが読める封の中。記録に出るのは「だれが、だれに、いくら払ったか」だけ。
+      // 封の中は2人の画面だけで開いて「持っている」に足す（数に限りのないカードだけ・投げ銭の分け前は受け取らない、なので残高はどの画面でも同じ）
+      if (c.t === "phold") {
+        const to = c.to;
+        if (!me.member || !isHex(to, 64) || to === e.pubkey || !U(to).member || !int(c.amount, 0, R.priceMax) || me.bal < c.amount || typeof c.sealed !== "string" || c.sealed.length > 2000) continue;
+        pay(e.pubkey, to, c.amount); if (c.amount) { me.deals++; U(to).deals++; }
+        S.sealed.push({id: e.id, from: e.pubkey, to, amount: c.amount, sealed: c.sealed, at: t}); ok(e, "phold"); continue;
+      }
       const card = S.cards[c.card];
       if (!card || card.gone) continue;   // 取り下げたカードには、もう何もできない
       if (card.hidden && ["hold", "want", "tip"].includes(c.t)) continue;   // 隠されたカードは、新しく持てない・投げ銭できない
@@ -262,7 +277,7 @@
         const to = c.to, mine = holdsOf(card, e.pubkey);
         if (!mine.length || !isHex(to, 64) || to === e.pubkey || to === card.by || !U(to).member) continue;
         if (holdsOf(card, to).length >= cap(card)) continue;
-        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t, vis: "show", redeem: null}); ok(e, "gift"); continue;
+        Object.assign(mine[0], {owner: to, fromCreator: false, paid: 0, at: t, vis: "show", redeem: null}); S.sends.push({id: e.id, from: e.pubkey, to, card: card.id, at: t}); ok(e, "gift"); continue;
       }
 
       // 使う：現物を受け取ったことを、作った人が記録する（その1枚は「使った」になり、上限が空く）

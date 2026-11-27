@@ -122,6 +122,37 @@ async function relay(page) {
     check("出ると、2人がつながる", await until(a, () => /話しています/.test((document.getElementById("call-s") || {}).textContent || ""), 15000));
     await a.click("[data-hang]"); await wait(800);
     check("終えると、相手の画面も閉じる", await until(bp, () => document.getElementById("over").hidden, 8000));
+    // ビデオ通話：相手は「ビデオで出る」か「声だけで出る」を選べる。2人の映像が届く
+    await wait(1500); await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
+    await a.click("#sheet .pcomm [data-vcall]"); await wait(1500);
+    check("ビデオ通話をかけると、相手に「ビデオで出る・声だけで出る」", await until(bp, () => !!document.querySelector('[data-pickup="v"]') && !!document.querySelector('[data-pickup="a"]'), 8000));
+    await bp.click('[data-pickup="v"]');
+    check("ビデオで出ると、お互いに相手の映像が見える", await until(a, () => { const v = document.getElementById("rtc-v"); return !!v && v.videoWidth > 0; }, 15000) && await until(bp, () => { const v = document.getElementById("rtc-v"); return !!v && v.videoWidth > 0; }, 15000));
+    check("自分の映像も小さく出る・カメラを切れる", await a.evaluate(() => document.getElementById("rtc-me").videoWidth > 0 && !!document.querySelector("[data-camoff]")));
+    await a.click("[data-camoff]"); check("カメラを切ると、ボタンが「カメラを入れる」に", /カメラを入れる/.test(await a.textContent("[data-camoff]")));
+    await a.click("[data-hang]"); await wait(800);
+    check("ビデオ通話を終えると、相手の画面も閉じ、カメラが止まる", await until(bp, () => document.getElementById("over").hidden, 8000));
+    // 贈る：jeni を直接（長押し）→ 相手のお知らせに届く
+    await a.evaluate(pk => __jt.person(pk), bpk); await wait(300); await a.click("#sheet .pcomm [data-giftp]"); await wait(200);
+    await a.fill("#g-amt", "15"); const gb = (await st(a)).bal;
+    await a.evaluate(() => document.querySelector('#over [data-lp="gsend"]').dispatchEvent(new PointerEvent("pointerdown", {bubbles: true}))); await wait(1300);
+    check("相手のプロフィールから jeni を贈れる（長押し）", /15 jeni を贈りました/.test(await a.textContent("#over")) && (await st(a)).bal === gb - 15);
+    check("贈られた人に届き、お知らせに出る", await until(bp, () => (__jt.S.sends || []).some(g => g.to === __jt.me && g.amount === 15), 8000) && await bp.evaluate(() => { document.querySelector('[data-fx="news"]') && document.querySelector('[data-fx="news"]').click(); return /から 15 jeni が届きました/.test(document.getElementById("sheet").textContent); }));
+    await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-overclose]").catch(() => {});
+    // 鍵をかけて持つ：中継の記録には、どのカードかが出ない。作った人と持った人の画面だけで「持っている」
+    await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="text"]'); await wait(200);
+    await a.fill("#m-title", "鍵で持つ文"); await a.fill("#m-price", "10").catch(() => {}); await a.click("[data-create]"); await wait(1500);
+    const lockId = await a.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "鍵で持つ文").id);
+    await until(bp, id => !!__jt.S.cards[id], 8000, lockId);
+    await bp.evaluate(() => { __jt.PREF[__jt.me] = "lock"; }); await bp.evaluate(id => __jt.detail(id), lockId); await wait(300);
+    const lb = (await st(bp)).bal;
+    await bp.evaluate(id => { const b = document.querySelector(`#pg-${id} [data-lp="hold"]`); b.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true})); }, lockId); await wait(1800);
+    const ph = store.find(e => e.pubkey === bpk && e.kind === 7740 && e.content.includes('"phold"'));
+    check("鍵をかけて持つと、中継の記録にはどのカードかが出ない（払った相手と額だけ）", !!ph && !ph.content.includes(lockId) && !store.some(e => e.pubkey === bpk && e.content.includes('"hold"') && e.content.includes(lockId)));
+    const lp2 = await st(bp); check("鍵をかけて持った人の画面：持っている（鍵つき）", lp2.bal < lb && await bp.evaluate(id => __jt.S.cards[id].copies.some(x => x.owner === __jt.me && x.vis === "lock"), lockId));
+    check("作った人の画面でも、鍵つきで持たれている", await until(a, ([id, pk]) => __jt.S.cards[id].copies.some(x => x.owner === pk && x.vis === "lock"), 10000, [lockId, bpk]));
+    await bp.evaluate(() => { __jt.PREF[__jt.me] = "show"; });
     // ---- その場で売る：売る人の QR（このページの #pay=）を、買う人がスマホのカメラで読む → 長押しで払う ----
     await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-overclose]").catch(() => {});
     await a.click("[data-make]"); await a.click('.mk-g button:nth-child(4)'); await wait(200);
@@ -212,6 +243,39 @@ async function relay(page) {
     await bp.fill("#t-text", "輪の中のひとこと"); await bp.click("[data-say]"); await wait(1200);
     check("輪の会話は中継では封のまま、輪の人には読める", !store.some(e => e.content.includes("輪の中のひとこと")) && await until(a, id => (__jt.S.cards[id].talk || []).some(x => __jt.S.comments[x].text === "輪の中のひとこと"), 10000, ccard));
     await bp.click("[data-overclose]").catch(() => {});
+    // 輪のアルバム：鍵で封をしてから置き場へ（置き場には中身が見えない）。輪の人は開いて見られる
+    await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+    await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="picture"]'); await wait(200);
+    await a.selectOption("#m-circle", {index: 1}); await wait(300);
+    check("輪を選ぶと「鍵で封をしてから置きます」と出る", /鍵で封をしてから置きます/.test(await a.textContent("#sheet")));
+    const nb0 = Object.keys(BLOB["blossom.nostr.build"]).length;
+    await a.setInputFiles("#m-pics", ["field.jpg", "bread.jpg"].map(f => path.resolve(__dirname, "..", "app", "media", f)));
+    await until(a, () => document.querySelectorAll(".alb .ali:not(.add)").length === 2, 15000);
+    const newBlobs = Object.values(BLOB["blossom.nostr.build"]).slice(nb0);
+    check("置き場には封をした中身だけ（写真の形ではない）", newBlobs.length === 2 && newBlobs.every(x => x.body.subarray(4, 8).toString() === "ftyp" && !x.body.includes(Buffer.from([0xff, 0xd8, 0xff]), 0, 64)));
+    await a.fill("#m-title", "輪のアルバム"); await a.click("[data-create]"); await wait(1500);
+    check("輪のアルバムの中身は中継でも封のまま", !store.some(e => e.kind === 7741 && e.content.includes('"pics"') && e.content.includes("輪のアルバム")) && !store.some(e => e.content.includes("輪のアルバム")));
+    const cal = await until(bp, () => Object.values(__jt.S.cards).some(c => c.title === "輪のアルバム"), 10000);
+    const calId = await bp.evaluate(() => (Object.values(__jt.S.cards).find(c => c.title === "輪のアルバム") || {}).id);
+    await until(bp, id => !!__jt.MEDIA[id] && (__jt.MEDIA[id].pics || []).length === 2, 10000, calId);
+    await bp.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, calId); await wait(400); await bp.click(`#pg-${calId} .cview`);
+    check("輪の人は、封を開けて大きく見られる", cal && await until(bp, () => { const im = document.querySelector("#over .album img"); return !!im && /^blob:/.test(im.src) && im.naturalWidth > 0; }, 10000));
+    if (process.env.MB_DIST) {   // 輪の動画：封をして置き、輪の人は開いて流せる
+      await bp.click("[data-overclose]").catch(() => {});
+      await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+      await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="video"]'); await wait(200);
+      await a.selectOption("#m-circle", {index: 1}); await wait(300); await a.fill("#m-title", "輪の動画");
+      await a.setInputFiles("#m-media", path.resolve(__dirname, "..", "app", "media", "field.mp4"));
+      await until(a, () => /動画を選びました/.test(document.getElementById("sheet").textContent), 120000);
+      await a.click("[data-create]"); await wait(1500);
+      const cvId = await until(bp, () => Object.values(__jt.S.cards).some(c => c.title === "輪の動画" && __jt.MEDIA[c.id] && __jt.MEDIA[c.id].parts), 10000) && await bp.evaluate(() => Object.values(__jt.S.cards).find(c => c.title === "輪の動画").id);
+      await bp.evaluate(id => { __jt.closeSheet(); __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, cvId); await wait(500);
+      await bp.click(`#pg-${cvId} [data-cplay]`);
+      check("輪の動画：封をして置き、輪の人の画面では開いて流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^blob:/.test(v.src) && !v.paused && v.currentTime > .3), 15000, cvId));
+      await bp.click(`#pg-${cvId} [data-cplay]`).catch(() => {});
+    }
+    if (process.env.DBG) console.log("DBG", await bp.evaluate(id => ({img: (document.querySelector("#over .album img") || {}).src, over: document.getElementById("over").innerHTML.slice(0, 300), pics: __jt.MEDIA[id].pics}), calId), await bp.evaluate(async id => { try { await JeniMedia.openPart(__jt.MEDIA[id].pics[0]); return "ok"; } catch (e) { return String(e); } }, calId));
+    await bp.click("[data-overclose]").catch(() => {});
     // お気に入りは、この端末の中だけ（開き直しても残る・中継には出さない）
     await bp.click(`#pg-${ccard} [data-fav]`); await wait(300);
     const nEv = store.length; const bp3 = await open(B); await wait(800);
@@ -246,7 +310,8 @@ async function relay(page) {
     check("参加している人が読むと「この人を認める」", /この人を認める/.test(await a5.textContent("#over")));
     await a5.click("[data-vouch]"); await wait(800);
     check("認めると、その人に 1,000 jeni", await until(cp, () => __jt.S.users[__jt.me].member && __jt.S.users[__jt.me].bal === 1000, 10000));
-    check("輪に入っていない人には、輪のカードの中身が見えない", !(await cp.evaluate(() => Object.values(__jt.S.cards).some(c => c.title === "輪だけの話"))));
+    check("輪に入っていない人には、輪のカードの中身が見えない", !(await cp.evaluate(() => Object.values(__jt.S.cards).some(c => c.title === "輪だけの話" || c.title === "輪のアルバム"))));
+    check("ほかの人の画面には、鍵をかけて持ったことが出ない", await cp.evaluate(([id, pk]) => !__jt.S.cards[id].copies.some(x => x.owner === pk), [lockId, bpk]));
     await a5.close();
     // ---- 刻んだ記録（毎日の刻みの一覧を読む） ----
     const a6 = await A.newPage(); a6.on("pageerror", e => errs.push(e.message)); await relay(a6);
