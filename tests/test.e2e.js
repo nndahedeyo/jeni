@@ -89,7 +89,7 @@ const K = c => c.repeat(64);
     await p.evaluate(() => { const m = document.querySelector(".menu"); const s = (x, y, type) => { const t = new Touch({identifier: 1, target: m, clientX: x, clientY: y}); m.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(60, 300, "touchstart"); s(300, 302, "touchend"); });
     await p.waitForTimeout(200);
     check(tag + " アイコンの並びの上で右へはらっても、ほかの画面は動かない", await p.$eval('[data-f="all"]', e => e.getAttribute("aria-pressed") === "true") && await p.evaluate(() => document.getElementById("sheet").hidden));
-    check(tag + " 選んでいるアイコンがはっきり（緑の地に白）・名前と枚数はアイコンのすぐ下に控えめに", await p.evaluate(() => getComputedStyle(document.querySelector('.menu [aria-pressed="true"]')).color === "rgb(255, 255, 255)") && /すべて・\d+枚/.test(await p.textContent(".me .mcap")) && await p.evaluate(() => { const c = document.querySelector(".me .mcap"), m = document.querySelector(".menu-w"); return c.getBoundingClientRect().top >= m.getBoundingClientRect().bottom - 1 && parseFloat(getComputedStyle(c).fontSize) <= 10.5; }) && !(await p.$(".cap")));
+    check(tag + " 選んでいるアイコンがはっきり（緑の地に白）・名前と枚数はしぼりとアイコンの間に控えめに", await p.evaluate(() => getComputedStyle(document.querySelector('.menu [aria-pressed="true"]')).color === "rgb(255, 255, 255)") && /すべて・\d+枚/.test(await p.textContent(".me .mcap")) && await p.evaluate(() => { const c = document.querySelector(".me .mcap").getBoundingClientRect(), m = document.querySelector(".menu-w").getBoundingClientRect(), d = document.querySelector(".mods").getBoundingClientRect(); return c.bottom <= m.top + 1 && c.top >= d.bottom - 1 && parseFloat(getComputedStyle(document.querySelector(".me .mcap")).fontSize) <= 10.5; }) && !(await p.$(".cap")));
     check(tag + " 自分のカードの比率は 1.586 のまま・中身がはみ出さない", await p.evaluate(() => { const m = document.querySelector(".me"), r = m.getBoundingClientRect(); return Math.abs(r.width / r.height - 1.586) < .02 && m.scrollHeight <= m.clientHeight + 1 && [...m.querySelectorAll(".menu-w, .comm, .me-top, .mcap")].every(x => x.getBoundingClientRect().bottom <= r.bottom + 1); }));
     check(tag + " 知らせの赤い印は小さい", await p.evaluate(() => { const b = document.querySelector(".comm b"); return !b || b.getBoundingClientRect().width <= 6; }));
     check(tag + " 地図の項目はない", !(await p.$('[data-f="place"]')));
@@ -289,6 +289,23 @@ const K = c => c.repeat(64);
     // カードのページはどれも同じ並び：カード・人と持つ・（受け取る）・くわしく（たたんである）
     check(tag + " カードのページ：くわしくはたたんである・どのカードも同じ並び", await p.evaluate(() => { __jt.detail(Object.keys(__jt.S.cards)[0]); const pgs = [...document.querySelectorAll("#sheet .pg")]; return pgs.length > 5 && pgs.every(g => { const k = [...g.children].map(x => x.className.split(" ")[0]).filter(x => x !== "tipbox" && x !== "recv"); return /^jc2,acts2,basic(,own)?,more$/.test(k.join()) && !!g.querySelector(".basic .bl") && /くわしく・記録/.test(g.querySelector(".more>summary").textContent); }); }));
     await p.click("#sheet [data-close]");
+    // その場で使うQR：作った人が「QRを出す」→ 読んだ人には確かめて長押しだけ（カードを開かない）
+    const wv2 = await id("Ambient Waves");
+    await p.selectOption("#who", K("d")); await p.waitForTimeout(100);
+    await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(150);
+    check(tag + " QRを出す：投げ銭のQRと持つQR、読んでも jeni は動かないと書いてある", (await p.$$("#over [data-qk]")).length >= 2 && /読んだだけで jeni は動きません/.test(await p.textContent("#over")));
+    await p.click("#over [data-qas]"); await p.waitForTimeout(200);
+    const qb = await bal();
+    check(tag + " 投げ銭のQRを読むと、カードを開かずに確かめの画面だけ", !!(await p.$('#over [data-lp="qtip"]')) && await p.evaluate(() => document.getElementById("sheet").hidden));
+    const qn = +(await p.textContent("#over [data-tipstep]")); await lp('#over [data-lp="qtip"]');
+    check(tag + " 長押しで投げ銭（額のとおり）", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")));
+    await p.click("#over [data-overclose]");
+    await p.selectOption("#who", K("d")); await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(100);
+    await p.click('#over [data-qk="hold"]'); await p.waitForTimeout(100);
+    check(tag + " 持つQRに切りかえられる", /読むと：持つ/.test(await p.textContent("#over")));
+    await p.click("#over [data-qas]"); await p.waitForTimeout(200);
+    check(tag + " 持つQRを読むと、長押しで持つだけの画面", !!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over")));
+    await p.click("[data-overclose]").catch(() => {}); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
     // 直す・取り下げる（作った人だけ）
     await p.click("[data-make]"); await p.click(".mk-g button:nth-child(2)"); await p.click('.mk-k [data-mk="text"]'); await p.fill("#m-title", "試しの文"); await p.fill("#m-body", "はじめの文"); await p.click("[data-create]"); await p.waitForTimeout(200);
     const tx = await id("試しの文");
@@ -364,7 +381,7 @@ const K = c => c.repeat(64);
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /朝採り大根/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /投げ銭のQR/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));

@@ -101,6 +101,13 @@ async function relay(page) {
     const saleMedia = store.filter(e => e.kind === 7741 && e.content.includes("data:image/jpeg"));
     check("写真は小さくして中継へ（100KB 未満）", saleMedia.length >= 1 && saleMedia.every(e => e.content.length < 100000));
     await bp2.close();
+    // ---- 投げ銭のQR（#tip=）をスマホのカメラで読む → カードを開かずに長押しで投げ銭 ----
+    const bpT = await open(B, "#tip=" + cardId); await wait(1200);
+    check("投げ銭のQRを読むと、確かめて長押しだけの画面", !!(await bpT.$('#over [data-lp="qtip"]')) && await bpT.evaluate(() => document.getElementById("sheet").hidden));
+    const tb = (await st(bpT)).bal, tn = +(await bpT.textContent("#over [data-tipstep]"));
+    await bpT.evaluate(() => document.querySelector('#over [data-lp="qtip"]').dispatchEvent(new PointerEvent("pointerdown", {bubbles: true}))); await wait(1400);
+    check("長押しで投げ銭が届く", /贈りました/.test(await bpT.textContent("#over")) && (await st(bpT)).bal < tb && store.some(e => e.pubkey === bpk && e.kind === 7740 && e.content.includes('"t":"tip"')));
+    await bpT.close(); void tn;
     // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----
     await a.click("#sheet [data-close]").catch(() => {});
     await a.click("[data-make]"); await a.click('.mk-g button:nth-child(1)'); await a.click('.mk-k [data-mk="rwa"]');
