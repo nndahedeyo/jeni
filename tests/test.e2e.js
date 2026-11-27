@@ -363,7 +363,7 @@ async function routeMB(p) {
     await p.click("#sheet [data-close]");
     const rad = await id("朝採り大根 3本セット");
     await p.evaluate(id => __jt.detail(id), rad); await rec(rad);
-    check(tag + " カードの記録：刻んだ要約に入っている証明", /日目の要約に入っています（証明 \d段）/.test(await p.textContent(`#pg-${rad} .more`)));
+    check(tag + " カードの記録：刻んだ指紋に入っている証明", /日目の指紋に入っています（その日にはもうあった、と確かめられます・証明 \d段）/.test(await p.textContent(`#pg-${rad} .more`)));
     await p.click("#sheet [data-close]");
     check(tag + " 名前の前にプロフィールアイコン（角丸の四角）", await p.evaluate(() => { const a = document.querySelector("#home .list .avs"); return !!a && getComputedStyle(a).borderRadius !== "50%"; }));
     // 近く：現在地から近い順（ほかの項目と同じ一覧・距離つき）
@@ -474,7 +474,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /名前はみんなに見えます/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
@@ -491,6 +491,14 @@ async function routeMB(p) {
       check(tag + " カードを贈るときも、取り消せないと書いてあり長押しで決める", /取り消せません/.test(await p.textContent("#over")) && !!(await p.$('#over [data-lp="gcard"]')));
       await lp('#over [data-lp="gcard"]');
       check(tag + " 長押しでカードが相手のものになる", /贈りました/.test(await p.textContent("#over")) && await p.evaluate(([id, pk]) => __jt.S.cards[id].copies.some(x => x.owner === pk), [gc, to])); }
+    // 運用版の最初の流れを、見本の画面でも
+    { await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); });
+      await p.click("#guide-btn, [data-guide]").catch(() => {}); await p.evaluate(() => { const b = [...document.querySelectorAll("[data-gi]")].find(x => /はじめて開いたとき/.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(200);
+      if (!/名前はみんなに見えます/.test(await p.textContent("#sheet"))) await p.evaluate(() => window.__jt.startSheet && window.__jt.startSheet());
+      check(tag + " 見本でも最初の画面：大事な3つと名前の欄", /名前はみんなに見えます/.test(await p.textContent("#sheet")) && /消せません/.test(await p.textContent("#sheet")) && !!(await p.$("#st-name")));
+      await p.fill("#st-name", "ためし"); await p.click("[data-start]"); await p.waitForTimeout(200);
+      check(tag + " 始めると、すぐ鍵の控え（見本の鍵と注意）", /はじめに：鍵の控え/.test(await p.textContent("#sheet")) && /見本の鍵/.test(await p.textContent("#sheet")) && /人に見せたり/.test(await p.textContent("#sheet")));
+      await p.click("[data-keysaved]"); await p.waitForTimeout(150); check(tag + " 控えましたで閉じる", await p.evaluate(() => document.getElementById("sheet").hidden)); }
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }

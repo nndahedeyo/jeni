@@ -325,7 +325,7 @@ async function relay(page) {
     await a6.route(/^https?:\/\//, r => /stamps\/index\.json/.test(r.request().url()) ? r.fulfill({status: 200, contentType: "application/json", body: JSON.stringify({days: {"2026-11-27": [cardId]}})}) : r.fulfill({status: 404, body: ""}));
     await a6.goto(URL); await wait(1500); await a6.evaluate(id => __jt.detail(id), cardId); await wait(300);
     await a6.evaluate(id => document.querySelector(`#pg-${id} .more summary`).click(), cardId); await wait(300);
-    check("カードの記録に、ビットコインに刻んだ日", /2026-11-27 にビットコインに刻んだ記録/.test(await a6.textContent(`#pg-${cardId} .more`)));
+    check("カードの記録に、ビットコインに刻んだ日", /2026-11-27 の指紋に入っています/.test(await a6.textContent(`#pg-${cardId} .more`)));
     await a6.close();
     // 開き直しても同じ（端末に写しがある）・中継が止まっても見本に切り替わらない
     const before = (await st(a)).bal; await a.close(); const a2 = await open(A);
