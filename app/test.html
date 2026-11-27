@@ -1297,6 +1297,60 @@ root.JENI_EN = [
   ["輪の人にだけ見えます", "Visible to circle members only"], ["（輪の人だけが読めます）", "(circle members only)"], ["輪の中に出したカードは、輪の人にしか見えません。本物では、中身を輪の鍵で封をしてから置くので、外からは読めない文字の固まりにしか見えません。", "Cards posted in a circle are visible only to members. The real app seals them with the circle key, so outsiders see only unreadable text."],
   ["輪の中のカードは輪の人にしか見えません。抜ける・外すは、わたしのカードから。", "Circle cards are visible only to members. Leave or remove people from My card."],
   ["（この見本の画面では、どこにも送りません）", "(this sample sends nothing)"], ["（読み込み中・まだなし）", "(loading · none yet)"], ["（鍵つき）", "(locked)"], ["準備しています", "Preparing"], ["準備中", "Coming soon"], ["できませんでした", "Couldn't do it"], ["開けませんでした", "Couldn't open"],
+
+  // ---- 会話（写真・ファイル・カード・日時）----
+  ["今日", "Today"], ["昨日", "Yesterday"], ["{*} さん", "$1"], ["{*} さんへ", "To $1"],
+  ["2人だけが読めます", "Only the two of you can read this"], ["2人だけが読めます（見本：どこにも送りません）", "Only the two of you can read this (sample: nothing is sent)"],
+  ["写真・ファイル・カードを送る", "Send photos, files, or cards"], ["ファイル", "File"], ["カード", "Card"], ["メッセージ", "Message"], ["送る", "Send"],
+  ["写真を送っています…", "Sending photos…"], ["写真を送っています（{#}/{#}）", "Sending photos ($1/$2)"], ["ファイルを送っています…", "Sending file…"],
+  ["送れませんでした（つながる場所で、もう一度）", "Couldn't send (try again where you're online)"], ["ファイルが大きすぎます（{#}MBまで）", "File too large (up to $1 MB)"],
+  ["{#}KB・押すと開く", "$1 KB · tap to open"], ["{#}MB・押すと開く", "$1 MB · tap to open"], ["{*}・カードを開く", "$1 · open card"], ["（もうないカード）", "(card no longer exists)"],
+  ["送れるカードがありません（作ったカード・持っているカード）", "No cards to send (cards you made or hold)"],
+  ["写真・{#}", "Photo · $1"], ["写真 {#}枚・{#}", "$1 photos · $2"], ["ファイル・{#}", "File · $1"], ["カード・{#}", "Card · $1"], ["写真・昨日", "Photo · Yesterday"], ["ファイル・昨日", "File · Yesterday"], ["カード・昨日", "Card · Yesterday"],
+  ["{*}・昨日", "$1 · Yesterday"], ["写真", "Photo"], ["写真 {#}枚", "$1 photos"],
+
+  // ---- 人を探す ----
+  ["人", "People"], ["人を探す", "Find people"], ["人・{#}人", "People · $1"], ["名前・ひとことで探す", "Search by name or bio"], ["見つかりません", "Not found"],
+  ["まだほかに参加している人はいません", "No one else has joined yet"], ["友達", "Friend"], ["友達・{*}", "Friend · $1"],
+  ["友達になりたいそうです", "Wants to be friends"], ["友達になりたいそうです・{*}", "Wants to be friends · $1"],
+  ["友達になるのを待っています", "Waiting for them to accept"], ["友達になるのを待っています・{*}", "Waiting for them to accept · $1"],
+  ["並びの「人」で、参加している人のプロフィールカードが出ます。名前やひとことで探して、カードから友達に。", "\"People\" in the menu lists everyone who has joined. Search by name or bio, and add friends from their card."],
+  ["並びは すべて・人・音楽・動画・写真・文章 → 現物・イベント・体験 → アプリ・お店・会社や団体・プロジェクト → 仲間の輪。", "Order: All · People · Music · Video · Photo · Writing → Goods · Events · Experiences → Apps · Shops · Organizations · Projects → Circles."],
+
+  // ---- 直す（作ったあとで足す）----
+  ["{#}枚", "$1"], ["外す", "Remove"], ["写真を足す", "Add photos"], ["動画を入れ替える", "Replace video"], ["音を入れ替える", "Replace audio"], ["入れ替えます（{*}）・変える", "Will replace ($1) · change"],
+  ["アプリのURL", "App URL"], ["リンク", "Link"], ["{#}回直しました（前の中身は輪の封の中）", "Edited $1 times (earlier versions are sealed in the circle)"],
+  ["作った人は、あとから題・説明・日時・場所・画像を直したり、アルバムに写真を足したり、動画や音を入れ替えたりできます（値段・数・種類は直せません）。取り下げると、だれも持っていないカードは消え、持っている人がいるカードは受付を終えます（持っている人のものはそのまま）。自分の書いた会話は消せます。直した・消したことは記録に残ります。", "Makers can later edit the title, description, date, place and image, add photos to an album, or replace video and audio (price, quantity and type can't change). Withdrawing removes a card no one holds; if someone holds it, it just stops taking new holders (theirs stays). You can delete your own comments. Edits and deletions stay on the record."],
+
+  // ---- 音・動画 ----
+  ["その場で録音する", "Record now"], ["● 録音をとめる", "● Stop recording"], ["ボイスメモは、共有 →「\"ファイル\"に保存」で、上から選べます", "Voice memos: Share → \"Save to Files\", then choose above"],
+  ["この端末では録音できません", "This device can't record"], ["録音できませんでした", "Couldn't record"], ["この端末では、この音を変換できません", "This device can't convert this audio"],
+
+  // ---- きまり（短い版）----
+  ["参加している人に認めてもらうと、{#} jeni が届きます。あなたも{#}人まで認められます。", "When a member vouches for you, you receive $1 jeni. You can vouch for up to $2 people too."],
+  ["だれでもカードを作って、値段（jeni）をつけられます。値段はあとから変えられません。", "Anyone can make a card and set a price in jeni. The price can't be changed later."],
+  ["カードを持つと、書かれたものを受け取れます。払った jeni は作った人へ。", "Holding a card lets you receive what it offers. The jeni you pay goes to the maker."],
+  ["気に入ったカードに jeni を送れます。半分は作った人、半分はそのカードを持っている人へ。", "You can tip cards you like. Half goes to the maker, half to the card's holders."],
+  ["長押しで決める", "Long-press to confirm"], ["jeni が動くのは、あなたが長押ししたときだけ。QRを読んだだけでは動きません。", "jeni only moves when you long-press. Scanning a QR alone never moves jeni."],
+  ["知っておくこと", "Good to know"], ["・jeni は円と交換できません。", "· jeni can't be exchanged for yen."],
+  ["・だれがだれに払ったかは記録に残り、だれでも見られます。見せたくないカードは、持つときに「かくす」か「鍵をかける」を。", "· Who paid whom stays on the record for anyone to see. For cards you'd rather not show, choose \"Hide\" or \"Lock\" when you get them."],
+  ["・2人の会話と、仲間の輪の中身は、その人たちだけが読めます。", "· Two-person chats and circle content can only be read by those people."],
+  ["・鍵をなくすと戻せません。わたしのカードの「鍵を守る」で守ってください。", "· A lost key can't be recovered. Protect it with \"Protect key\" on My card."],
+  ["くわしいきまり", "Full rules"],
+  ["カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話（写真・ファイル・カードも送れる）と通話（ビデオ通話も）は、お互いに友達のときだけ（残高の下の吹き出しと受話器、または相手のカードから）。危ないカードや会話は、実績のある別々の人{#}人の知らせで隠れます。現物・イベント・体験は、持っている人が出す一度きりのQRを作った人が読んで、受け取り・参加・受けたことにします。", "Any member can comment on a card (circle cards: circle members only). Two-person chats (photos, files and cards too) and calls (including video) are only between mutual friends (from the bubble and phone under your balance, or from their card). Harmful cards or comments are hidden after reports from $1 separate members with a track record. For goods, events and experiences, the holder shows a one-time QR and the maker scans it to mark it received, attended or used."],
+
+  ["{#} jeni が {*} さんに届きました。", "$1 jeni reached $2."], ["{*}（{#}人）・作った輪", "$1 ($2) · you made it"],
+  // ---- この端末から出る・始める画面 ----
+  ["この端末から出る", "Sign out of this device"], ["出たあとは、始める画面の「前に使っていた人」から、控えた鍵で戻れます。", "After signing out, you can come back with your saved key via \"Used jeni before\" on the start screen."],
+  ["出たあとは、始める画面の「前に使っていた人」から、Face ID か控えた鍵で戻れます。", "After signing out, you can come back with Face ID or your saved key via \"Used jeni before\" on the start screen."],
+  ["鍵を守っていません。出ると、この人には二度と戻れません（jeni もカードも）。先に「鍵を守る」を。", "Your key isn't protected. If you sign out, you can never come back as this person (jeni and cards included). Protect your key first."],
+  ["まだ届いていないものが {#}件あります。つながってから出てください。", "$1 items haven't been delivered yet. Sign out after you're back online."],
+  ["前に使っていた人（別の場所で参加した鍵に戻す）", "Used jeni before (restore a key that joined elsewhere)"], ["招待のリンクが届いた人", "Got an invite link"], ["届いたリンクを貼る", "Paste the link you received"],
+  ["戻すと、いまのこの名前（まだ参加していない方）は使わなくなります。", "Restoring stops using this current name (the one that hasn't joined)."],
+  ["招待のリンクを開くか、参加している人に、このカードの裏のQRを読んでもらいます。", "Open an invite link, or have a member scan the QR on the back of this card."],
+  ["参加するには", "How to join"], ["招待のリンクの形が合いません", "That doesn't look like an invite link"],
+  ["署名", "Signature"], ["見える人", "Who can see"], ["記録", "Record"], ["だれでも読めます", "Anyone can read"], ["下書き", "Draft"],
+  ["認められませんでした（{#}人まで・もう参加している人は認められません）", "Couldn't vouch (up to $1 people · members can't be vouched for)"],
 ];
 // 見本の画面にだけ出る、見本のカード・人の言葉（本物の人が書いたものは、置き換えない）
 root.JENI_EN_SAMPLE = [
@@ -1316,6 +1370,7 @@ root.JENI_EN_SAMPLE = [
   ["雨の音", "Rain sounds"], ["畑の動画", "Farm video"], ["ジャケット：田んぼ", "Cover: paddy"], ["ジャケット：畑", "Cover: field"], ["表紙：田んぼ", "Cover: paddy"], ["表紙：畑", "Cover: field"], ["田んぼの写真", "Paddy photo"], ["畑の写真", "Field photo"], ["パン", "Bread"], ["大根", "Radish"], ["カレー", "Curry"],
   ["例：{#}月{#}日（日）{#}", "e.g. Sun $1/$2 $3"], ["{#}月{#}日（日）{#}", "Sun $1/$2 $3"], ["毎週月曜 {#}", "Mondays $1"], ["火〜土 {#}–{#}", "Tue–Sat $1–$2"], ["千葉県 の畑", "a farm in Chiba"], ["東京都 の店頭", "a shop in Tokyo"], ["東京", "Tokyo"],
   ["ゆず", "Yuzu"], ["ゆず さんに贈る", "Give to Yuzu"], ["ゆず さんのカード", "Yuzu's card"], ["ゆず（まだ参加していない）", "Yuzu (not joined)"],
+  ["自然と調和する音。作業のあいまに。", "Sounds in harmony with nature. For breaks between work."], ["焼きたてのパン", "Fresh-baked bread"], ["朝の大根", "Morning radishes"], ["畑の地図アプリ", "Farm map app"],
 ];
 })(typeof globalThis !== "undefined" ? globalThis : this);
 </script>
@@ -2008,6 +2063,7 @@ const tsOf = m => m.ts || (LIVE ? m.at : Date.now() / 1000 - (clock - m.at) * 60
 const hm = d => `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
 function dayLabel(d) {
   const t = new Date(); t.setHours(0, 0, 0, 0); const x = new Date(d); x.setHours(0, 0, 0, 0); const n = Math.round((t - x) / 864e5);
+  if (window.JeniI18n && JeniI18n.lang !== "ja" && n > 1) return x.toLocaleDateString("en-US", {weekday: "short", month: "short", day: "numeric", ...(x.getFullYear() !== t.getFullYear() ? {year: "numeric"} : {})});
   return n === 0 ? "今日" : n === 1 ? "昨日" : `${x.getFullYear() !== t.getFullYear() ? x.getFullYear() + "年" : ""}${x.getMonth() + 1}月${x.getDate()}日（${"日月火水木金土"[x.getDay()]}）`;
 }
 const sizeOf = n => n >= 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
