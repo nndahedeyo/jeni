@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "stamps"
 RELAYS = ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.primal.net", "wss://relay.nostr.band"]
 # jeni の出来事（決まり・カードの中身・封をした会話や通話のつなぎ・輪のかぎ）。封をしたものも、番号（指紋）だけを刻むので中身は出ない
-FILTERS = [{"kinds": [7740, 7741, 7742, 7743, 7744], "#t": ["jeni-trial-1"]}]
+FILTERS = [{"kinds": [7740, 7741, 7742, 7743, 7744, 7745], "#t": ["jeni-trial-1"]}]
 
 
 def event_id(ev):

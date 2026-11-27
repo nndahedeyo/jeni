@@ -493,12 +493,11 @@ async function routeMB(p) {
       check(tag + " 長押しでカードが相手のものになる", /贈りました/.test(await p.textContent("#over")) && await p.evaluate(([id, pk]) => __jt.S.cards[id].copies.some(x => x.owner === pk), [gc, to])); }
     // 運用版の最初の流れを、見本の画面でも
     { await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); });
-      await p.click("#guide-btn, [data-guide]").catch(() => {}); await p.evaluate(() => { const b = [...document.querySelectorAll("[data-gi]")].find(x => /はじめて開いたとき/.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(200);
-      if (!/名前はみんなに見えます/.test(await p.textContent("#sheet"))) await p.evaluate(() => window.__jt.startSheet && window.__jt.startSheet());
-      check(tag + " 見本でも最初の画面：大事な3つと名前の欄", /名前はみんなに見えます/.test(await p.textContent("#sheet")) && /消せません/.test(await p.textContent("#sheet")) && !!(await p.$("#st-name")));
+      await p.click("[data-firstrun]"); await p.waitForTimeout(200);
+      check(tag + " 上の「はじめての画面」から、最初の画面：大事な3つと名前の欄", /名前はみんなに見えます/.test(await p.textContent("#sheet")) && /消せません/.test(await p.textContent("#sheet")) && !!(await p.$("#st-name")));
       await p.fill("#st-name", "ためし"); await p.click("[data-start]"); await p.waitForTimeout(200);
-      check(tag + " 始めると、すぐ鍵の控え（見本の鍵と注意）", /はじめに：鍵の控え/.test(await p.textContent("#sheet")) && /見本の鍵/.test(await p.textContent("#sheet")) && /人に見せたり/.test(await p.textContent("#sheet")));
-      await p.click("[data-keysaved]"); await p.waitForTimeout(150); check(tag + " 控えましたで閉じる", await p.evaluate(() => document.getElementById("sheet").hidden)); }
+      check(tag + " 始めると、すぐ鍵を守る画面（パスキー・見本の鍵と注意）", !!(await p.$("[data-pksave]")) && /はじめに：鍵を守る/.test(await p.textContent("#sheet")) && /見本の鍵/.test(await p.textContent("#sheet")) && /人に見せたり/.test(await p.textContent("#sheet")));
+      await p.click("[data-pksave]"); await p.waitForTimeout(150); check(tag + " パスキーで守る（見本）で閉じる", await p.evaluate(() => document.getElementById("sheet").hidden)); }
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }

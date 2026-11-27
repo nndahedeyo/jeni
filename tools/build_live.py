@@ -21,7 +21,7 @@ head = ('<!doctype html><html lang="ja"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
         '<title>jeni 試験運用</title><meta name="robots" content="noindex">'
         '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">'
-        '<meta name="theme-color" content="#f3ecdd"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">'
+        '<meta name="theme-color" content="#efe9dc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">'
         '<meta name="apple-mobile-web-app-title" content="jeni"><meta name="apple-mobile-web-app-status-bar-style" content="default">'
         '<style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}[hidden]{display:none!important}img{max-width:100%}</style>'
         '<script>window.JENI_LIVE = true;</script>'
@@ -36,12 +36,12 @@ print("built index.html", len(out))
 import hashlib, subprocess
 ver = hashlib.sha256(out.encode("utf-8")).hexdigest()[:12]
 json.dump({"name": "jeni 試験運用", "short_name": "jeni", "lang": "ja", "start_url": "./", "scope": "./", "display": "standalone",
-           "background_color": "#f3ecdd", "theme_color": "#f3ecdd",
+           "background_color": "#efe9dc", "theme_color": "#efe9dc",
            "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
                      {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]},
           open(os.path.join(here, "manifest.webmanifest"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 sw = open(os.path.join(here, "tools", "sw.tpl.js"), encoding="utf-8").read().replace("/*VER*/", ver)
 open(os.path.join(here, "sw.js"), "w", encoding="utf-8").write(sw)
-if not all(os.path.exists(os.path.join(here, f"icon-{n}.png")) for n in (180, 192, 512)):
+if os.environ.get("ICONS") or not all(os.path.exists(os.path.join(here, f"icon-{n}.png")) for n in (180, 192, 512)):
     subprocess.run([sys.executable, os.path.join(here, "tools", "icons.py")], check=True)
 print("built manifest/sw", ver)

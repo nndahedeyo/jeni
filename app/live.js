@@ -6,7 +6,7 @@
   const Rules = () => root.JeniRules;   // きまりはあとで読み込まれる
   const TAG = "jeni-trial-1";
   // 出来事の種類：決まり（だれでも読める）・カードの中身（画像など）・2人だけの会話・通話のつなぎ・輪のかぎ
-  const K = {rule: 7740, media: 7741, dm: 7742, call: 7743, ckey: 7744};
+  const K = {rule: 7740, media: 7741, dm: 7742, call: 7743, ckey: 7744, kbak: 7745};   // kbak：パスキーで封をした鍵の控え（本人のパスキーでしか開けない）
   const RELAYS = ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.primal.net", "wss://relay.nostr.band"];
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
@@ -104,10 +104,61 @@
   const sealWith = (keyHex, obj, ad) => Seal.seal(Sig.unhex(keyHex), obj, ad);
   const openWith = (keyHex, str, ad) => Seal.open(Sig.unhex(keyHex), str, ad);
 
+  // ---- パスキー（Face ID・指紋など）で鍵を守る ----
+  // パスキーは iCloud キーチェーン・Google パスワード マネージャーなどに入り、機種を変えても同じ人のまま使える。
+  // パスキーの「PRF」でこの人だけの秘密を取り出し、それで鍵に封をして中継に置く。パスキーがないと、だれにも開けない
+  const SALT = new TextEncoder().encode("jeni/kbak/1");
+  const b64u = u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const ub64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+  async function prfKey(prf) {
+    const base = await crypto.subtle.importKey("raw", prf, "HKDF", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({name: "HKDF", hash: "SHA-256", salt: SALT, info: new TextEncoder().encode("key")}, base, {name: "AES-GCM", length: 256}, false, ["encrypt", "decrypt"]);
+  }
+  const passkeyOK = () => !!(root.PublicKeyCredential && navigator.credentials && root.isSecureContext);
+  async function prfGet(allow) {
+    const cred = await navigator.credentials.get({publicKey: {challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname, userVerification: "required",
+      allowCredentials: allow ? [{type: "public-key", id: allow}] : [], extensions: {prf: {eval: {first: SALT}}}}});
+    const r = cred.getClientExtensionResults().prf; const out = r && r.results && r.results.first;
+    return {cred, prf: out ? new Uint8Array(out) : null};
+  }
+  async function passkeySave(name) {
+    if (!me) throw new Error("鍵がありません");
+    if (!passkeyOK()) throw new Error("この端末・ブラウザはパスキーに対応していません");
+    const cred = await navigator.credentials.create({publicKey: {rp: {name: "jeni", id: location.hostname}, challenge: crypto.getRandomValues(new Uint8Array(32)),
+      user: {id: Sig.unhex(me.pk), name: "jeni・" + (name || me.pk.slice(0, 8)), displayName: "jeni・" + (name || me.pk.slice(0, 8))},
+      pubKeyCredParams: [{type: "public-key", alg: -7}, {type: "public-key", alg: -257}],
+      authenticatorSelection: {residentKey: "required", requireResidentKey: true, userVerification: "required"}, extensions: {prf: {eval: {first: SALT}}}}});
+    const ex = cred.getClientExtensionResults().prf || {};
+    let prf = ex.results && ex.results.first ? new Uint8Array(ex.results.first) : null;
+    if (!prf) { if (ex.enabled === false) throw new Error("このパスキーでは鍵を守れません（この端末は未対応）"); prf = (await prfGet(new Uint8Array(cred.rawId))).prf; }
+    if (!prf) throw new Error("このパスキーでは鍵を守れません（この端末は未対応）");
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name: "AES-GCM", iv}, await prfKey(prf), Sig.unhex(me.sk)));
+    const blob = {v: 1, iv: b64u(iv), ct: b64u(ct)};
+    store.set("jeni.kbak", blob); publish(K.kbak, blob); return true;
+  }
+  // 中継から自分の控え（封）を探す。見つからなければ、この端末の写しを置き直す（無料の中継は古いものを消すことがあるので）
+  const myBackup = pk => events.filter(e => e.kind === K.kbak && e.pubkey === pk).sort((a, b) => b.created_at - a.created_at)[0];
+  function backupKeep() { const b = store.get("jeni.kbak", null); if (me && b && !myBackup(me.pk) && online()) publish(K.kbak, b); }
+  async function passkeyRestore(wait = 8000) {
+    if (!passkeyOK()) throw new Error("この端末・ブラウザはパスキーに対応していません");
+    const {cred, prf} = await prfGet(null);
+    if (!prf) throw new Error("このパスキーでは戻せません（この端末は未対応）");
+    const pk = Sig.hex(new Uint8Array(cred.response.userHandle));
+    if (!/^[0-9a-f]{64}$/.test(pk)) throw new Error("jeni のパスキーではありません");
+    const t0 = Date.now(); let ev; while (!(ev = myBackup(pk)) && Date.now() - t0 < wait) await new Promise(r => setTimeout(r, 300));
+    if (!ev) throw new Error("控えが中継に見つかりません（つながる場所で、もう一度）");
+    const b = JSON.parse(ev.content);
+    const sk = Sig.hex(new Uint8Array(await crypto.subtle.decrypt({name: "AES-GCM", iv: ub64u(b.iv)}, await prfKey(prf), ub64u(b.ct))));
+    if (pkOf(sk) !== pk) throw new Error("鍵が合いません");
+    me = {sk, pk}; store.set("jeni.me", me); store.set("jeni.kbak", b); return me;
+  }
+
   root.JeniLive = {
     K, TAG, RELAYS, store, now,
     get me() { return me; }, newMe, importKey,
     get events() { return events; }, get pending() { return outbox.length; }, publish, sign, start, online, flush,
+    passkeyOK, passkeySave, passkeyRestore, backupKeep,
     sealTo, openFrom, sealWith, openWith, randHex: n => Sig.hex(crypto.getRandomValues(new Uint8Array(n))),
   };
 })(typeof globalThis !== "undefined" ? globalThis : this);
