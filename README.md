@@ -6,6 +6,7 @@
 - 運営のサーバーはありません。出来事は各自の鍵で署名して、だれでも立てられる複数の中継（Nostr のリレー）に置き、各自の端末にも写しを持ちます
 - 2人だけの会話・通話のつなぎ・仲間の輪の中身は、鍵で封をしてから置きます（中継からは読めません）
 - 写真・音・動画は、各自の端末の中で軽くしてから、Nostr 用の無料の置き場（Blossom：blossom.nostr.build と blossom.primal.net の2か所）に、各自の鍵で署名した許可で置きます。動画・音は2時間まで（音は AAC 192kbps）。仲間の輪のカードのものは、ファイルごとの鍵で封をしてから置き、鍵は輪の人だけが読める中身に入れます。1ファイル20MBの上限に合わせて長いものは時間で分けて置き、再生では続けて1本として流します。置いたものはだれでも見られます
+- ホーム画面に置くと、アプリのように開けます（`manifest.webmanifest`・`sw.js`）。つながらない場所でも開いて使え、出したものは端末に控えて、つながったら中継に届けます
 - 毎日1回、すべての出来事の番号を OpenTimestamps でビットコインに刻みます（`stamps/`・`.github/workflows/stamp.yml`）
 - jeni は円や暗号資産と交換できません。カードの裏の「ウォレット」は開発中です（開発者を募集しています）
 
@@ -27,6 +28,7 @@
 node --test tests/rules.test.js tests/seal.test.js && node tests/sig.test.js
 python3 tools/build_test.py && MB_DIST=… node tests/test.e2e.js   # MB_DIST：Mediabunny を tsc で組み立てた dist（なければ変換の確かめはとばす）
 python3 tools/build_live.py && GENESIS=… MB_DIST=… node tests/live.e2e.js   # 中継と置き場のまねで確かめる（本物には送らない）
+node tests/offline.e2e.js   # つながらない場所で開ける・控えて、つながったら届く
 ```
 
 元の構想と最初の試作（Asset-card の app30）は参考にするだけで、ここで一から簡素に作り直しています。

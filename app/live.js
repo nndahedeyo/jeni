@@ -68,6 +68,7 @@
     return ev;
   }
   function flush() {
+    if (root.navigator && root.navigator.onLine === false) return;   // つながっていないあいだは控えておく
     const os = sockets.filter(s => s.readyState === 1); if (!os.length) return;
     const ready = outbox.filter(e => e.sig);
     for (const ev of ready) for (const s of os) { try { s.send(JSON.stringify(["EVENT", ev])); } catch (e) {} }
@@ -87,6 +88,7 @@
     ws.onerror = () => {};
     sockets.push(ws);
   }
+  try { root.addEventListener && root.addEventListener("online", () => { for (const s of sockets.slice()) try { s.close(); } catch (e) {} }); } catch (e) {}
   function start(cb) {
     onChange = cb || onChange;
     for (const e of events) if (e.pubkey === (me && me.pk)) lastAt = Math.max(lastAt, e.created_at);
@@ -105,7 +107,7 @@
   root.JeniLive = {
     K, TAG, RELAYS, store, now,
     get me() { return me; }, newMe, importKey,
-    get events() { return events; }, publish, sign, start, online, flush,
+    get events() { return events; }, get pending() { return outbox.length; }, publish, sign, start, online, flush,
     sealTo, openFrom, sealWith, openWith, randHex: n => Sig.hex(crypto.getRandomValues(new Uint8Array(n))),
   };
 })(typeof globalThis !== "undefined" ? globalThis : this);
