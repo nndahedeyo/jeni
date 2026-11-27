@@ -13,7 +13,7 @@ coin = re.sub(r'\s(width|height)="\d+"', "", coin, count=2)
 coin = " ".join(coin.split()).replace("`", "")
 gp, _ = golden.golden(n=12)
 rd = lambda f: open(os.path.join(app, f), encoding="utf-8").read()
-body = (tpl.replace("/*RULES*/", rd("rules.js")).replace("/*QR*/", rd("qr.js")).replace("/*MEDIA*/", rd("media.js"))
+body = (tpl.replace("/*RULES*/", rd("rules.js")).replace("/*QR*/", rd("qr.js")).replace("/*MEDIA*/", rd("media.js")).replace("/*EN*/", rd("en.js") if os.environ.get("EN") else "").replace("/*I18N*/", rd("i18n.js") if os.environ.get("EN") else "")   # 英語は確かめ終わるまで運用版には入れない（EN=1 で入る）
            .replace("/*COIN*/", coin).replace("/*G*/", json.dumps(gp)).replace("/*GENESIS*/", cfg["genesis"]))
 body = re.sub(r"^<title>.*?</title>\n", "", body, count=1)
 body = body.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")

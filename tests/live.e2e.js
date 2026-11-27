@@ -1,6 +1,9 @@
 // つなぐ版（site/index.html）を、中継のまね（ブラウザの中で受け答えする）で確かめる。本物の中継には一切送らない。
 // 使い方: python3 tools/build_live.py && GENESIS=<はじまりの番号> node tests/live.e2e.js
 const { chromium } = require("playwright");
+const RECP = []; const RECSET = new Set();
+async function recDump() { if (!process.env.REC) return;
+  const fs2 = require("fs"); let prev = []; try { prev = fs2.readFileSync(process.env.REC, "utf8").split("\n").filter(Boolean); } catch (e) {} fs2.writeFileSync(process.env.REC, [...new Set([...prev, ...RECSET])].sort().join("\n") + "\n"); }
 const path = require("path");
 const URL = "file://" + path.resolve(__dirname, "..", "index.html");
 const GEN = process.env.GENESIS;
@@ -58,7 +61,7 @@ async function relay(page) {
   const b = await chromium.launch({args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]});
   const errs = [], log = [];
   const check = (l, c) => { if (!c) process.exitCode = 1; log.push((c ? "OK  " : "NG  ") + l); };
-  const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); await relay(p);
+  const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); }); await relay(p);
     await p.route(/^https?:\/\//, r => r.fulfill({status: 404, body: ""}));   // 外へは出さない（刻みの記録の読み込みなど）
     await blossom(p);
     await p.goto(URL + hash); await p.waitForTimeout(700); return p; };
@@ -305,6 +308,7 @@ async function relay(page) {
     check("だれも持っていないカードを取り下げると、相手の一覧からも消える", await until(bp, id => !__jt.S.cards[id] || __jt.S.cards[id].gone, 8000, draft));
     // ---- 別の端末で、書き出した鍵で続ける ----
     const key = await a.evaluate(() => JSON.parse(localStorage.getItem("jeni.me")).sk);
+    const key0 = key;
     const D = await b.newContext({locale: "ja-JP"}); const d = await open(D);
     await d.click('[data-story="3"]'); await d.click("#sheet details.more summary"); await d.fill("#st-key", key); await d.click("[data-startkey]"); await wait(500);
     check("控えた鍵で続けたときは、鍵の控えの画面を出さない", !/鍵を守る/.test(await d.textContent("#sheet").catch(() => "")) && !(await d.$(".pmark .kdot")));
@@ -314,6 +318,11 @@ async function relay(page) {
     check("招待なしで始めた人にも、すぐ鍵の控えの画面", /鍵を守る/.test(await cp.textContent("#sheet"))); await cp.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
     const cpk = (await st(cp)).me;
     check("招待なしで始めた人は、まだ参加していない", !(await st(cp)).member);
+    { const C2 = await b.newContext({locale: "ja-JP"}); const e2 = await open(C2); await e2.click('[data-story="3"]'); await e2.fill("#st-name", "べつのばしょ"); await e2.click("[data-start]"); await wait(800);
+      await e2.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
+      await e2.click("[data-me]"); await e2.click("#sheet details.more summary"); await e2.fill("#st-key", key0); await e2.click("[data-startkey]");
+      check("まだ参加していない人も、わたしのカードから「前に使っていた人」で参加済みの鍵に戻れる", await until(e2, pk => __jt.me === pk && __jt.S.users[pk] && __jt.S.users[pk].member, 10000, (await st(a)).me));
+      await C2.close(); }
     const a5 = await open(A, "#me=" + cpk); await wait(1500);
     check("参加している人が読むと「この人を認める」", /この人を認める/.test(await a5.textContent("#over")));
     await a5.click("[data-vouch]"); await wait(800);
@@ -338,5 +347,5 @@ async function relay(page) {
     check("画面のエラーなし", errs.length === 0);
   } catch (e) { log.push("NG  例外: " + e.message.split("\n")[0]); process.exitCode = 1; }
   console.log(log.join("\n")); if (errs.length) console.log("errors:", errs.slice(0, 5));
-  await b.close();
+  await recDump(); await b.close();
 })();
