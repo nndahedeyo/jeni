@@ -324,6 +324,11 @@ async function relay(page) {
       const C3 = await b.newContext({locale: "ja-JP"}); const g3 = await open(C3); await g3.click('[data-story="3"]');
       await g3.click("#sheet details.more summary"); await g3.fill("#st-inv", inv); await g3.fill("#st-name", "とおく"); await g3.click("[data-start]");
       check("ホーム画面のアイコンから：届いた招待のリンクを貼って始めると参加できる", await until(g3, () => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].member, 12000));
+      await g3.evaluate(() => { localStorage.setItem("jeni.keysaved", "true"); __jt.closeSheet(); });
+      await g3.click("[data-me]"); await wait(300); await g3.click("[data-logout]"); await wait(200);
+      check("この端末から出る：長押しで決める（戻り方の一言つき）", /前に使っていた人/.test(await g3.textContent("#over")) && !!(await g3.$('#over [data-lp="logout"]')));
+      const lo = await g3.$('#over [data-lp="logout"]'), lb = await lo.boundingBox(); await g3.mouse.move(lb.x + lb.width / 2, lb.y + lb.height / 2); await g3.mouse.down(); await wait(1300); await g3.mouse.up(); await wait(1500);
+      check("出ると、始める画面に戻る（この端末に鍵はない）", await g3.evaluate(() => !localStorage.getItem("jeni.me")) && /jeni は、貝のしるし/.test(await g3.textContent("#sheet")));
       await C3.close(); }
     { const C2 = await b.newContext({locale: "ja-JP"}); const e2 = await open(C2); await e2.click('[data-story="3"]'); await e2.fill("#st-name", "べつのばしょ"); await e2.click("[data-start]"); await wait(800);
       await e2.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
