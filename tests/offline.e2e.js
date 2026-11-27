@@ -19,9 +19,9 @@ let ok = 0, ng = 0; const check = (n, c) => { if (c) ok++; else ng++; console.lo
     const man = await p.evaluate(() => fetch(document.querySelector('link[rel="manifest"]').href).then(r => r.json()));
     check("ホーム画面に置ける形（名前・アプリのように開く・アイコン）", man.short_name === "jeni" && man.display === "standalone" && man.icons.some(i => i.sizes === "512x512") && !!(await p.$('link[rel="apple-touch-icon"]')));
     check("控えの係が動く", await p.evaluate(() => navigator.serviceWorker.ready.then(r => !!r.active)));
-    check("はじめての人へ：iPhone は先にホーム画面に追加、の注意（ブラウザで開いたとき）", /ホーム画面に置く|ホーム画面に追加/.test(await p.textContent("#sheet")));
+    check("はじめての人へ：iPhone は先にホーム画面に追加、の注意（ブラウザで開いたとき）", /ホーム画面に/.test(await p.textContent("#sheet")));
     await p.fill("#st-name", "そと"); await p.click("[data-start]"); await p.waitForTimeout(600);
-    check("始めるとすぐ「鍵を守る」：Face ID・パスキーで守る", /はじめに：鍵を守る/.test(await p.textContent("#sheet")) && !!(await p.$("[data-pksave]")));
+    check("始めるとすぐ「鍵を守る」：Face ID・パスキーで守る", /鍵を守る/.test(await p.textContent("#sheet")) && !!(await p.$("[data-pksave]")));
     await p.click("#sheet [data-close]"); await p.waitForTimeout(200);
     check("守らずに閉じると、わたしのカードの印に赤い点", !!(await p.$(".pmark .kdot")));
     await p.reload(); await p.waitForTimeout(800);   // 控えの係がページを控える

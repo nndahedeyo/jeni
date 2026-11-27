@@ -36,7 +36,7 @@ print("built index.html", len(out))
 import hashlib, subprocess
 ver = hashlib.sha256(out.encode("utf-8")).hexdigest()[:12]
 json.dump({"name": "jeni 試験運用", "short_name": "jeni", "lang": "ja", "start_url": "./", "scope": "./", "display": "standalone",
-           "background_color": "#efe9dc", "theme_color": "#efe9dc",
+           "background_color": "#111712", "theme_color": "#111712",
            "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
                      {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]},
           open(os.path.join(here, "manifest.webmanifest"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)

@@ -69,13 +69,13 @@ async function relay(page) {
     // はじまりの人
     const A = await b.newContext({locale: "ja-JP", permissions: ["microphone", "geolocation"], geolocation: {latitude: 35.68, longitude: 139.76}});
     const a = await open(A, "#genesis=" + GEN);
-    check("はじめて開くと、はじめての人が判断できる3つ（名前は見える・消せない・鍵の控え）と名前の欄", /名前はみんなに見えます/.test(await a.textContent("#sheet")) && /消せません/.test(await a.textContent("#sheet")) && /パスキーで守ります/.test(await a.textContent("#sheet")) && !!(await a.$("#st-name")));
+    check("はじめて開くと、はじめての人が判断できる3つ（名前は見える・消せない・鍵の控え）と名前の欄", /名前は、みんなに見えます/.test(await a.textContent("#sheet")) && /消せません/.test(await a.textContent("#sheet")) && /Face ID で守ります/.test(await a.textContent("#sheet")) && !!(await a.$("#st-name")));
     await a.fill("#st-name", "はじめ"); await a.click("[data-start]"); await wait(1200);
     let s = await st(a);
     check("はじまりの番号で参加し、1,000 jeni", s.member && s.bal === 1000 && /はじまりの人として参加/.test(await a.textContent("#sheet")));
     check("鍵の控えがまだのあいだ、わたしのカードの印に小さな赤い印", !!(await a.$(".pmark .kdot")));
     await a.click("#sheet [data-close]"); await wait(500);
-    check("参加の知らせを閉じると「はじめに：鍵を守る」（パスキーで守る・64文字の控え・人に見せない注意）", !!(await a.$("[data-pksave]")) && /はじめに：鍵を守る/.test(await a.textContent("#sheet")) && /[0-9a-f]{64}/.test(await a.textContent("#sheet .keyv")) && /人に見せたり/.test(await a.textContent("#sheet")));
+    check("参加の知らせを閉じると「鍵を守る」（パスキーで守る・64文字の控え・人に見せない注意）", !!(await a.$("[data-pksave]")) && /鍵を守る/.test(await a.textContent("#sheet")) && /[0-9a-f]{64}/.test(await a.textContent("#sheet .keyv")) && /人に見せない/.test(await a.textContent("#sheet")));
     await a.click("#sheet details.more summary"); await a.click("[data-keysaved]"); await wait(200);
     check("控えましたを押すと赤い印が消える（控えたことはこの端末の中だけ・中継には出さない）", !(await a.$(".pmark .kdot")) && !store.some(e => e.content.includes("keysaved")));
     check("署名した出来事が中継に届く", await until(a, () => true) && store.some(e => e.pubkey === s.me && e.kind === 7740 && e.sig && e.sig.length === 128));
@@ -306,11 +306,11 @@ async function relay(page) {
     const key = await a.evaluate(() => JSON.parse(localStorage.getItem("jeni.me")).sk);
     const D = await b.newContext({locale: "ja-JP"}); const d = await open(D);
     await d.click("#sheet details.more summary"); await d.fill("#st-key", key); await d.click("[data-startkey]"); await wait(500);
-    check("控えた鍵で続けたときは、鍵の控えの画面を出さない", !/はじめに：鍵を守る/.test(await d.textContent("#sheet").catch(() => "")) && !(await d.$(".pmark .kdot")));
+    check("控えた鍵で続けたときは、鍵の控えの画面を出さない", !/鍵を守る/.test(await d.textContent("#sheet").catch(() => "")) && !(await d.$(".pmark .kdot")));
     check("書き出した鍵で、別の端末でも同じ人・同じ残高", await until(d, bal => __jt.S.users[__jt.me] && __jt.S.users[__jt.me].bal === bal, 10000, (await st(a)).bal));
     // ---- 参加していない人の QR（#me=）を、参加している人が読んで認める ----
     const C = await b.newContext({locale: "ja-JP"}); const cp = await open(C); await cp.fill("#st-name", "さんにんめ"); await cp.click("[data-start]"); await wait(800);
-    check("招待なしで始めた人にも、すぐ鍵の控えの画面", /はじめに：鍵を守る/.test(await cp.textContent("#sheet"))); await cp.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
+    check("招待なしで始めた人にも、すぐ鍵の控えの画面", /鍵を守る/.test(await cp.textContent("#sheet"))); await cp.evaluate(() => document.querySelector("[data-keysaved]").click()); await wait(200);
     const cpk = (await st(cp)).me;
     check("招待なしで始めた人は、まだ参加していない", !(await st(cp)).member);
     const a5 = await open(A, "#me=" + cpk); await wait(1500);
