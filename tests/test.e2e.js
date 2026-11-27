@@ -355,7 +355,8 @@ async function routeMB(p) {
     await p.click("[data-export]"); await p.waitForTimeout(100);
     check(tag + " 書き出しの知らせ", /書き出しました/.test(await p.textContent("#toast")));
     check(tag + " ウォレットの説明は、ふだんは出さない", !/開発者を募集/.test(await p.textContent("#sheet")));
-    await p.evaluate(() => document.querySelector("#dcard .back .wal [data-wallet]").click()); await p.waitForTimeout(100);
+    await p.click("#dcard [data-flip]"); await p.waitForTimeout(700);
+    await p.click("#dcard .back .wal [data-wallet]"); await p.waitForTimeout(150);
     check(tag + " 裏のウォレット（開発中）を押したときだけ、説明と開発者募集", /開発者を募集/.test(await p.textContent("#over")) && /シードフレーズ/.test(await p.textContent("#over")));
     await p.click("#over [data-overclose]");
     check(tag + " ウォレットには jeni の印を使わない・受け取る/送るは大きく（裏の右側の下 0.382）", !(await p.$("#dcard .wal .coin")) && await p.evaluate(() => { const w = document.querySelector("#dcard .wal").getBoundingClientRect(), c = document.querySelector("#dcard .back").getBoundingClientRect(), b = document.querySelector("#dcard .wal .wb button").getBoundingClientRect(); return Math.abs(w.height / c.height - 0.382) < .03 && b.height > c.height * .2; }));
@@ -379,20 +380,22 @@ async function routeMB(p) {
     const wv2 = await id("Ambient Waves");
     await p.selectOption("#who", K("d")); await p.waitForTimeout(100);
     await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(150);
-    check(tag + " QRを出す：払うQR 1つだけ（読むと 持つ・投げ銭）、読んでも jeni は動かないと書いてある", /払うQR/.test(await p.textContent("#over h2")) && !(await p.$("#over [data-qk]")) && /読むと：持つ.*投げ銭/.test(await p.textContent("#over")) && /読んだだけで jeni は動きません/.test(await p.textContent("#over")));
+    check(tag + " 作った人のボタンは「QRで受け取る」：読んだ人に 持つ・投げ銭、読んでも jeni は動かないと書いてある", /QRで受け取る/.test(await p.textContent("#over h2")) && !(await p.$("#over [data-qk]")) && /読んだ人の画面に：持つ.*投げ銭/.test(await p.textContent("#over")) && /読んだだけで jeni は動きません/.test(await p.textContent("#over")) && !!(await p.$("#over [data-qrwatch] .qth")));
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
     const qb = await bal();
-    check(tag + " 払うQRを読むと、カードを開かずに 持つ と 投げ銭 が1つの画面に", !!(await p.$('#over [data-lp="qtip"]')) && (!!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over"))) && await p.evaluate(() => document.getElementById("sheet").hidden));
+    check(tag + " QRを読んだ人の画面は「QRで払う」：カードを開かずに 持つ と 投げ銭 が1つに", /QRで払う/.test(await p.textContent("#over h2")) && !!(await p.$('#over [data-lp="qtip"]')) && (!!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over"))) && await p.evaluate(() => document.getElementById("sheet").hidden));
     const qn = +(await p.textContent("#over [data-tipstep]")); await lp('#over [data-lp="qtip"]');
-    check(tag + " 長押しで投げ銭（額のとおり）", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")));
+    check(tag + " 長押しで投げ銭（額のとおり）・小さなカードに jeni が入る動き", await bal() === qb - qn && /贈りました/.test(await p.textContent("#over")) && !!(await p.$("#over .qth.got .qc")));
+    await p.click("#over [data-overclose]"); await p.waitForTimeout(500);
+    check(tag + " 閉じると QR を出していた人の画面に戻り、同じ動きで「投げ銭が届きました」", /投げ銭が届きました/.test(await p.textContent("#qr-got")) && !!(await p.$("#over [data-qrwatch] .qth.got")));
     await p.click("#over [data-overclose]");
     await p.selectOption("#who", K("d")); await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(100);
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
     { const hb = await bal(), can = !!(await p.$('#over [data-lp="qhold"]'));
       if (can) await lp('#over [data-lp="qhold"]');
-      check(tag + " 払うQRから長押しで持つ（持っていなければ）", !can || (/持ちました/.test(await p.textContent("#over")) && await bal() < hb)); }
-    check(tag + " きまり：QRは3つ（開く・払う・受け取る）", await p.evaluate(() => { document.querySelector("[data-overclose]") && document.querySelector("[data-overclose]").click(); return true; }) && true);
-    await p.click("[data-overclose]").catch(() => {}); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
+      check(tag + " QRで払う画面から長押しで持つ（持っていなければ）", !can || (/持ちました/.test(await p.textContent("#over")) && await bal() < hb)); }
+    await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); });
+    await p.click("[data-overclose]").catch(() => {}); await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); }); await p.selectOption("#who", K("a")); await p.waitForTimeout(100);
     // 直す・取り下げる（作った人だけ）
     await p.click("[data-make]"); await p.click(".mk-g button:nth-child(2)"); await p.click('.mk-k [data-mk="text"]'); await p.fill("#m-title", "試しの文"); await p.fill("#m-body", "はじめの文"); await p.click("[data-create]"); await p.waitForTimeout(200);
     const tx = await id("試しの文");
@@ -468,7 +471,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /払うQR/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));

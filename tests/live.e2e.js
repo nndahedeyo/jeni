@@ -177,7 +177,7 @@ async function relay(page) {
     await bpT.close(); void tn;
     // ---- 払うQR（#pay=カード）：読むと 持つ と 投げ銭 が1つの画面に ----
     const bpP = await open(B, "#pay=" + cardId); await wait(1200);
-    check("払うQR（#pay=カード）を読むと、持つ・投げ銭が1つの画面", !!(await bpP.$('#over [data-lp="qtip"]')) && (!!(await bpP.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await bpP.textContent("#over"))) && /払う/.test(await bpP.textContent("#over h2")));
+    check("払うQR（#pay=カード）を読むと、持つ・投げ銭が1つの画面", !!(await bpP.$('#over [data-lp="qtip"]')) && (!!(await bpP.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await bpP.textContent("#over"))) && /QRで払う/.test(await bpP.textContent("#over h2")));
     await bpP.close();
     // ---- 写真のアルバム：1枚ずつ置き場へ（位置などは消して）、カードには小さな表だけ ----
     await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.click("[data-overclose]").catch(() => {});

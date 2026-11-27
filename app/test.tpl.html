@@ -199,7 +199,7 @@ button:focus-visible,.line:focus-visible,select:focus-visible,input:focus-visibl
 .fline{margin:0 2px;font-size:12px;color:var(--mute);line-height:1.6}
 .note1{margin:0 2px;font-size:14px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pg .body{margin:0;padding:12px 14px;border-radius:14px;background:var(--t-text);font-size:14px;line-height:1.9;max-height:34dvh;overflow:auto}
-.qrbox{width:min(70vw,260px);margin:0 auto;background:#fff;padding:10px;border-radius:12px}.qrbox svg{width:100%;height:auto;display:block}
+.qrbox{width:min(70vw,260px);margin:0 auto;background:#fff;padding:10px;border-radius:12px}.qrbox small{color:#5b5446}.qrbox svg{width:100%;height:auto;display:block}
 .qhead{display:flex;gap:10px;align-items:center}.qhead b{display:block;font-size:15px}.qhead small{color:var(--mute);font-size:12px}.qth{width:56px;height:56px;border-radius:12px;background:var(--sunk) center/cover;display:grid;place-items:center;flex:none;color:var(--mute)}
 .recv{display:flex;flex-wrap:wrap;gap:8px}
 .basic{display:grid;gap:4px}.basic .bl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;font-weight:600}.basic .bl .coin{width:15px;height:15px;vertical-align:-3px;margin-right:2px}.basic .fline{margin:0}
@@ -230,6 +230,10 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .over .grab{width:40px;height:4px;border-radius:2px;background:var(--line)}
 .over .x{z-index:3;position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:8px;width:36px;height:36px;border:0;background:none;color:var(--mute);font-size:22px}
 .bigimg{width:100%;border-radius:14px;display:block}
+.qth{position:relative}.qth.got{animation:qgot 1.6s ease both}.qth .qc{position:absolute;left:50%;top:0;width:24px;height:24px;pointer-events:none;animation:qdrop 1s cubic-bezier(.3,1.3,.5,1) both}.qth .qc svg{width:100%;height:100%}
+@keyframes qgot{0%{transform:scale(1)}35%{transform:scale(1.14);box-shadow:0 0 0 3px #e2b64e,0 0 22px rgba(226,182,78,.95)}100%{transform:scale(1);box-shadow:0 0 0 2px #e2b64e}}
+@keyframes qdrop{0%{transform:translate(-50%,-30px) scale(.6);opacity:0}55%{opacity:1}100%{transform:translate(-50%,12px) scale(.9);opacity:0}}
+.qdone{margin:0;font-size:15px;font-weight:700;color:var(--ink)}.qwatch .qhead{margin-bottom:4px}
 .vcall{position:relative;border-radius:14px;overflow:hidden;background:#111;height:min(52dvh,110vw);margin:30px auto 0;width:100%}.vcall+.call{padding:10px 0 4px}.vcall+.call .row2{display:flex;gap:8px}.vcall #rtc-v{width:100%;height:100%;object-fit:cover;display:block}.vcall #rtc-me{position:absolute;right:8px;bottom:8px;width:28%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#333;border:1px solid rgba(255,255,255,.4)}.vcall .vnote{position:absolute;inset:auto 0 45% 0;text-align:center;color:#ddd;font-size:13px}
 .gamt{display:flex;align-items:center;gap:8px}.gamt input{width:8em;font:inherit;font-size:18px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .jc2 .bgimg.nxt{animation:afade 1.4s ease both}@keyframes afade{from{opacity:0}to{opacity:1}}
@@ -722,7 +726,7 @@ function pageHtml(c) {
   if (c.hidden) main = `<span class="sub warnc">知らせが${RULE.flagsToHide}件あり、隠されました</span>`;
   const canRedeem = lim && !c.handover && my.some(x => !x.used);
   // 持つ＝受け取れる：デジタルは元のデータ、現物は引き換え（QR）
-  const recv = canRedeem ? `<button type="button" class="pill go" data-redeem="${c.id}">${{event: "入る（参加券のQR）", service: "受ける（券のQR）"}[c.kind] || "受け取る（引き換えのQR）"}</button>`
+  const recv = canRedeem ? `<button type="button" class="pill go" data-redeem="${c.id}">${{event: "QRで入る", service: "QRで受ける"}[c.kind] || "QRで引き換える"}</button>`
     : my.length && c.kind === "app" ? `<button type="button" class="pill go" data-openapp="${c.id}">${icon("app")}アプリを開く</button>`
     : my.length && !lim && !BUNDLE.includes(c.kind) ? `<button type="button" class="pill" data-orig="${c.id}">元のデータを受け取る</button>` : "";
   const info = AT.includes(c.kind) && (c.when || c.place || c.geo || c.kind !== "rwa") ? `<dl class="kv pjk">${c.when ? `<dt>${c.kind === "shop" ? "営業" : "日時"}</dt><dd>${esc(c.when)}</dd>` : ""}${c.place ? `<dt>${c.kind === "rwa" ? "受け取り" : "場所"}</dt><dd>${esc(c.place)}</dd>` : ""}${c.kind === "event" || c.kind === "service" ? `<dt>${c.kind === "event" ? "定員" : "枠"}</dt><dd>残り ${c.left} / ${c.supply}</dd>` : ""}</dl>${c.geo ? mapSvg([{g: c.geo, t: c.title}]) : ""}` : "";
@@ -736,7 +740,7 @@ function pageHtml(c) {
   // どのカードも同じ並び：カード → 人・投げ銭・持つ → 受け取る（あれば）→「くわしく」（説明・場所・つながり・記録・直す）
   const own = isMe ? `<div class="own">${RETIRE === c.id
       ? `<span class="sub">${c.copies.length ? "持っている人がいるので、受付を終えます（持っている人のものはそのまま）。" : "だれも持っていないので、カードは消えます。"}</span><button type="button" class="pill warn" data-retire="${c.id}">取り下げる</button><button type="button" class="pill" data-retireno>やめる</button>`
-      : `<button type="button" class="pill" data-edit="${c.id}">直す</button>${c.hidden || c.closed ? "" : `<button type="button" class="pill" data-qrshow="${c.id}">払うQR</button>`}${c.closed ? `<span class="sub">受付を終えています</span>` : `<button type="button" class="pill" data-retireask="${c.id}">取り下げる</button>`}`}</div>` : "";
+      : `<button type="button" class="pill" data-edit="${c.id}">直す</button>${c.hidden || c.closed ? "" : `<button type="button" class="pill" data-qrshow="${c.id}">QRで受け取る</button>`}${c.closed ? `<span class="sub">受付を終えています</span>` : `<button type="button" class="pill" data-retireask="${c.id}">取り下げる</button>`}`}</div>` : "";
   // どのカードも同じ並び：カード → 人・投げ銭・持つ → 基本（値段・残り・持っている人・jeni の行き先・記録）→ 受け取る → そのカードだけの「くわしく」
   const canTip = !isMe && u.member && !c.hidden;
   const tip = canTip ? `<span class="tipc"><button type="button" class="tipamt" data-tipstep="${c.id}" aria-label="投げ銭の額を変える（いま ${tipAmt(c.id)} jeni）">${tipAmt(c.id)}</button>${lpBtn("tip", c.id, `${coin()}投げ銭<small>長押し</small>`)}</span>` : "";
@@ -960,7 +964,7 @@ function redeemSheet(id) {
   emit(me, {t: "redeem", card: id, lock: sha256hex(code), until: clock + 300});
   RD = {id, code, holder: me};
   const evt = c.kind === "event" || c.kind === "service";
-  openOver(`<h2 class="rh">受け取るQR・${evt ? "入る" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
+  openOver(`<h2 class="rh">QRで${evt ? "入る" : c.kind === "service" ? "受ける" : "引き換える"}</h2><p class="sub">${evt ? "受付（作った人）" : "お店（作った人）"}に、この QR を読んでもらいます。一度きりで、すこしのあいだだけ使えます。</p>
     <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#used=${id}.${code}`, "q")}</div><b>${esc(c.title)}</b></div>
     ${LIVE ? `<p class="sub" style="text-align:center;font-size:12px">読めないときの番号：<b style="letter-spacing:.08em">${code}</b></p>` : `<button type="button" class="pill go" data-shopread="${id}">見本：${esc(nameOf(c.by))} さん（${evt ? "受付" : "お店"}）として読む</button>`}`);
 }
@@ -1312,14 +1316,14 @@ function rules() {
       <li><b>はじまり</b>認められて（招待のリンク・QRからも）参加すると、${RULE.start.toLocaleString("ja-JP")} jeni が届きます。1人が認めて・招待してあげられるのは合わせて${RULE.vouchMax}人まで。カードを作れるのは参加している人です。</li>
       <li><b>持つ</b>持つと、カードに書かれたものを受け取れます。データは元のデータを何度でも、現物はそのものを1回、イベントは参加を1回、体験・サービスは受けるのを1回。お店・会社や団体・プロジェクト（つなぐカード）は無料で、持つと常連・会員・仲間になり、いつでもやめられます。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わりません。</li>
       <li><b>譲る</b>数に限りのあるカードは、持っている人から同じ値段で譲り受けます。jeni は手放した人へ戻ります。</li>
-      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ（鍵をかけて持っている人はのぞく）。受け取るとなくなるもの（現物など数に限りのあるカード）と、つなぐカードは、全額が作った人へ。</li>
+      <li><b>投げ銭</b>半分は作った人へ、半分は持っている人へ（鍵をかけて持っている人はのぞく：分け前の動きから、どのカードを持っているかが分かってしまうため）。受け取るとなくなるもの（現物など数に限りのあるカード）と、つなぐカード（常連・会員・仲間は無料でだれでもなれるため）は、全額が作った人へ。</li>
       <li><b>上限</b>同じカードは${RULE.capPaid}枚まで（無料のカードは${RULE.capFree}枚まで）。使うか贈ると、また持てます。</li>
     </ol>
     <p class="rnote"><b>会話・友達・知らせる</b>　カードの会話は、参加している人ならだれでも書けます（輪のカードは輪の人だけ）。2人だけの会話と通話（ビデオ通話も）は、お互いに友達のときだけ（残高の下の吹き出しと受話器、または相手のカードから）。危ないカードや会話は、実績のある別々の人${RULE.flagsToHide}人の知らせで隠れます。現物・イベント・体験は、持っている人が出す一度きりのQRを作った人が読んで、受け取り・参加・受けたことにします。</p>
     <p class="rnote"><b>QRは3つ</b>　どのQRも、読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。<br>
-      ・開く：カードの裏・プロフィールのQR。カードや人が開きます（紹介・友達になる・参加を認める）<br>
-      ・払う：作った人・売る人が出すQR。読んだ人の画面に「持つ」と「投げ銭」が出ます（その場で売るときは5分・1回だけ）<br>
-      ・受け取る：持っている人が出し、作った人が読むQR（引き換え・入場）<br>招待は一度きりのリンクで送ります（QRにもできます）。</p>
+      ・カードの裏・プロフィールのQR：カードや人が開きます（紹介・友達になる・参加を認める）<br>
+      ・QRで受け取る：作った人・売る人が出すQR。読んだ人の画面に「持つ」と「投げ銭」が出て、長押しすると jeni が出した人に届きます（その場で売るときは5分・1回だけ）<br>
+      ・QRで引き換える（入る・受ける）：持っている人が出し、作った人が読むQR。現物の受け取り・入場・体験に<br>決まると、両方の画面の小さなカードが同じように光ります。招待は一度きりのリンクで送ります（QRにもできます）。</p>
     <p class="rnote"><b>直す・取り下げる</b>　作った人は、題・説明・日時・場所・画像を直せます（値段・数・種類は直せません）。取り下げると、だれも持っていないカードは消え、持っている人がいるカードは受付を終えます（持っている人のものはそのまま）。自分の書いた会話は消せます。直した・消したことは記録に残ります。</p>
     <p class="rnote"><b>見えるもの・隠れるもの</b>　だれがだれに何 jeni 払ったかは、確かめ合うために記録に残り、だれでも見られます（番号と、その人が決めた名前で）。「画面に出さない」はアプリに出さないだけで、記録を調べれば分かります。「鍵をかける」（数に限りのないカードだけ）と、どのカードかは本人と作った人にしか分かりません。仲間の輪の中身（写真・音・動画も）は、輪の人にしか読めません。ただし、輪の人が自分の端末に保存したり、輪から外れた人がそれまでに見たものを持っていたりすることは防げません。2人だけの会話・通話も同じで、相手の手元に残ることは防げません。</p>
     <p class="rnote"><b>贈る</b>　jeni や持っているカードを、参加している人に直接届けられます（残高の下の贈り物の印か、相手のプロフィールカードから・長押しで決める）。贈ると取り消せません。だれからだれへ何を贈ったかは記録に残ります。</p>
@@ -1405,7 +1409,7 @@ const GUIDE = [
   ["カードのページ", "どのカードも同じ並び：カード → 作った人・投げ銭・持つ → 値段・残り・持っている人・jeni の行き先 → 受け取る →「くわしく・記録」（そのカードだけの話と、持っている人・譲る・贈る・記録）。", () => { me = AS("kenji"); detail(cardBy("畑の収穫体験").id); }],
   ["投げ銭は1か所で", "額を押すと 1→5→10→20 と変わり（最初に届く 1,000 jeni に合わせた段）、となりを長押しで贈ります。", () => { me = AS("kenji"); detail(cardBy("Ambient Waves").id); }],
   ["全画面", "カードのページの右上「全画面」。写真・動画は画面いっぱいに、1枚ずつめくれます。", () => { me = AS("kenji"); detail(cardBy("畑の一日").id); }],
-  ["QRは3つ：開く・払う・受け取る", "開く＝カードの裏・プロフィール。払う＝作った人のカードの「払うQR」（読んだ人の画面に 持つ と 投げ銭 が1つに出る）・その場で売るQR。受け取る＝持っている人が出し、作った人が読む。読んだだけで jeni は動きません。", () => { me = AS("sound"); detail(cardBy("Ambient Waves").id); qrShowSheet(cardBy("Ambient Waves").id); }],
+  ["QRは3つ", "カードの裏・プロフィールのQR＝開く。作った人のカードの「QRで受け取る」＝読んだ人の画面に 持つ と 投げ銭 が1つに出る（その場で売るQRも同じ）。持っている人の「QRで引き換える」＝作った人が読む。決まると両方の小さなカードが光ります。",  () => { me = AS("sound"); detail(cardBy("Ambient Waves").id); qrShowSheet(cardBy("Ambient Waves").id); }],
   ["アルバム", "写真のカードに20枚まで。カードの表でゆっくり自動でめくれ、押すと大きく1枚ずつ。", () => { me = AS("kenji"); detail(cardBy("田んぼと畑の朝").id); }],
   ["贈る", "残高の下の贈り物の印、または相手のプロフィールカードから。jeni や持っているカードを、相手に直接届けます（長押しで決める・取り消せない）。届いた贈り物はお知らせに。", () => { me = AS("kenji"); giftList(); }],
   ["ビデオ通話", "お互いに友達の人と。相手のプロフィールカードか電話の一覧のカメラの印から。受ける人は「ビデオで出る」か「声だけで出る」を選べます。", () => { me = AS("kenji"); phoneList(); }],
@@ -1492,7 +1496,13 @@ document.addEventListener("click", e => {
   if (q("[data-rules]")) return rules();
   if (q("[data-me]")) return meCard();
   if ((b = q("[data-vouchby]"))) { const before = U().member; emit(b.dataset.vouchby, {t: "vouch", who: me}); if (!before && U().member) return joined(); return toast("認められませんでした"); }
-  if (q("[data-overclose]") || e.target.id === "scrim") { closeOver(); const h = $("sheet").querySelector("h2.rh"); if (h && h.textContent === "話す") chatList(); return; }
+  if (!LIVE && QRBACK && q("[data-overclose]") && $("over").querySelector(".qdone")) {   // 見本：QRを出していた人の画面に戻ると、同じ動きで届いたことが分かる
+    const k = QRBACK; QRBACK = null; me = k.me; closeOver(); home(); detail(k.id); qrShowSheet(k.id, k); return setTimeout(qrSync, 300); }
+  if (q("[data-overclose]") || e.target.id === "scrim") { QRBACK = null; closeOver(); const h = $("sheet").querySelector("h2.rh"); if (h && h.textContent === "話す") chatList(); return; }
+  // 裏のウォレット：押したときだけ説明（裏を押すと表に戻る、より先に）
+  if (q("[data-wallet]")) return openOver(`<h2 class="rh">${icon("wallet")} ウォレット（開発中）</h2>
+    <p class="sub" style="line-height:1.8">ここでは、いずれ暗号資産を受け取るQRを出したり、相手に送ったりできるようにする予定です。ウォレットで扱うのは暗号資産で、jeni は扱いません（jeni は円や暗号資産とは交換できません）。安全を最優先に作るため、いまは使えません。<br>一緒に作ってくれる開発者を募集しています：<b>github.com/nndahedeyo/jeni</b></p>
+    <p class="sub" style="font-size:12px">${icon("lock")} jeni がシードフレーズや秘密の鍵をたずねることはありません。たずねてくる人や画面は、にせものです。</p>`);
   if (q("[data-flip]")) { const d = q(".jc2") || $("dcard"); if (d) d.classList.toggle("on"); return; }
   if ((b = q(".jc2.on")) && !q(".mark")) { b.classList.remove("on"); return; }
   if ((b = q("[data-cplay]"))) return cplay(b.dataset.cplay);
@@ -1521,9 +1531,6 @@ document.addEventListener("click", e => {
   if ((b = q("[data-giftp]"))) return giftTo(b.dataset.giftp);
   if ((b = q("[data-gamt]"))) { $("g-amt").value = b.dataset.gamt; return; }
   if (q("[data-camoff]")) { const t = RTC.stream && RTC.stream.getVideoTracks()[0]; if (t) { t.enabled = !t.enabled; q("[data-camoff]").textContent = t.enabled ? "カメラを切る" : "カメラを入れる"; } return; }
-  if (q("[data-wallet]")) return openOver(`<h2 class="rh">${icon("wallet")} ウォレット（開発中）</h2>
-    <p class="sub" style="line-height:1.8">ここでは、いずれ暗号資産を受け取るQRを出したり、相手に送ったりできるようにする予定です。ウォレットで扱うのは暗号資産で、jeni は扱いません（jeni は円や暗号資産とは交換できません）。安全を最優先に作るため、いまは使えません。<br>一緒に作ってくれる開発者を募集しています：<b>github.com/nndahedeyo/jeni</b></p>
-    <p class="sub" style="font-size:12px">${icon("lock")} jeni がシードフレーズや秘密の鍵をたずねることはありません。たずねてくる人や画面は、にせものです。</p>`);
   if (LIVE && q("[data-hang]")) { rtcEnd(true); closeOver(); return toast("通話を終えました"); }
   if ((b = q("[data-pickup]"))) return rtcAnswer(b.dataset.pickup === "v");
   if (q("[data-decline]")) { const i = RTC.inc; RTC.inc = null; if (i) sendCall(i.from, {cid: i.cid, ty: "end"}); return closeOver(); }
@@ -1561,7 +1568,7 @@ document.addEventListener("click", e => {
     try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {} return; }
   if (q("[data-editme]")) return meCard(true);
   if (q("[data-invite]")) return inviteSheet();
-  if ((b = q("[data-qas]"))) { const id = b.dataset.qid; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(id); }
+  if ((b = q("[data-qas]"))) { const id = b.dataset.qid, c = S.cards[id]; QRBACK = {me, id, n: qCount(c), t: c.tipped}; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(id); }
   if ((b = q("[data-qrshow]"))) return qrShowSheet(b.dataset.qrshow);
   if (q("[data-scan]")) return scanSheet();
   if (q("[data-scantext]")) { const t = ($("scan-t").value || "").trim(); scanStop(); closeOver(); return /^[0-9a-f]{16}$/.test(t) && sel && S.cards[sel] && S.cards[sel].by === me ? useCode(sel, t) : onScan(t); }
@@ -1608,26 +1615,44 @@ function lpStart(b) {
   lpT = setTimeout(() => { b.classList.remove("pressing"); lpT = null; lpDo(b.dataset.lp, b.dataset.id); }, LP_MS);
 }
 function lpCancel() { if (lpT) clearTimeout(lpT); lpT = null; document.querySelectorAll(".lp.pressing").forEach(x => x.classList.remove("pressing")); document.querySelectorAll(".jc2.drawing").forEach(x => x.classList.remove("drawing")); }
-// ---- QR は3つ：開く（カードの裏・プロフィール）・払う（作った人・売る人が出す）・受け取る（持っている人が出し、作った人が読む）----
-// 払うQR を読んだ人の画面には「持つ」と「投げ銭」が1つに出る。長押ししたときだけ jeni が動く（カードを開かずに済む）
+// ---- QR は3つ：開く（カードの裏・プロフィール）・QRで受け取る（作った人・売る人が出す）・QRで引き換える（持っている人が出し、作った人が読む）----
+// 「QRで受け取る」を読んだ人の画面には「持つ」と「投げ銭」が1つに出る。長押ししたときだけ jeni が動く（カードを開かずに済む）
+const qHead = c => { const m = MEDIA[c.id] || {}; return `<div class="qhead"><div class="qth" ${m.img ? `style="background-image:url('${m.img}')"` : ""}>${m.img ? "" : icon(kindIcon(c.kind))}</div><div><b>${esc(c.title)}</b><small>${whoTag(c.by)}</small></div></div>`; };
+// 決まったとき：小さなカードに jeni が入る動き（読んだ人の画面と、QRを出している人の画面で同じ）
+function qGot(root) { const t = root && root.querySelector(".qth"); if (!t) return; t.classList.remove("got"); void t.offsetWidth; t.classList.add("got"); t.querySelectorAll(".qc").forEach(x => x.remove()); t.insertAdjacentHTML("beforeend", `<span class="qc" aria-hidden="true">${coin()}</span>`); }
+function qDone(text, id) {
+  const o = $("over"); qGot(o);
+  o.querySelectorAll(".acts2,.fline,p.sub,.link").forEach(x => x.remove());
+  o.insertAdjacentHTML("beforeend", `<p class="qdone" role="status">${text}</p><div class="row2"><button type="button" class="big ghost" data-detail="${id}">カードを見る</button><button type="button" class="big" data-overclose>閉じる</button></div>`);
+}
+// QRを出している人の画面：だれかが読んで持った・投げ銭したら、同じ動きで知らせる
+const qCount = c => c.tipped + c.copies.length;
+function qrSync() {
+  const w = document.querySelector("#over [data-qrwatch]"); if (!w) return; const c = S.cards[w.dataset.qrwatch]; if (!c) return;
+  const n = qCount(c), was = +w.dataset.n; if (n <= was) return; w.dataset.n = n;
+  const tip = c.tipped > +w.dataset.t; w.dataset.t = c.tipped;
+  qGot(w); const g = $("qr-got"); if (g) g.textContent = tip ? "投げ銭が届きました" : `${KEEP[c.kind] ? KEEP[c.kind][0] + "が増えました" : "持たれました"}${c.price && !tip ? `（${c.price} jeni）` : ""}`;
+}
 function canHoldQR(c) { return !c.closed && !c.hidden && !c.lock && (c.supply == null || c.left > 0); }
-function qrShowSheet(id) {
+let QRBACK = null;   // 見本：読む人として試したあと、QRを出していた人に戻る
+function qrShowSheet(id, prev = null) {
   const c = S.cards[id], hold = canHoldQR(c), hl = KEEP[c.kind] ? KEEP[c.kind][1] : `持つ（${c.price ? c.price + " jeni" : "無料"}）`;
-  openOver(`<h2 class="rh">払うQR</h2>
-    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#pay=${id}`, "q")}</div><b>${esc(c.title)}</b><small>読むと：${hold ? `${hl}・` : ""}投げ銭</small></div>
-    <p class="sub" style="font-size:12px">路上ライブ・展示・ポスター・受付・お店のレジ横などに。印刷して貼っても使えます。読んだだけで jeni は動きません（読んだ人が自分の画面で長押ししたときだけ）。</p>
+  openOver(`<h2 class="rh">QRで受け取る</h2>
+    <div class="qwatch" data-qrwatch="${id}" data-n="${prev ? prev.n : qCount(c)}" data-t="${prev ? prev.t : c.tipped}">${qHead(c)}<p class="qdone" id="qr-got" role="status" aria-live="polite"></p></div>
+    <div class="qrbox"><div class="qrwrap">${qrSvg(`${BASE}#pay=${id}`, "q")}</div><small>読んだ人の画面に：${hold ? `${hl}・` : ""}投げ銭</small></div>
+    <p class="sub" style="font-size:12px">読んだ人が長押しすると、jeni があなたに届き、上の小さなカードが光ります。路上ライブ・展示・ポスター・受付・お店のレジ横などに。印刷して貼っても使えます。読んだだけで jeni は動きません。</p>
     ${LIVE ? "" : `<section class="box"><h3>見本：読む人として</h3>${Object.values(S.users).filter(x => x.member && x.pk !== me).slice(0, 3).map(x => `<div class="who-row">${whoTag(x.pk)}<button type="button" class="pill go" data-qas="${x.pk}" data-qid="${id}">読む</button></div>`).join("")}</section>`}`);
 }
 function quickSheet(id) {
   const c = S.cards[id]; if (!c) return toast("カードを探しています…");
   const u = U(), m = MEDIA[id] || {};
-  const head = `<div class="qhead"><div class="qth" ${m.img ? `style="background-image:url('${m.img}')"` : ""}>${m.img ? "" : icon(kindIcon(c.kind))}</div><div><b>${esc(c.title)}</b><small>${whoTag(c.by)}</small></div></div>`;
-  if (!u.member) return openOver(`<h2 class="rh">払う</h2>${head}<p class="sub">参加すると使えます。</p>`);
+  const head = qHead(c); void m;
+  if (!u.member) return openOver(`<h2 class="rh">QRで払う</h2>${head}<p class="sub">参加すると使えます。</p>`);
   if (c.by === me) return toast("自分のカードです");
   const full = mine(c).length >= capOf(c), hold = !full && canHoldQR(c) && !c.hidden;
   const holdRow = hold ? `<div class="acts2">${lpBtn("qhold", id, KEEP[c.kind] ? `${KEEP[c.kind][1]}<small>長押し</small>` : `${coin()}${c.price ? c.price : "無料"}<small>長押しで持つ</small>`, "go")}</div>` : `<p class="sub">${full ? `もう持っています（${capOf(c)}枚まで）` : "いまは持てません（受付終了・残りなし）"}</p>`;
   const tipRow = c.hidden ? "" : `<div class="acts2"><span class="tipc"><button type="button" class="tipamt" data-tipstep="${id}" aria-label="投げ銭の額を変える">${tipAmt(id)}</button>${lpBtn("qtip", id, `${coin()}投げ銭<small>長押し</small>`)}</span></div>`;
-  openOver(`<h2 class="rh">払う</h2>${head}${holdRow}${hold ? `<p class="fline">${flowLine(c)}</p>` : ""}${tipRow}${tipRow && !hold ? `<p class="fline">投げ銭は${c.supply != null || KEEP[c.kind] ? `全額 ${esc(nameOf(c.by))} さんへ` : `半分は ${esc(nameOf(c.by))} さんへ、半分は持っている人へ`}・額を押すと変わります</p>` : ""}<button type="button" class="link" data-detail="${id}" style="justify-self:start">カードを見る</button>`);
+  openOver(`<h2 class="rh">QRで払う</h2>${head}${holdRow}${hold ? `<p class="fline">${flowLine(c)}</p>` : ""}${tipRow}${tipRow && !hold ? `<p class="fline">投げ銭は${c.supply != null || KEEP[c.kind] ? `全額 ${esc(nameOf(c.by))} さんへ` : `半分は ${esc(nameOf(c.by))} さんへ、半分は持っている人へ`}・額を押すと変わります</p>` : ""}<button type="button" class="link" data-detail="${id}" style="justify-self:start">カードを見る</button>`);
 }
 function lpDo(act, id) {
   if (act === "gsend") { const n = parseInt(($("g-amt") || {}).value, 10), bal = U().bal;
@@ -1638,13 +1663,14 @@ function lpDo(act, id) {
   if (act === "gcard") { const [cid, pk] = id.split(":"), c = S.cards[cid]; emit(me, {t: "gift", card: cid, to: pk});
     if (!S.cards[cid].copies.some(x => x.owner === pk)) return toast("贈れませんでした（きまりに合いません）");
     return openOver(`<div class="done">${icon("gift")}<h2 class="rh">贈りました</h2><p class="sub">「${esc(c.title)}」を ${esc(nameOf(pk))} さんへ</p></div><button type="button" class="big" data-overclose>閉じる</button>`); }
-  if (act === "qtip") { const n = tipAmt(id); if (n > U().bal) return toast("jeni が足りません"); emit(me, {t: "tip", card: id, amount: n});
-    return openOver(`<div class="done">${coin()}<h2 class="rh">${n} jeni を贈りました</h2><p class="sub">${esc(S.cards[id].title)}・${esc(nameOf(S.cards[id].by))} さんへ</p></div><button type="button" class="big" data-overclose>閉じる</button>`); }
+  if (act === "qtip") { const n = tipAmt(id); if (n > U().bal) return toast("jeni が足りません"); const t0 = S.cards[id].tipped; emit(me, {t: "tip", card: id, amount: n});
+    if (S.cards[id].tipped === t0) return toast("投げ銭できませんでした（きまりに合いません）");
+    return qDone(`${n} jeni を贈りました・${esc(nameOf(S.cards[id].by))} さんへ`, id); }
   if (act === "qhold") { const c = S.cards[id], before = mine(c).length; if (c.price > U().bal) return toast("jeni が足りません");
     return holdEmit(c).then(() => lpDo("qheld", id + ":" + before)); }
   if (act === "qheld") { const [cid, before] = id.split(":"), c = S.cards[cid]; id = cid;
     if (mine(S.cards[id]).length === +before) return toast("持てませんでした（きまりに合いません）");
-    return openOver(`<div class="done">${coin()}<h2 class="rh">${KEEP[c.kind] ? KEEP[c.kind][0] + "になりました" : "持ちました"}</h2><p class="sub">${esc(c.title)}${c.price ? `・${c.price} jeni → ${esc(nameOf(c.by))} さんへ` : ""}</p></div><button type="button" class="big" data-detail="${id}">カードを見る</button>`); }
+    return qDone(`${KEEP[c.kind] ? KEEP[c.kind][0] + "になりました" : "持ちました"}${c.price ? `・${c.price} jeni → ${esc(nameOf(c.by))} さんへ` : ""}${prefVis(c) === "lock" ? "（鍵つき）" : ""}`, id); }
   if (act === "buy") { const [cid, code] = id.split("."), c = S.cards[cid]; if (c.price > U().bal) return toast("jeni が足りません");
     emit(me, {t: "hold", card: cid, code, vis: "show"}); if (!S.cards[cid].copies.some(x => x.owner === me)) return toast("払えませんでした（期限切れか、もう払われています）");
     return openSheet(`<div class="done">${coin()}<h2 class="rh">払い終わりました</h2><p class="sub">${c.price} jeni が ${esc(nameOf(c.by))} さんに届きました。受け取り済みのカードが、レシートとして手元に残ります。</p></div><button type="button" class="big" data-detail="${cid}">レシート（カード）を見る</button><button type="button" class="back" data-close style="margin:0 auto">${icon("back")}一覧へ</button>`); }
@@ -1771,7 +1797,7 @@ function liveRefresh() {
     if (typing) return;
     if ($("sheet").hidden) home();
     else if ($("sheet").classList.contains("feed") && sel && $("pg-" + sel) && $("over").hidden) refreshPage(sel);
-    netBadge();
+    netBadge(); qrSync();
   }, 150);
 }
 function netBadge() { const t = document.querySelector(".tbar .tag"); if (t) { const on = LV.online(); t.textContent = on ? "試験運用・つながっています" : "試験運用・つないでいます…"; t.classList.toggle("on", on); } }
@@ -1869,7 +1895,7 @@ function rtcEnd(tell = true) {
 /* ---- QR を読む（読めるブラウザではカメラで。読めないときは、スマホのカメラで読むか、番号を入れる） ---- */
 let scanStream = null, scanLoop = null;
 async function scanSheet() {
-  openOver(`<h2 class="rh">QRを読む</h2><p class="sub">開く（カード・人）・払う・受け取るのQRを読めます。読んだだけで jeni は動きません。</p>
+  openOver(`<h2 class="rh">QRを読む</h2><p class="sub">カード・人を開くQR、「QRで受け取る」「QRで引き換える」のQRを読めます。読んだだけで jeni は動きません。</p>
     <video id="scanv" playsinline muted style="width:100%;border-radius:12px;background:#000;aspect-ratio:1;object-fit:cover"></video>
     <p class="sub" id="scan-m" style="font-size:12px"></p>
     <label class="fl">読めないときは、QRの下の文字を入れる<input id="scan-t" placeholder="https://… または番号"></label><button type="button" class="pill go" data-scantext>読む</button>`);
