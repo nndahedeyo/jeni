@@ -328,3 +328,11 @@ test("鍵をかけて持つ（封）：記録には払った額と相手だけ�
   assert.equal(S.users[C].bal, 950); assert.equal(S.users[B].bal, 1050); assert.equal(S.sealed.length, 1);
   assert.ok(!JSON.stringify(S.sealed).includes("card"));
 });
+test("版2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人で等しく分ける（仲間になっただけの人には分けない）", () => {
+  const pj = ev(A, 10, {t: "card", kind: "project", title: "畑", price: 0}), cb = ev(B, 11, {t: "card", kind: "text", title: "B の文", price: 0}), cc = ev(C, 12, {t: "card", kind: "text", title: "C の文", price: 0});
+  const e = [...base(), pj, cb, cc, ev(B, 13, {t: "attach", project: pj.id, card: cb.id}), ev(C, 14, {t: "attach", project: pj.id, card: cc.id}), ev(D, 15, {t: "hold", card: pj.id})];
+  const S2 = reduce([...e, ev(A, 16, {t: "vouch", who: D}), ev(D, 17, {t: "tip", card: pj.id, amount: 100, v: 2})], 30, opt);
+  assert.equal(S2.users[B].bal, 1025); assert.equal(S2.users[C].bal, 1025); assert.equal(S2.users[A].bal, 1050); assert.equal(S2.users[D].bal, 900);
+  const S1 = reduce([...e, ev(A, 16, {t: "vouch", who: D}), ev(D, 17, {t: "tip", card: pj.id, amount: 100})], 30, opt);   // 版1の出来事は前のまま（全額が作った人へ）
+  assert.equal(S1.users[A].bal, 1100); assert.equal(S1.users[B].bal, 1000);
+});

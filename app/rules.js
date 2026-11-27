@@ -6,12 +6,13 @@
 //  2 持つ　　：持つと、カードに書かれたものを受け取れる。作った人から持つと、値段の分の jeni が作った人へ。値段はずっと変わらない
 //             （デジタルは元のデータを何度でも。現物はそのものを1回。受け取るとなくなるものは「使った」になる）
 //  3 譲る　　：数に限りのあるカードは、持っている人から同じ値段で譲り受ける。jeni は手放した人へ
-//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。受け取るとなくなるもの（数に限りのあるカード）と、つなぐカードは全額が作った人へ
+//  4 投げ銭　：半分は作った人へ、半分は持っている人へ（枚数に応じて）。受け取るとなくなるもの（数に限りのあるカード）と、お店・会社や団体は全額が作った人へ。
+//             プロジェクトは、半分を自分のカードをつないで育てた人で等しく分ける（版2から）
 //  5 上限　　：同じカードは3枚まで（無料のカードは1枚まで）。使うか贈ると、また持てる
 "use strict";
 (function (root) {
   const R = {
-    version: 1,         // きまりの版。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
+    version: 2,         // きまりの版（2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人へ）。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
     start: 1000,        // 参加したときに届く jeni（配る量は使われ方を見て変わることがある。変わるときも全員に同じきまり）
     vouchMax: 3,        // 1人が認められる人数
     capPaid: 3,         // 同じカードを持てる数
@@ -315,6 +316,8 @@
         if (!me.member || e.pubkey === card.by || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;   // 自分のカードには投げ銭しない
         const holders = {};
         if (card.supply == null && !BUNDLE.includes(card.kind)) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
+        // 版2から：プロジェクトは、自分のカードをつないで育てた人（作った人のほか）で半分を等しく分ける。仲間になっただけの人には分けない
+        if (card.kind === "project" && (c.v || 1) >= 2) for (const it of card.items) if (it.by !== card.by && U(it.by).member) holders[it.by] = 1;
         const n = Object.values(holders).reduce((a, b) => a + b, 0);
         me.bal -= c.amount;
         let toCreator = c.amount;
