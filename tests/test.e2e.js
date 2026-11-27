@@ -29,7 +29,7 @@ async function routeMB(p) {
 (async () => {
   const b = await chromium.launch();
   for (const [w, cs] of [[390, "dark"], [320, "light"]]) {
-    const p = await b.newPage({viewport: {width: w, height: 844}, colorScheme: cs, deviceScaleFactor: SHOT ? 2 : 1, hasTouch: true}); const errs = []; if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); });
+    const p = await b.newPage({locale: process.env.LANG_EN ? "en-US" : "ja-JP", viewport: {width: w, height: 844}, colorScheme: cs, deviceScaleFactor: SHOT ? 2 : 1, hasTouch: true}); const errs = []; if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); });
     // 「くわしく」の中にあるものを押すときは、人と同じように先に「くわしく」を開く
     const click0 = p.click.bind(p);
     const rec = async id => { await p.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (!d.open) d.querySelector("summary").click(); }, id); await p.waitForTimeout(150); };
