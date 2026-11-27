@@ -192,7 +192,7 @@ async function routeMB(p) {
     check(tag + " 会話の名前から、その人のカード", await p.evaluate(() => document.getElementById("over").hidden && /プロフィール/.test(document.getElementById("sheet").textContent)));
     await p.click("#sheet [data-close]");
     // 自分のプロフィールカードから「話す」：お互いに友達の人の一覧 → 会話・通話
-    check(tag + " 残高の下に、電話・会話・贈る・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="phones"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "phones,chats,gifts,news,set" && r.width <= 30; }));
+    check(tag + " 残高の下に、電話・会話・贈る・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="phones"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "phones,chats,gifts,news" && r.width <= 30; }));
     check(tag + " 不在着信と新しい会話は、数ではなく小さな赤い印", !!(await p.$('[data-fx="phones"] b')) && !/\d/.test(await p.textContent(".comm")));
     // 贈る：残高の下の「贈る」→ 相手 → jeni を長押しで。相手のお知らせに届く
     { const me0 = await p.evaluate(() => __jt.me);
@@ -474,7 +474,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /名前は、みんなに見えます/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /jeni は、貝のしるし/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
@@ -494,20 +494,14 @@ async function routeMB(p) {
     // 運用版の最初の流れを、見本の画面でも
     { await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); });
       await p.click("[data-firstrun]"); await p.waitForTimeout(200);
+      check(tag + " はじまり：jeni とは（貝は待っている・1枚目）", /jeni は、貝のしるし/.test(await p.textContent("#sheet")) && !!(await p.$("#sheet .story .coin.idle")));
+      await p.click("[data-story]"); await p.waitForTimeout(100); await p.click("[data-story]"); await p.waitForTimeout(100);
+      check(tag + " 3枚目：カードを持つと jeni が作った人へ・「はじめる」", /作った人へ/.test(await p.textContent("#sheet")) && /はじめる/.test(await p.textContent("#sheet [data-story]")));
+      await p.click("[data-story]"); await p.waitForTimeout(150);
       check(tag + " 上の「はじめての画面」から、最初の画面：大事な3つと名前の欄", /名前は、みんなに見えます/.test(await p.textContent("#sheet")) && /消せません/.test(await p.textContent("#sheet")) && !!(await p.$("#st-name")));
       await p.fill("#st-name", "ためし"); await p.click("[data-start]"); await p.waitForTimeout(200);
       check(tag + " 始めると、すぐ鍵を守る画面（パスキー・見本の鍵と注意）", !!(await p.$("[data-pksave]")) && /鍵を守る/.test(await p.textContent("#sheet")) && /見本の鍵/.test(await p.textContent("#sheet")) && /人に見せない/.test(await p.textContent("#sheet")));
       await p.click("[data-pksave]"); await p.waitForTimeout(150); check(tag + " パスキーで守る（見本）で閉じる", await p.evaluate(() => document.getElementById("sheet").hidden)); }
-    // 設定（残高の下の右端）：色を変える
-    { await p.evaluate(() => { const x = document.querySelector("#over [data-overclose]"); if (x) x.click(); __jt.closeSheet(); });
-      await p.click('[data-fx="set"]'); await p.waitForTimeout(150);
-      await p.click('[data-theme-set="dark"]'); await p.waitForTimeout(100);
-      const dk = await p.evaluate(() => document.documentElement.dataset.theme === "dark" && getComputedStyle(document.body).backgroundColor);
-      await p.click('[data-theme-set="light"]'); await p.waitForTimeout(100);
-      const lt = await p.evaluate(() => document.documentElement.dataset.theme === "light" && getComputedStyle(document.body).backgroundColor);
-      await p.click('[data-theme-set="auto"]'); await p.waitForTimeout(100);
-      check(tag + " 設定：色を 暗い・明るい・端末に合わせる に変えられる", !!dk && !!lt && dk !== lt && await p.evaluate(() => !document.documentElement.dataset.theme));
-      await p.click("#sheet [data-close]"); }
     check(tag + " エラーなし", errs.length === 0); if (errs.length) console.log(errs);
     await p.close();
   }

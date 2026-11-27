@@ -19,6 +19,7 @@ let ok = 0, ng = 0; const check = (n, c) => { if (c) ok++; else ng++; console.lo
     const man = await p.evaluate(() => fetch(document.querySelector('link[rel="manifest"]').href).then(r => r.json()));
     check("ホーム画面に置ける形（名前・アプリのように開く・アイコン）", man.short_name === "jeni" && man.display === "standalone" && man.icons.some(i => i.sizes === "512x512") && !!(await p.$('link[rel="apple-touch-icon"]')));
     check("控えの係が動く", await p.evaluate(() => navigator.serviceWorker.ready.then(r => !!r.active)));
+    await p.click('[data-story="3"]'); await p.waitForTimeout(150);
     check("はじめての人へ：iPhone は先にホーム画面に追加、の注意（ブラウザで開いたとき）", /ホーム画面に/.test(await p.textContent("#sheet")));
     await p.fill("#st-name", "そと"); await p.click("[data-start]"); await p.waitForTimeout(600);
     check("始めるとすぐ「鍵を守る」：Face ID・パスキーで守る", /鍵を守る/.test(await p.textContent("#sheet")) && !!(await p.$("[data-pksave]")));
@@ -46,7 +47,7 @@ let ok = 0, ng = 0; const check = (n, c) => { if (c) ok++; else ng++; console.lo
     check("パスキーで守ると、封をした控えが中継に置かれ（鍵そのものは出ない）、赤い印が消える", store.some(e => e.kind === 7745 && e.pubkey === pk0) && !store.some(e => e.content.includes(sk0)) && !(await p.$(".pmark .kdot")));
     // 端末をなくした・記録を消した → パスキーで戻す
     await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(1000);
-    await p.click("#sheet details.more summary"); await p.click("[data-pkrestore]"); await p.waitForTimeout(2500);
+    await p.click('[data-story="3"]'); await p.waitForTimeout(150); await p.click("#sheet details.more summary"); await p.click("[data-pkrestore]"); await p.waitForTimeout(2500);
     check("記録を消しても、Face ID・パスキーで同じ人に戻る", await p.evaluate(() => window.JeniLive.me && window.JeniLive.me.pk) === pk0 && /そと/.test(await p.textContent("body")));
     check("画面のエラーなし", errs.length === 0); if (errs.length) console.log(errs);
   } catch (e) { check("例外: " + e.message.split("\n")[0], false); }
