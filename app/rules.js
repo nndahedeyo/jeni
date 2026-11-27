@@ -12,9 +12,9 @@
 "use strict";
 (function (root) {
   const R = {
-    version: 2,         // きまりの版（2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人へ）。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
+    version: 3,         // きまりの版（2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人へ。3：1人が認められるのは10人まで）。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
     start: 1000,        // 参加したときに届く jeni（配る量は使われ方を見て変わることがある。変わるときも全員に同じきまり）
-    vouchMax: 3,        // 1人が認められる人数
+    vouchMax: 10,       // 1人が認められる人数（版3から。版2までの出来事は3人まで）
     capPaid: 3,         // 同じカードを持てる数
     capFree: 1,         // 無料のカードを持てる数
     priceMax: 1000000,
@@ -93,24 +93,25 @@
 
       if (c.t === "profile") { me.name = str(c.name, 40); me.line = str(c.line, 60); continue; }
 
-      // 1 はじまり：参加している人が、まだの人を認める（1人3人まで）
+      // 1 はじまり：参加している人が、まだの人を認める（1人10人まで）
+      const vmax = (c.v || 1) >= 3 ? R.vouchMax : 3;
       if (c.t === "vouch") {
-        if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || me.vouched.length >= R.vouchMax) continue;
+        if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || me.vouched.length >= vmax) continue;
         if (U(c.who).member) continue;
         me.vouched.push(c.who); join(c.who, t, e.pubkey); ok(e, "vouch"); continue;
       }
 
       // 招待：参加している人が、一度きりの番号（の要約）と期限を出す。リンクや QR で番号を受け取った人が「参加」を出すと、認めたのと同じになる
-      // （認められるのは1人3人まで。まだ使われていない招待も数に入れる）
+      // （認められるのは1人10人まで。まだ使われていない招待も数に入れる）
       if (c.t === "invite") {
         const open = me.invites.filter(x => !x.used && x.until >= t).length;
-        if (!me.member || !isHex(c.lock, 64) || !int(c.until, t, t + R.inviteMax) || me.vouched.length + open >= R.vouchMax) continue;
+        if (!me.member || !isHex(c.lock, 64) || !int(c.until, t, t + R.inviteMax) || me.vouched.length + open >= vmax) continue;
         me.invites.push({id: e.id, lock: c.lock, until: c.until, used: null}); ok(e, "invite"); continue;
       }
       if (c.t === "join") {
         if (me.member || !isHex(c.by, 64) || typeof c.code !== "string") continue;
         const inv = U(c.by), x = inv.invites.find(y => y.id === c.invite);
-        if (!inv.member || !x || x.used || t > x.until || sha256hex(c.code) !== x.lock || inv.vouched.length >= R.vouchMax) continue;
+        if (!inv.member || !x || x.used || t > x.until || sha256hex(c.code) !== x.lock || inv.vouched.length >= vmax) continue;
         x.used = e.pubkey; inv.vouched.push(e.pubkey); join(e.pubkey, t, c.by); ok(e, "join"); continue;
       }
 

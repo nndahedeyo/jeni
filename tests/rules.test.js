@@ -12,11 +12,15 @@ const base = () => [ev(A, 1, {t: "profile", name: "A"}), ev(A, 2, {t: "vouch", w
 const total = S => Object.values(S.users).reduce((s, u) => s + u.bal, 0);
 const members = S => Object.values(S.users).filter(u => u.member).length;
 
-test("はじまり：認められると 1000 jeni。1人が認められるのは3人まで。jeni は参加した人数×1000 から増えない", () => {
-  const e = [...base(), ev(A, 4, {t: "vouch", who: D}), ev(A, 5, {t: "vouch", who: E})];
-  const S = reduce(e, 10, opt);
-  assert.equal(S.users[B].bal, 1000); assert.equal(S.users[D].bal, 1000);
-  assert.ok(!(S.users[E] || {}).member);                 // 4人目は認められない
+test("はじまり：認められると 1000 jeni。1人が認められるのは10人まで。jeni は参加した人数×1000 から増えない", () => {
+  const { R } = require("../app/rules.js"); assert.equal(R.vouchMax, 10);
+  const more = Array.from({length: R.vouchMax - 2}, (_, i) => (i + 1).toString(16).padStart(2, "0").repeat(32));
+  const e = [...base(), ...more.map((x, i) => ev(A, 4 + i, {t: "vouch", who: x, v: 3})), ev(A, 40, {t: "vouch", who: E, v: 3})];
+  const S = reduce(e, 50, opt);
+  assert.equal(S.users[B].bal, 1000); assert.equal(S.users[more[0]].bal, 1000); assert.ok(S.users[more[more.length - 1]].member);
+  assert.ok(!(S.users[E] || {}).member);                 // 11人目は認められない
+  const old = reduce([...base(), ev(A, 4, {t: "vouch", who: D}), ev(A, 5, {t: "vouch", who: E})], 10, opt);
+  assert.ok(old.users[D].member && !(old.users[E] || {}).member);   // 版2までの出来事は、前のとおり3人まで
   assert.equal(total(S), members(S) * 1000);
 });
 test("参加していない人は認められない・二重に認めても増えない", () => {
@@ -294,7 +298,7 @@ test("自分のカードには投げ銭できない。取り下げたカード�
   const S = reduce([...base(), a, pj, ev(A, 12, {t: "tip", card: a.id, amount: 10}), ev(A, 13, {t: "retire", card: a.id}), ev(A, 14, {t: "attach", project: pj.id, card: a.id})], 20, opt);
   assert.equal(S.users[A].bal, 1000); assert.equal(S.cards[a.id].tipped, 0); assert.equal(S.cards[pj.id].items.length, 0);
 });
-test("招待：一度きりの番号で参加できる。期限・使い回し・3人の上限を守る", () => {
+test("招待：一度きりの番号で参加できる。期限・使い回し・10人の上限を守る", () => {
   const { sha256hex } = require("../app/rules.js");
   const D = "d".repeat(64), E = "e".repeat(64);
   const inv = ev(A, 10, {t: "invite", lock: sha256hex("ひみつ"), until: 1000});
@@ -302,8 +306,8 @@ test("招待：一度きりの番号で参加できる。期限・使い回し�
   assert.ok(S.users[D].member); assert.equal(S.users[D].bal, 1000); assert.ok(!S.users[E] || !S.users[E].member); assert.equal(S.users[A].vouchedBy == null || true, true);
   const late = ev(A, 10, {t: "invite", lock: sha256hex("x"), until: 15});
   S = reduce([...base(), late, ev(D, 16, {t: "join", invite: late.id, by: A, code: "x"})], 20, opt); assert.ok(!S.users[D].member);
-  const many = [1, 2, 3, 4].map(i => ev(A, 10 + i, {t: "invite", lock: sha256hex("c" + i), until: 1000}));
-  S = reduce([...base(), ...many], 20, opt); assert.equal(S.users[A].invites.length, 1);   // A はもう2人認めているので、あと1人分だけ
+  const many = Array.from({length: 12}, (_, i) => ev(A, 10 + i, {t: "invite", lock: sha256hex("c" + i), until: 1000, v: 3}));
+  S = reduce([...base(), ...many], 30, opt); assert.equal(S.users[A].invites.length, 8);   // A はもう2人認めているので、あと8人分だけ
 });
 test("カードを作れるのは参加している人だけ。直す前の題と説明は残る", () => {
   const X = "f".repeat(64);

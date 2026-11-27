@@ -57,7 +57,8 @@
     const at = await input.getPrimaryAudioTrack();
     if (kind === "video" && !vt) throw new Error("動画が入っていません");
     if (kind === "music" && !at) throw new Error("音が入っていません");
-    const useAac = at ? await aacOK(M) : false;
+    const aCopy = !!at && at.codec === "aac";
+    const useAac = at && !aCopy ? await aacOK(M) : false;
     const acodec = useAac ? "aac" : "opus";
     const plan = kind === "music" ? PLAN.music : dur <= PLAN.short.sec ? PLAN.short : PLAN.long;
     let w = 0, h = 0, poster = null;
@@ -72,33 +73,38 @@
     const ac = at ? at.codec : null;
     const srcRate = file.size * 8 / dur;
     const copyOK = file.size <= LIM.part && (!vt || (vt.codec === "avc" && Math.max(vt.displayWidth, vt.displayHeight) <= 1920)) && (!at || ac === "aac") && srcRate <= ((plan.v || 0) + plan.a) * 2.2;
-    const rate = (plan.v || 0) + (at ? plan.a : 0);
-    const n = copyOK ? 1 : Math.max(1, Math.ceil(dur / Math.floor(LIM.part * 8 / (rate * 1.08))));
+    const rate = (plan.v || 0) + (at ? (aCopy ? (kind === "music" ? Math.max(plan.a, srcRate) : 320000) : plan.a) : 0);   // そのまま移す音は、多めに見積もる
+    // MP3 の音楽：変換せず、MP3 のまま分けて置く（音はそのまま・速い）
+    const mp3 = kind === "music" && ac === "mp3";
+    const n = copyOK ? 1 : mp3 ? Math.max(1, Math.ceil(dur / Math.floor(LIM.part * 8 / (srcRate * 1.08)))) : Math.max(1, Math.ceil(dur / Math.floor(LIM.part * 8 / (rate * 1.08))));
     const seg = dur / n, parts = [];
     for (let i = 0; i < n; i++) {
-      const out = new M.Output({format: new M.Mp4OutputFormat({fastStart: "in-memory"}), target: new M.BufferTarget()});
+      const out = new M.Output({format: mp3 ? new M.Mp3OutputFormat() : new M.Mp4OutputFormat({fastStart: "in-memory"}), target: new M.BufferTarget()});
       const start = i * seg, end = i === n - 1 ? dur : (i + 1) * seg;
       const opts = {input: i === 0 ? input : open(), output: out, tags: {}, showWarnings: false};
       if (n > 1) opts.trim = {start, end};
-      if (copyOK) {
+      if (mp3) { opts.video = {discard: true}; opts.audio = {}; opts.copy = {shiftTolerance: Infinity}; }
+      else if (copyOK) {
         opts.video = kind === "music" ? {discard: true} : undefined;
       } else {
-        opts.copy = false;
-        opts.video = kind === "music" ? {discard: true} : {codec: "avc", width: w, height: h, fit: "contain", quality: new M.Quality({bitrate: plan.v}), keyFrameInterval: 2};
-        opts.audio = {codec: acodec, quality: new M.Quality({bitrate: plan.a}), numberOfChannels: 2, sampleRate: 48000};
+        opts.video = kind === "music" ? {discard: true} : {codec: "avc", width: w, height: h, fit: "contain", quality: new M.Quality({bitrate: plan.v}), keyFrameInterval: 2, forceTranscode: true};
+        // 音：もとが AAC（iPhone の動画・ボイスメモなど）なら、変換せずそのまま移す（端末が音を解けなくても、音が消えない）
+        opts.audio = aCopy ? {} : {codec: acodec, quality: new M.Quality({bitrate: plan.a}), numberOfChannels: 2, sampleRate: 48000, forceTranscode: true};
       }
       if (!at && kind === "video") opts.audio = {discard: true};
       const conv = await M.Conversion.init(opts);
       if (!conv.isValid) throw new Error("この形のファイルは変換できません");
+      // 音が黙って落ちることがないように（音のない動画を置かない）
+      if (at && conv.discardedTracks.some(x => x.track.type === "audio" && x.reason !== "discarded_by_user")) throw new Error("この端末では、この音を変換できません");
       conv.onProgress = p => onp((i + p) / n);
       await conv.execute();
-      const blob = new Blob([out.target.buffer], {type: kind === "music" ? "audio/mp4" : "video/mp4"});
+      const blob = new Blob([out.target.buffer], {type: mp3 ? "audio/mpeg" : kind === "music" ? "audio/mp4" : "video/mp4"});
       if (blob.size > 19.5 * MiB) throw new Error("分けても大きすぎました");
       const d = Math.round((end - start) * 100) / 100;
       if (onPart) parts.push({...(await onPart(blob, i, n, d)), d, size: blob.size}); else parts.push({blob, d, size: blob.size});
     }
     onp(1);
-    return {parts, dur, poster, w, h, codec: acodec, copied: copyOK};
+    return {parts, dur, poster, w, h, codec: mp3 ? "mp3" : aCopy ? "aac" : acodec, copied: copyOK};
   }
 
   // 写真：長い辺 2048 まで、描き直して位置情報などを消す。表に使う小さい写し（640）も作る

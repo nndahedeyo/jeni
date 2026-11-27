@@ -122,6 +122,12 @@ async function relay(page) {
     const dm = store.find(e => e.kind === 7742);
     check("会話は封をして中継に置く（中継からは読めない）", !!dm && !dm.content.includes("こんにちは") && dm.tags.some(t => t[0] === "p" && t[1] === bpk));
     check("相手の端末では読める", await until(bp, () => Object.values(__jt.CHAT).flat().some(m => m.text === "こんにちは、届きますか"), 8000));
+    await a.click("[data-cplus]"); await a.setInputFiles("#c-pic", path.resolve(__dirname, "..", "app", "media", "paddy.jpg"));
+    check("会話：写真は封をして置き場へ、相手の端末で開ける", await until(bp, () => Object.values(__jt.CHAT).flat().some(m => m.pics && m.pics[0].k), 15000));
+    await a.click("[data-cplus]"); await a.setInputFiles("#c-file", {name: "memo.txt", mimeType: "text/plain", buffer: Buffer.from("jeni memo")});
+    check("会話：ファイルも封をして届く（名前つき）", await until(bp, () => Object.values(__jt.CHAT).flat().some(m => m.file && m.file.name === "memo.txt" && m.file.k), 15000));
+    check("相手が会話を開いていると、届いたものがその場で並ぶ", await (async () => { const pk = await a.evaluate(() => __jt.me); await bp.evaluate(pk => __jt.chatSheet(pk), pk); await wait(300); await a.fill("#c-text", "その場で届く？"); await a.click("[data-send]"); return until(bp, () => /その場で届く？/.test(document.getElementById("c-talk").textContent), 8000); })());
+    await bp.click("[data-overclose]").catch(() => {});
     // 通話（2人の端末を直接つなぐ）
     await a.click("[data-overclose]").catch(() => {});
     await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
@@ -201,6 +207,13 @@ async function relay(page) {
     await until(bp, id => !!__jt.S.cards[id] && !!__jt.MEDIA[id] && (__jt.MEDIA[id].pics || []).length === 3, 10000, albId);
     await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => __jt.detail(id), albId); await wait(4800);
     check("相手の画面で、アルバムが自動でめくれる", await bp.$eval(`#pg-${albId} .face[data-album]`, f => +f.dataset.ai >= 1 && [...f.querySelectorAll("img.bgimg")].some(i => /blossom/.test(i.src))));
+    // 作ったあとでアルバムに写真を足す（直す）
+    await a.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, albId); await wait(300);
+    await a.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (d) d.open = true; }, albId); await a.click(`#pg-${albId} [data-edit]`); await wait(300);
+    await a.setInputFiles("#e-pics", ["bread.jpg"].map(f => path.resolve(__dirname, "..", "app", "media", f)));
+    await until(a, () => document.querySelectorAll("#over .alb .ali:not(.add)").length === 4, 15000);
+    await a.click("#over [data-esave]"); await wait(1200);
+    check("直す：作ったあとでアルバムに写真を足せる（相手の画面でも4枚）", await until(bp, id => (__jt.MEDIA[id].pics || []).length === 4, 10000, albId));
     // ---- 長い動画：その場で軽くして、2分ほどずつに分けて置く → 相手の画面で続けて流れる・置き場が1つ消えても写しから ----
     if (VID) {
       await a.evaluate(() => __jt.closeSheet()).catch(() => {});
@@ -269,6 +282,14 @@ async function relay(page) {
     await until(bp, id => !!__jt.MEDIA[id] && (__jt.MEDIA[id].pics || []).length === 2, 10000, calId);
     await bp.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, calId); await wait(400); await bp.click(`#pg-${calId} .cview`);
     check("輪の人は、封を開けて大きく見られる", cal && await until(bp, () => { const im = document.querySelector("#over .album img"); return !!im && /^blob:/.test(im.src) && im.naturalWidth > 0; }, 10000));
+    { const nb1 = Object.keys(BLOB["blossom.nostr.build"]).length;
+      await a.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, calId); await wait(300);
+      await a.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (d) d.open = true; }, calId); await a.click(`#pg-${calId} [data-edit]`); await wait(300);
+      await a.setInputFiles("#e-pics", ["radish.jpg"].map(f => path.resolve(__dirname, "..", "app", "media", f)));
+      await until(a, () => document.querySelectorAll("#over .alb .ali:not(.add)").length === 3, 15000);
+      const nb = Object.values(BLOB["blossom.nostr.build"]).slice(nb1);
+      await a.click("#over [data-esave]"); await wait(1500);
+      check("輪のアルバムに足した写真も、封をして置く・輪の人は3枚", nb.length === 1 && nb[0].body.subarray(4, 8).toString() === "ftyp" && await until(bp, id => (__jt.MEDIA[id].pics || []).length === 3 && __jt.MEDIA[id].pics.every(p => p.k), 10000, calId)); }
     if (process.env.MB_DIST) {   // 輪の動画：封をして置き、輪の人は開いて流せる
       await bp.click("[data-overclose]").catch(() => {});
       await a.evaluate(() => __jt.closeSheet()).catch(() => {});
