@@ -271,6 +271,12 @@ root.JENI_EN = [
   ["写真・{#}", "Photo · $1"], ["写真 {#}枚・{#}", "$1 photos · $2"], ["ファイル・{#}", "File · $1"], ["カード・{#}", "Card · $1"], ["写真・昨日", "Photo · Yesterday"], ["ファイル・昨日", "File · Yesterday"], ["カード・昨日", "Card · Yesterday"],
   ["{*}・昨日", "$1 · Yesterday"], ["写真", "Photo"], ["写真 {#}枚", "$1 photos"],
 
+  ["話す・電話", "Chats & calls"], ["電話をかけました", "Outgoing call"], ["電話がありました", "Incoming call"], ["不在着信", "Missed call"], ["不在着信 {#}件", "$1 missed calls"],
+  ["{*} さんと話す・電話", "Chat or call $1"], ["新しい会話・不在着信", "New message or missed call"], ["電話がありました・{*}", "Incoming call · $1"], ["電話をかけました・{*}", "Outgoing call · $1"], ["不在着信・{*}", "Missed call · $1"], ["不在着信 {#}件・{*}", "$1 missed calls · $2"],
+  ["お互いに友達の人とだけ、2人で話したり電話したりできます（鍵つき）。電話は、会話の右上から。友達になるのは、その人のプロフィールカードから。", "You can chat and call only with mutual friends (end-to-end locked). Calls start from the top right of a chat. Become friends from their profile card."],
+  ["お互いに友達の人と。相手との会話の右上のカメラの印から。受ける人は「ビデオで出る」か「声だけで出る」を選べます。", "With mutual friends, from the camera icon at the top right of your chat. The person receiving can answer with video or voice only."],
+  ["残高の下に 吹き出し・贈り物・鈴。話すのも電話も、吹き出しひとつにまとめました（電話は会話の右上から）。知らせは小さな赤い印。相手のカードの吹き出しからも話せます（お互いに友達のとき）。", "Under your balance: bubble, gift, bell. Chats and calls are in the one bubble (calls from the top right of a chat). A small red dot means something new. You can also chat from their card's bubble (mutual friends)."],
+  ["中身が確かめられませんでした", "Couldn't verify the content"],
   // ---- 人を探す ----
   ["人", "People"], ["人を探す", "Find people"], ["人・{#}人", "People · $1"], ["名前・ひとことで探す", "Search by name or bio"], ["見つかりません", "Not found"],
   ["まだほかに参加している人はいません", "No one else has joined yet"], ["友達", "Friend"], ["友達・{*}", "Friend · $1"],

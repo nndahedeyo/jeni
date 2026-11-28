@@ -139,15 +139,18 @@ async function relay(page) {
       check("悪意のある画像・名前・番号を送りつけても、画面に紛れ込まない・表が書き換わらない", await bp.evaluate(() => !window.__pwned && !document.querySelector("[onerror]") && ({}).bal === undefined && ({}).holders === undefined && Object.prototype.tipped === undefined) && await a.evaluate(() => !window.__pwned));
       await a.evaluate(() => { const L = window.JeniLive; L.publish(L.K.rule, {v: 4, t: "profile", ...window.__oldp}); }); await wait(800); }
     await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
-    await a.click("#sheet .pcomm [data-call]"); await wait(1500);
+    check("相手のカードの連絡は吹き出しひとつ（電話は会話の中から）", !!(await a.$("#sheet .pcomm [data-chat]")) && !(await a.$("#sheet .pcomm [data-call]")));
+    await a.click("#sheet .pcomm [data-chat]"); await wait(300);
+    await a.click("#over .chead [data-call]"); await wait(1500);
     check("電話をかけると、相手に着信", await until(bp, () => !!document.querySelector("[data-pickup]"), 8000));
     await bp.click("[data-pickup]");
     check("出ると、2人がつながる", await until(a, () => /話しています/.test((document.getElementById("call-s") || {}).textContent || ""), 15000));
     await a.click("[data-hang]"); await wait(800);
     check("終えると、相手の画面も閉じる", await until(bp, () => document.getElementById("over").hidden, 8000));
+    check("かけた人は会話に戻り、電話の記録が会話の中に並ぶ", await until(a, () => /電話をかけました/.test((document.getElementById("c-talk") || {}).textContent || ""), 8000));
     // ビデオ通話：相手は「ビデオで出る」か「声だけで出る」を選べる。2人の映像が届く
-    await wait(1500); await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
-    await a.click("#sheet .pcomm [data-vcall]"); await wait(1500);
+    await wait(1500); await a.evaluate(pk => __jt.chatSheet(pk), bpk); await wait(300);
+    await a.click("#over .chead [data-vcall]"); await wait(1500);
     check("ビデオ通話をかけると、相手に「ビデオで出る・声だけで出る」", await until(bp, () => !!document.querySelector('[data-pickup="v"]') && !!document.querySelector('[data-pickup="a"]'), 8000));
     await bp.click('[data-pickup="v"]');
     check("ビデオで出ると、お互いに相手の映像が見える", await until(a, () => { const v = document.getElementById("rtc-v"); return !!v && v.videoWidth > 0; }, 15000) && await until(bp, () => { const v = document.getElementById("rtc-v"); return !!v && v.videoWidth > 0; }, 15000));
@@ -214,7 +217,7 @@ async function relay(page) {
     const albId = albM && albM.card;
     await until(bp, id => !!__jt.S.cards[id] && !!__jt.MEDIA[id] && (__jt.MEDIA[id].pics || []).length === 3, 10000, albId);
     await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => __jt.detail(id), albId); await wait(4800);
-    check("相手の画面で、アルバムが自動でめくれる", await bp.$eval(`#pg-${albId} .face[data-album]`, f => +f.dataset.ai >= 1 && [...f.querySelectorAll("img.bgimg")].some(i => /blossom/.test(i.src))));
+    check("相手の画面で、アルバムが自動でめくれる（写真は中身の指紋を確かめてから）", await bp.$eval(`#pg-${albId} .face[data-album]`, f => +f.dataset.ai >= 1 && [...f.querySelectorAll("img.bgimg")].some(i => /^blob:/.test(i.src))));
     // 作ったあとでアルバムに写真を足す（直す）
     await a.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, albId); await wait(300);
     await a.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (d) d.open = true; }, albId); await a.click(`#pg-${albId} [data-edit]`); await wait(300);
@@ -222,6 +225,12 @@ async function relay(page) {
     await until(a, () => document.querySelectorAll("#over .alb .ali:not(.add)").length === 4, 15000);
     await a.click("#over [data-esave]"); await wait(1200);
     check("直す：作ったあとでアルバムに写真を足せる（相手の画面でも4枚）", await until(bp, id => (__jt.MEDIA[id].pics || []).length === 4, 10000, albId));
+    { const pp = await bp.evaluate(id => __jt.MEDIA[id].pics[3], albId), host = new U2(pp.u).hostname, keep = BLOB[host][pp.x];
+      const good = await bp.evaluate(async p => { try { await JeniMedia.fetchChecked(p); return true; } catch (e) { return false; } }, pp);
+      for (const h of Object.keys(BLOB)) if (BLOB[h][pp.x]) BLOB[h][pp.x] = {...BLOB[h][pp.x], body: Buffer.concat([BLOB[h][pp.x].body, Buffer.from("x")])};
+      const bad = await bp.evaluate(async p => { try { await JeniMedia.fetchChecked(p); return true; } catch (e) { return false; } }, pp);
+      check("置き場で中身を差し替えられたら、その写真は使わない（指紋が合わない）", good && !bad);
+      BLOB[host][pp.x] = keep; }
     // ---- 長い動画：その場で軽くして、2分ほどずつに分けて置く → 相手の画面で続けて流れる・置き場が1つ消えても写しから ----
     if (VID) {
       await a.evaluate(() => __jt.closeSheet()).catch(() => {});

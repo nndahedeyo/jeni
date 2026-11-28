@@ -145,6 +145,14 @@
   }
   // 封をしたものを取って開く（写しのある置き場からも）。開いたものはこの端末の中だけの URL に
   const OPENED = {};
+  // 公開の置き場のもの：取ってきた中身の指紋（SHA-256）が、作った人が署名して出した指紋と同じときだけ使う（置き場で差し替えられていたら使わない）
+  async function fetchChecked(p) {
+    for (const u of urlsOf(p)) { try { const r = await fetch(u); if (!r.ok) continue; const buf = await r.arrayBuffer();
+      if (p.x && hexOf(await crypto.subtle.digest("SHA-256", buf)) !== p.x) continue;
+      return URL.createObjectURL(new Blob([buf], {type: r.headers.get("content-type") || p.t || ""})); } catch (e) {} }
+    throw new Error("中身が確かめられませんでした");
+  }
+  const hexOf = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, "0")).join("");
   async function openPart(p) {
     if (OPENED[p.x || p.u]) return OPENED[p.x || p.u];
     for (const u of urlsOf(p)) { try { const r = await fetch(u); if (!r.ok) continue; const b = await openBlob(await r.arrayBuffer(), p.k, p.t); return (OPENED[p.x || p.u] = URL.createObjectURL(b)); } catch (e) {} }
@@ -192,5 +200,5 @@
     return null;
   }
 
-  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart};
+  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked};
 })(typeof globalThis !== "undefined" ? globalThis : this);

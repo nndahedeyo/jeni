@@ -178,7 +178,7 @@ async function routeMB(p) {
     await p.click("[data-overclose]");
     // 人のカード：お互いに友達なら話せる・通話（見本）
     await p.click(`#pg-${paddy2} [data-person]`); await p.waitForTimeout(200);
-    check(tag + " お互いに友達なら、相手のカードの中（右下）に受話器と吹き出し", !!(await p.$("#sheet .jc2 .pcomm [data-chat]")) && !!(await p.$("#sheet .jc2 .pcomm [data-call]")));
+    check(tag + " お互いに友達なら、相手のカードの中（右下）に連絡は吹き出しひとつ", !!(await p.$("#sheet .jc2 .pcomm [data-chat]")) && !(await p.$("#sheet .jc2 .pcomm [data-call]")) && !(await p.$("#sheet .jc2 .pcomm [data-vcall]")));
     await p.click("[data-chat]"); await p.fill("#c-text", "土曜はよろしく"); await p.click("[data-send]"); await p.waitForTimeout(150);
     check(tag + " 2人の会話を送れる", (await p.textContent("#over")).includes("土曜はよろしく"));
     check(tag + " 会話：日付の区切り（今日）と時刻が出る", await p.evaluate(() => { const d = [...document.querySelectorAll("#c-talk .cday")].pop(), b = [...document.querySelectorAll("#c-talk .bub.mymsg time")].pop(); return !!d && d.textContent === "今日" && !!b && /^\d{1,2}:\d\d$/.test(b.textContent); }));
@@ -192,12 +192,12 @@ async function routeMB(p) {
     { const cc = await p.$("[data-csendcard]"); if (cc) { const t = await cc.textContent(); await cc.click(); await p.waitForTimeout(200); check(tag + " 会話：カードを送れる（押すと開ける）", !!(await p.$("#c-talk .ccard[data-detail]")) && (await p.textContent("#c-talk .ccard")).includes(t.trim().slice(0, 6))); } else check(tag + " 会話：カードを送れる（押すと開ける）", false); }
     await p.fill("#c-text", "土曜はよろしく"); await p.click("[data-send]"); await p.waitForTimeout(150);
     if (SHOT) await p.screenshot({path: `${SHOT}/chat-${w}.png`});
-    check(tag + " 会話の中に通話の入口は出さない（入口はプロフィールカードだけ）", !(await p.$("#over [data-call]")));
-    await p.click("[data-overclose]");
-    await p.click("#sheet [data-call]"); await p.waitForTimeout(200);
+    check(tag + " 会話の右上に、電話とビデオ通話（ふつうのメッセンジャーのように）", !!(await p.$("#over .chead [data-call]")) && !!(await p.$("#over .chead [data-vcall]")));
+    await p.click("#over .chead [data-call]"); await p.waitForTimeout(200);
     check(tag + " 通話の画面（見本）", (await p.textContent("#over")).includes("終える"));
     await p.click("[data-hang]"); await p.waitForTimeout(150);
-    check(tag + " 通話を終えるとプロフィールカードに戻る", await p.evaluate(() => document.getElementById("over").hidden) && !!(await p.$("#sheet [data-chat]")));
+    check(tag + " 通話を終えると会話に戻り、電話の記録が会話の中に並ぶ", !(await p.evaluate(() => document.getElementById("over").hidden)) && !!(await p.$("#over .chead")) && /電話をかけました/.test(await p.textContent("#c-talk .ccall:last-of-type")));
+    await p.click("[data-overclose]");
     // 会話を書いた人の名前から、その人のカードへ
     await p.click("#sheet [data-close]");
     await p.evaluate(id => __jt.detail(id), paddy2); await p.click(`#pg-${paddy2} [data-talk]`); await p.waitForTimeout(200);
@@ -205,8 +205,8 @@ async function routeMB(p) {
     check(tag + " 会話の名前から、その人のカード", await p.evaluate(() => document.getElementById("over").hidden && /プロフィール/.test(document.getElementById("sheet").textContent)));
     await p.click("#sheet [data-close]");
     // 自分のプロフィールカードから「話す」：お互いに友達の人の一覧 → 会話・通話
-    check(tag + " 残高の下に、電話・会話・贈る・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="phones"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "phones,chats,gifts,news" && r.width <= 30; }));
-    check(tag + " 不在着信と新しい会話は、数ではなく小さな赤い印", !!(await p.$('[data-fx="phones"] b')) && !/\d/.test(await p.textContent(".comm")));
+    check(tag + " 残高の下に、話す・電話（ひとつ）・贈る・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="chats"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "chats,gifts,news" && r.width <= 30; }));
+    check(tag + " 不在着信と新しい会話は、吹き出しの小さな赤い印（数ではなく）", !(await p.$('[data-fx="phones"]')) && !/\d/.test(await p.textContent(".comm")));
     // 贈る：残高の下の「贈る」→ 相手 → jeni を長押しで。相手のお知らせに届く
     { const me0 = await p.evaluate(() => __jt.me);
       await p.click('[data-fx="gifts"]'); await p.waitForTimeout(150);
@@ -220,18 +220,20 @@ async function routeMB(p) {
       await p.selectOption("#who", to); await p.waitForTimeout(150);
       check(tag + " 受け取った人の鈴に印、お知らせに「から 25 jeni が届きました」", !!(await p.$('[data-fx="news"] b')) && await (async () => { await p.click('[data-fx="news"]'); await p.waitForTimeout(150); const r = /から 25 jeni が届きました/.test(await p.textContent("#sheet")); await p.click("#sheet [data-close]"); return r; })());
       await p.selectOption("#who", me0); await p.waitForTimeout(150);
-      // ビデオ通話（見本）：電話の一覧から
-      await p.click('[data-fx="phones"]'); await p.waitForTimeout(150);
-      const vc = await p.$("#sheet [data-vcall]");
-      if (vc) { await vc.click(); await p.waitForTimeout(150); check(tag + " ビデオ通話：相手の映像と自分の小さな映像・カメラを切る・終える", !!(await p.$("#over #rtc-v")) && !!(await p.$("#over #rtc-me")) && !!(await p.$("#over [data-camoff]")) && !!(await p.$("#over [data-hang]"))); await p.click("#over [data-hang]"); }
+      // ビデオ通話（見本）：会話の右上から
+      await p.click('[data-fx="chats"]'); await p.waitForTimeout(150); await p.click("#sheet .crow[data-chat]"); await p.waitForTimeout(150);
+      const vc = await p.$("#over .chead [data-vcall]");
+      if (vc) { await vc.click(); await p.waitForTimeout(150); check(tag + " ビデオ通話：相手の映像と自分の小さな映像・カメラを切る・終える", !!(await p.$("#over #rtc-v")) && !!(await p.$("#over #rtc-me")) && !!(await p.$("#over [data-camoff]")) && !!(await p.$("#over [data-hang]"))); await p.click("#over [data-hang]"); await p.waitForTimeout(150); }
       else check(tag + " ビデオ通話のボタン（かけられる人がいれば）", true);
+      await p.click("#over [data-overclose]").catch(() => {});
       await p.click("#sheet [data-close]").catch(() => {}); }
     await p.click('[data-fx="chats"]'); await p.waitForTimeout(200);
-    check(tag + " 吹き出しから、話せる人の一覧（最後のひとことつき）", /Farmer_S/.test(await p.textContent("#sheet")) && /土曜はよろしく/.test(await p.textContent("#sheet")) && !/Bakery_Haru/.test(await p.textContent("#sheet")));
+    check(tag + " 吹き出しから、話せる人の一覧（最後のひとこと・電話つき）", /Farmer_S/.test(await p.textContent("#sheet")) && /土曜はよろしく|電話をかけました/.test(await p.textContent("#sheet")) && !/Bakery_Haru/.test(await p.textContent("#sheet")));
+    const cpk = await p.$eval("#sheet .crow[data-chat]", b => b.dataset.chat);
     await p.click("#sheet .crow[data-chat]"); await p.waitForTimeout(150);
-    check(tag + " 一覧から会話を開ける", /土曜はよろしく/.test(await p.textContent("#over")));
+    check(tag + " 一覧から会話を開ける（新しい順のいちばん上）", /土曜はよろしく/.test(await p.textContent("#over")));
     await p.click("[data-overclose]"); await p.waitForTimeout(100);
-    check(tag + " 会話を開くと、新しい数が消える", !(await p.$("#sheet .nb")));
+    check(tag + " 会話を開くと、その人の行の印が消える", await p.evaluate(pk => !document.querySelector(`#sheet .crow[data-chat="${pk}"]`).parentElement.querySelector(".nb"), cpk));
     await p.click("#sheet [data-close]");
     await p.click('[data-f="people"]'); await p.waitForTimeout(150);
     { const n = (await p.$$("#home .list .row[data-pn]")).length; check(tag + " 並びの「人」：参加している人のプロフィールカードが並び、探す欄がある", n >= 2 && !!(await p.$("#pq")) && /人・\d+人/.test(await p.textContent(".mcap")));
@@ -243,15 +245,14 @@ async function routeMB(p) {
       await p.fill("#pq", "farmer"); await p.click("#home .list .row:not([hidden]) [data-person]"); await p.waitForTimeout(200);
       check(tag + " 押すとその人のプロフィールカード", !(await p.$eval("#sheet", e => e.hidden)) && /Farmer/.test(await p.textContent("#sheet")));
       await p.click("#sheet [data-close]"); await p.fill("#pq", ""); await p.evaluate(() => { document.getElementById("pq").dispatchEvent(new Event("input", {bubbles: true})); }); await p.click('[data-f="all"]'); }
-    check(tag + " 読んだあとは吹き出しの数が消える", !(await p.$('[data-fx="chats"] b')));
-    await p.click('[data-fx="phones"]'); await p.waitForTimeout(150);
-    check(tag + " 電話：不在着信と、かけられる人", /不在着信/.test(await p.textContent("#sheet")) && /かけられる人/.test(await p.textContent("#sheet")));
-    await p.click("#sheet [data-call]"); await p.waitForTimeout(150);
-    check(tag + " 電話から通話（見本）", /終える/.test(await p.textContent("#over")));
-    await p.click("[data-hang]"); await p.waitForTimeout(100);
-    check(tag + " かけた記録が残る", /かけた/.test(await p.textContent("#sheet")));
+    await p.evaluate(() => { __jt.CALLS.push({from: __jt.P.farmer.pk, to: __jt.me, at: __jt.clock + 1, missed: true}); __jt.home(); }); await p.waitForTimeout(150);
+    check(tag + " 新しい不在着信は、吹き出しの小さな赤い印", !!(await p.$('[data-fx="chats"] b')));
+    await p.click('[data-fx="chats"]'); await p.waitForTimeout(150);
+    check(tag + " 不在着信は、会話の一覧にその人の行で出る（赤）", /不在着信/.test(await p.textContent("#sheet .crow .warnc")));
+    { const pk = await p.$eval("#sheet .crow .warnc", e => e.closest(".crow").dataset.chat); await p.click(`#sheet .crow[data-chat="${pk}"]`); await p.waitForTimeout(150);
+      check(tag + " 会話を開くと、不在着信が会話の中に並ぶ", /不在着信/.test(await p.textContent("#c-talk"))); await p.click("[data-overclose]"); await p.waitForTimeout(100); }
     await p.click("#sheet [data-close]");
-    check(tag + " 電話を見たあとは受話器の数が消える", !(await p.$('[data-fx="phones"] b')));
+    check(tag + " 不在着信を見たあとは吹き出しの印が消える", !(await p.$('[data-fx="chats"] b')));
     // 友達でない人とは話せない（SoundArchitect は Kenji を友達にしていない）
     await p.evaluate(() => __jt.person(__jt.P.sound.pk)); await p.waitForTimeout(150);
     check(tag + " お互いに友達でなければ「話す」は出ない", !(await p.$("[data-chat]")));
@@ -517,7 +518,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /名前・ひとことで探す|人・\d+人/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /かけられる人/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /jeni は、貝のしるし/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /名前・ひとことで探す|人・\d+人/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /Farmer_S さん/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /jeni は、貝のしるし/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
