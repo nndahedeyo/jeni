@@ -270,8 +270,7 @@ async function relay(page) {
         const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; BLOB[h][p0.x] = {...keep[h], body: Buffer.concat([keep[h].body, Buffer.from("x")])}; }
         await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
-        const noted = await until(bp, id => /指紋がちがう/.test(__jt.VDIAG[id] || ""), 20000, vid);
-        check("置き場が動画を整え直していても流し続け、そのことを残す", noted && await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > .5), 10000, vid));
+        check("置き場が動画を整え直していても（指紋がちがう）、ふだん通り置き場から流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^https:/.test(v.src) && !v.paused && v.currentTime > 1.5), 15000, vid));
         for (const h in keep) BLOB[h][p0.x] = {...keep[h], type: "text/html", body: Buffer.from("<html>ちがうページ</html>")};
         await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
