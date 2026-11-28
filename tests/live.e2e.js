@@ -265,12 +265,17 @@ async function relay(page) {
         await a.click(`#pg-${vid} [data-mdiag]`);
         check("作った人は「置き場を確かめる」で、どの置き場にあるかを見られる", await until(a, () => /置き場の様子/.test(document.getElementById("over").textContent) && (document.getElementById("over").textContent.match(/：200|：206/g) || []).length >= 2, 15000));
         await a.click("#over [data-overclose]").catch(() => {}); }
-      { // 置き場で動画の中身を差し替えられたら：すぐ流しはじめても、裏で指紋を確かめて止める
+      { // 置き場が動画を整え直した（指紋が変わる）だけなら流し続け、「置き場を確かめる」に残す。動画でないもの（ページ）にすり替わっていたら止める
         const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; BLOB[h][p0.x] = {...keep[h], body: Buffer.concat([keep[h].body, Buffer.from("x")])}; }
         await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
-        const stopped = await until(bp, id => { const vs = [...document.querySelectorAll(`#pg-${id} video.inplay`)]; return vs.length > 0 && vs.every(v => !v.getAttribute("src")); }, 20000, vid);
-        check("置き場で動画を差し替えられたら、指紋が合わないので止める", stopped);
+        const noted = await until(bp, id => /指紋がちがう/.test(__jt.VDIAG[id] || ""), 20000, vid);
+        check("置き場が動画を整え直していても流し続け、そのことを残す", noted && await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > .5), 10000, vid));
+        for (const h in keep) BLOB[h][p0.x] = {...keep[h], type: "text/html", body: Buffer.from("<html>ちがうページ</html>")};
+        await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
+        await bp.click(`#pg-${vid} [data-cplay]`);
+        const stopped = await until(bp, id => { const vs = [...document.querySelectorAll(`#pg-${id} video.inplay`)]; return vs.length > 0 && vs.every(v => !v.getAttribute("src") || v.error || v.paused); }, 20000, vid);
+        check("置き場で動画でないものにすり替えられたら、流さない", stopped);
         for (const h in keep) BLOB[h][p0.x] = keep[h]; }
       await bp.click(`#pg-${vid} [data-cplay]`);
     } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
