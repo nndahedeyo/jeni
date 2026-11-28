@@ -88,7 +88,7 @@ async function routeMB(p) {
     { const alb = await id("田んぼと畑の朝");
       await p.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, alb); await p.waitForTimeout(4700);
       check(tag + " アルバム：カードの表で自動でめくれる・枚数が出る", await p.$eval(`#pg-${alb} .face[data-album]`, f => +f.dataset.ai >= 1 && /写真・3枚/.test(f.textContent)));
-      await p.click(`#pg-${alb} .cview`); await p.waitForTimeout(200);
+      await p.click(`#pg-${alb} .cview`); await p.waitForTimeout(500);
       check(tag + " 押すと大きく1枚ずつ（何枚目か出る）", !!(await p.$("#over .album img")) && /\d \/ 3/.test(await p.textContent("#over .adots")));
       await p.click('#over [data-astep="1"]'); await p.waitForTimeout(300);
       check(tag + " 右を押すと次の写真", /\d \/ 3/.test(await p.textContent("#over .adots")));
@@ -113,6 +113,10 @@ async function routeMB(p) {
     check(tag + " 全画面ではカードだけ", await p.evaluate(id => document.getElementById("sheet").classList.contains("imm") && getComputedStyle(document.querySelector(`#pg-${id} .acts2`)).display === "none", paddy));
     if (SHOT) await p.screenshot({path: `${SHOT}/imm-${w}.png`});
     await p.click("[data-imm]"); void curry;
+    { const tap2 = async () => { await p.$eval(`#pg-${paddy} .face`, e => e.scrollIntoView({block: "center"})); await p.waitForTimeout(100); const fb = await (await p.$(`#pg-${paddy} .face`)).boundingBox(), x = fb.x + fb.width * 0.25, y = fb.y + fb.height * 0.42; await p.mouse.click(x, y); await p.waitForTimeout(90); await p.mouse.click(x, y); await p.waitForTimeout(250); };
+      await tap2(); const on = await p.evaluate(() => document.getElementById("sheet").classList.contains("imm"));
+      await tap2(); const off = await p.evaluate(() => !document.getElementById("sheet").classList.contains("imm"));
+      check(tag + " カードを2回たたくと全画面、もう一度2回たたくと戻る", on && off); }
     // 左へスワイプしても戻らない（右へスワイプで戻る）
     await p.evaluate(() => { const s = (x, y, type) => { const t = new Touch({identifier: 1, target: document.body, clientX: x, clientY: y}); document.dispatchEvent(new TouchEvent(type, {touches: type === "touchend" ? [] : [t], changedTouches: [t], bubbles: true})); }; s(300, 400, "touchstart"); s(60, 410, "touchend"); });
     await p.waitForTimeout(200);

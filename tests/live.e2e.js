@@ -14,7 +14,8 @@ let realSockets = 0;
 // 置き場（Blossom）のまね：PUT /upload（その人の鍵で署名した kind 24242 の許可を確かめる）・PUT /mirror・GET /<sha256>（Range に応える）
 const crypto = require("crypto"), fs = require("fs"), os = require("os"), cp = require("child_process");
 const U2 = globalThis.URL;
-const BLOB = {"blossom.nostr.build": {}, "blossom.primal.net": {}}, AUTHS = []; let failPrimary = 0;
+const JeniMedia_pathHash = u => (/\/([0-9a-f]{64})(?:\.[a-z0-9]{2,5})?$/.exec(u) || [])[1];
+const BLOB = {"blossom.nostr.build": {}, "blossom.primal.net": {}}, AUTHS = []; let failPrimary = 0, XFORM = 0;   // XFORM：置き場が受け取った中身を整え直す（指紋が変わる）
 const CORS = {"access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, x-sha-256", "access-control-allow-methods": "GET, HEAD, PUT, OPTIONS"};
 async function blossom(page) {
   await page.route(/^https:\/\/(blossom\.nostr\.build|blossom\.primal\.net)\//, async r => {
@@ -27,8 +28,9 @@ async function blossom(page) {
       AUTHS.push(ev);
       let body = q.postDataBuffer(), type = q.headers()["content-type"] || "application/octet-stream";
       if (u.pathname === "/mirror") { const from = JSON.parse(body.toString()).url, fu = new U2(from), src = (BLOB[fu.hostname] || {})[fu.pathname.slice(1).split(".")[0]]; if (!src) return r.fulfill({status: 404, headers: CORS, body: ""}); body = src.body; type = src.type; }
-      const x = crypto.createHash("sha256").update(body).digest("hex");
+      let x = crypto.createHash("sha256").update(body).digest("hex");
       if (!ev.tags.some(t => t[0] === "x" && t[1] === x)) return r.fulfill({status: 403, headers: CORS, body: ""});
+      if (XFORM && u.pathname === "/upload") { body = Buffer.concat([body, Buffer.from("整え直し")]); x = crypto.createHash("sha256").update(body).digest("hex"); }
       box[x] = {body, type}; const ext = {"video/mp4": ".mp4", "audio/mp4": ".m4a", "image/jpeg": ".jpg"}[type] || "";
       return r.fulfill({status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify({url: `https://${host}/${x}${ext}`, sha256: x, size: body.length, type})});
     }
@@ -221,14 +223,19 @@ async function relay(page) {
     // 作ったあとでアルバムに写真を足す（直す）
     await a.evaluate(id => { __jt.closeSheet(); __jt.detail(id); }, albId); await wait(300);
     await a.evaluate(id => { const d = document.querySelector(`#pg-${id} .more`); if (d) d.open = true; }, albId); await a.click(`#pg-${albId} [data-edit]`); await wait(300);
+    XFORM = 1;   // この1枚は、置き場が中身を整え直す
     await a.setInputFiles("#e-pics", ["bread.jpg"].map(f => path.resolve(__dirname, "..", "app", "media", f)));
     await until(a, () => document.querySelectorAll("#over .alb .ali:not(.add)").length === 4, 15000);
+    XFORM = 0;
     await a.click("#over [data-esave]"); await wait(1200);
     check("直す：作ったあとでアルバムに写真を足せる（相手の画面でも4枚）", await until(bp, id => (__jt.MEDIA[id].pics || []).length === 4, 10000, albId));
     { const pp = await bp.evaluate(id => __jt.MEDIA[id].pics[3], albId), host = new U2(pp.u).hostname, keep = BLOB[host][pp.x];
       const good = await bp.evaluate(async p => { try { await JeniMedia.fetchChecked(p); return true; } catch (e) { return false; } }, pp);
+      const ob = BLOB[host][pp.x].body, orig = crypto.createHash("sha256").update(ob.subarray(0, ob.length - Buffer.byteLength("整え直し"))).digest("hex");
+      const old = await bp.evaluate(async p => { try { await JeniMedia.fetchChecked(p); return true; } catch (e) { return false; } }, {...pp, x: orig});
       for (const h of Object.keys(BLOB)) if (BLOB[h][pp.x]) BLOB[h][pp.x] = {...BLOB[h][pp.x], body: Buffer.concat([BLOB[h][pp.x].body, Buffer.from("x")])};
       const bad = await bp.evaluate(async p => { try { await JeniMedia.fetchChecked(p); return true; } catch (e) { return false; } }, pp);
+      check("置き場が中身を整え直しても（指紋が変わる）、置き場の指紋で確かめて使える（前に作ったカードも）", good && old && pp.x === JeniMedia_pathHash(pp.u) && orig !== pp.x);
       check("置き場で中身を差し替えられたら、その写真は使わない（指紋が合わない）", good && !bad);
       BLOB[host][pp.x] = keep; }
     // ---- 長い動画：その場で軽くして、2分ほどずつに分けて置く → 相手の画面で続けて流れる・置き場が1つ消えても写しから ----

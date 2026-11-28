@@ -148,10 +148,14 @@
   // 公開の置き場のもの：取ってきた中身の指紋（SHA-256）が、作った人が署名して出した指紋と同じときだけ使う（置き場で差し替えられていたら使わない）
   async function fetchChecked(p) {
     for (const u of urlsOf(p)) { try { const r = await fetch(u); if (!r.ok) continue; const buf = await r.arrayBuffer();
-      if (p.x && hexOf(await crypto.subtle.digest("SHA-256", buf)) !== p.x) continue;
+      if (p.x && !hashOk(p, hexOf(await crypto.subtle.digest("SHA-256", buf)))) continue;
       return URL.createObjectURL(new Blob([buf], {type: r.headers.get("content-type") || p.t || ""})); } catch (e) {} }
     throw new Error("中身が確かめられませんでした");
   }
+  // 置き場によっては、受け取ったときに中身を整え直す（写真の情報を消す・動画を詰め直す）ので、指紋が変わる。
+  // カードに書いた指紋か、作った人が署名したカードの置き場の住所に入っている指紋（Blossom の住所は /<指紋>）のどちらかと合えばよい
+  const hashOk = (p, h) => !!h && (h === p.x || h === pathHash(p.u));
+  const pathHash = u => { const m = /\/([0-9a-f]{64})(?:\.[a-z0-9]{2,5})?$/i.exec(String(u || "").split(/[?#]/)[0]); return m ? m[1].toLowerCase() : ""; };
   const hexOf = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, "0")).join("");
   async function openPart(p) {
     if (OPENED[p.x || p.u]) return OPENED[p.x || p.u];
@@ -173,8 +177,8 @@
   }
   // sign(kind, content, tags) → 署名した出来事（その人の鍵で）
   async function upload(blob, sign, onp = () => {}) {
-    const x = await sha256(blob), now = Math.floor(Date.now() / 1000);
-    const auth = async t => "Nostr " + b64(JSON.stringify(await sign(24242, "jeni に置く", [["t", t], ["x", x], ["expiration", String(now + 900)]])));
+    let x = await sha256(blob); const now = Math.floor(Date.now() / 1000);
+    const auth = async (t, h = x) => "Nostr " + b64(JSON.stringify(await sign(24242, "jeni に置く", [["t", t], ["x", h], ["expiration", String(now + 900)]])));
     let got = null, used = null, err = null;
     for (const s of SERVERS) {
       try { got = await put(s + "/upload", blob, {"Authorization": await auth("upload"), "Content-Type": blob.type || "application/octet-stream", "X-SHA-256": x}, onp); used = s; break; }
@@ -182,9 +186,11 @@
     }
     if (!got) throw err || new Error("置けませんでした");
     const url = got.url || `${used}/${x}`;
+    // 置き場が中身を整え直したときは、置き場の指紋（住所に入っているもの）を正とする
+    { const h = /^[0-9a-f]{64}$/.test(got.sha256 || "") ? got.sha256 : pathHash(url); if (h && h !== x) x = h; }
     const mir = [];
     for (const s of SERVERS) if (s !== used) {
-      try { await put(s + "/mirror", JSON.stringify({url}), {"Authorization": await auth("upload"), "Content-Type": "application/json"}); mir.push(s); } catch (e) {}
+      try { await put(s + "/mirror", JSON.stringify({url}), {"Authorization": await auth("upload", x), "Content-Type": "application/json"}); mir.push(s); } catch (e) {}
     }
     const ext = (url.match(/\.[a-z0-9]{2,4}$/i) || [""])[0];
     return {u: url, x, m: mir, e: ext};
@@ -211,5 +217,5 @@
     return null;
   }
 
-  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked, keep};
+  root.JeniMedia = {hashOk, pathHash, LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked, keep};
 })(typeof globalThis !== "undefined" ? globalThis : this);

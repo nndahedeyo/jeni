@@ -232,6 +232,7 @@ button.link{border:0;background:none;color:var(--leaf);text-decoration:underline
 .jc2 .cview{position:absolute;inset:0 30% 30% 0;border:0;background:none;padding:0}
 .jc2 .cbar{position:absolute;left:0;right:0;bottom:0;height:.9cqw;background:rgba(255,255,255,.15);transition:height .2s,opacity .25s}
 /* 再生中は、ふつうの動画アプリのように：絵だけを見せ、押すと操作（止める・線・時間）が出て、少しすると消える */
+.jc2 .face{touch-action:manipulation}
 .jc2 .face :is(.cplay,.jno,.cfav,.ctalk,.txt,.excerpt,.gfield,.ctime){transition:opacity .25s}
 .jc2 .face.pl :is(.jno,.cfav,.ctalk,.excerpt,.gfield,.mark){opacity:0!important;pointer-events:none!important}
 .jc2 .face.pl:not(.ui) :is(.cplay,.txt,.cbar){opacity:0;pointer-events:none}
@@ -1635,7 +1636,7 @@ class Chain {
   async check(j, u) {
     // 流している置き場の中身が、カードに書かれた指紋と同じかを確かめる。違えば止めて、その置き場は使わない
     const p = this.parts[j], key = j + " " + u; this.seen = this.seen || {}; if (this.seen[key]) return; this.seen[key] = 1;
-    let ok = null; try { const r = await fetch(u); if (r.ok) ok = hexOfBuf(await crypto.subtle.digest("SHA-256", await r.arrayBuffer())) === p.x; } catch (e) {}
+    let ok = null; try { const r = await fetch(u); if (r.ok) ok = JeniMedia.hashOk(p, hexOfBuf(await crypto.subtle.digest("SHA-256", await r.arrayBuffer()))); } catch (e) {}
     if (ok !== false || this.gone || this.i !== j || this.el.getAttribute("src") !== u) return;
     this.el.pause(); this.el.removeAttribute("src"); try { this.el.load(); } catch (e) {} if (this.h.fail) this.h.fail();
   }
@@ -1794,7 +1795,19 @@ document.addEventListener("pointerdown", e => { const b = e.target.closest && e.
 document.addEventListener("pointermove", e => { if (SEEK) seekPreview(e); });
 document.addEventListener("pointerup", () => { SEEK = null; });
 document.addEventListener("pointercancel", () => { SEEK = null; });
+// 全画面：カードをすばやく2回たたくと入る・もう一度2回たたくと戻る（右上の「全画面」「もどす」でも）
+let DTAP = null, DTAP_T = 0;
+function immToggle() {
+  const on = !$("sheet").classList.contains("imm"), b = document.querySelector("#sheet [data-imm]"); $("sheet").classList.toggle("imm", on);
+  if (b) { b.setAttribute("aria-pressed", on); b.textContent = on ? "もどす" : "全画面"; }
+  try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {}
+}
 document.addEventListener("click", e => {
+  { const f = e.target.closest && e.target.closest("#sheet .jc2 .face"); if (f && document.querySelector("#sheet [data-imm]") && !e.target.closest("button:not(.cview),[data-seek],a,iframe,input,[data-flip],.gfield")) {
+      const now = Date.now(), L = DTAP; DTAP = {t: now, x: e.clientX, y: e.clientY};
+      if (L && now - L.t < 400 && Math.abs(e.clientX - L.x) < 40 && Math.abs(e.clientY - L.y) < 40) { DTAP = null; clearTimeout(DTAP_T); const pg = f.closest(".pg"); immToggle(); if (pg) pg.scrollIntoView({block: "start"}); return; }
+      // カード全体で「大きく見る」ものは、2回目を少しだけ待ってから開く
+      const cv = e.target.closest(".cview"); if (cv) { clearTimeout(DTAP_T); DTAP_T = setTimeout(() => cplay(cv.dataset.cplay), 320); return; } } }
   { const pf = e.target.closest && e.target.closest(".jc2 .face.pl"); if (pf && !e.target.closest("button,[data-seek],a,iframe,input")) { if (pf.classList.contains("ui")) { pf.classList.remove("ui"); clearTimeout(pf._ui); } else faceUI(pf); return; } }
   { const pf = e.target.closest && e.target.closest(".jc2 .face.pl.ui"); if (pf) faceUI(pf); }
   { const pg = e.target.closest && e.target.closest(".pg"); if (pg) sel = pg.dataset.pg; }
@@ -1914,8 +1927,7 @@ document.addEventListener("click", e => {
   if ((b = q("[data-attachask]"))) return attachAsk(b.dataset.attachask);
   if ((b = q("[data-attach]"))) { const pid = sel; emit(me, {t: "attach", project: pid, card: b.dataset.attach}); closeOver(); refreshPage(pid); return toast("つなぎました"); }
   if ((b = q("[data-vis]"))) { const c = S.cards[b.dataset.vis], v = mine(c)[0].vis === "hide" ? "show" : "hide"; emit(me, {t: "vis", card: c.id, vis: v}); refreshPage(c.id); return toast(`見せ方：${VIS[v]}`); }
-  if (q("[data-imm]")) { const on = !$("sheet").classList.contains("imm"); $("sheet").classList.toggle("imm", on); q("[data-imm]").setAttribute("aria-pressed", on); q("[data-imm]").textContent = on ? "もどす" : "全画面";
-    try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen(); } catch (x) {} return; }
+  if (q("[data-imm]")) return immToggle();
   if (q("[data-editme]")) return meCard(true);
   if (q("[data-invite]")) return inviteSheet();
   if ((b = q("[data-qas]"))) { const id = b.dataset.qid, c = S.cards[id]; QRBACK = {me, id, n: qCount(c), t: c.tipped}; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(id); }
