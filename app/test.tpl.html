@@ -189,6 +189,7 @@ body.lite .mods,body.lite .menu [data-f]:not([data-f="all"]):not([data-f="people
 .sheet.feed{scroll-snap-type:y proximity;padding-top:0;padding-bottom:0}
 .sheet.feed>.wrap{gap:0}
 .ftop{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(6px + env(safe-area-inset-top,0px)) 0 6px;background:linear-gradient(var(--bg) 70%,transparent)}
+.dg{display:grid;gap:8px;font-size:13px;line-height:1.5}.dg .mono{font-family:ui-monospace,monospace;color:var(--mute)}
 .ftop .imm-b{border:0;background:none;color:var(--mute);font-size:12px;text-decoration:underline;text-underline-offset:3px;min-height:36px}
 /* 全画面：カードだけ。押すものは隠す（もどすで戻る） */
 .sheet.imm{background:#000;scroll-snap-type:y mandatory;padding:0}
@@ -841,7 +842,7 @@ function pageHtml(c) {
       ${my.length ? `<div class="minor"><span>持っている ${my.length}</span>${my[0].vis !== "lock" ? `<span>・</span><button type="button" class="link" data-vis="${c.id}">見せ方：${VIS[my[0].vis || "show"]}</button>` : `<span>・${VIS.lock}</span>`}</div>` : ""}</div>
     ${recv ? `<div class="recv">${recv}</div>` : ""}
     ${own}
-    <details class="more" data-more="${c.id}" ${OPENED.has(c.id) ? "open" : ""}><summary>くわしく・記録</summary>${special}${OPENED.has(c.id) ? `<div class="recb">${recBody(c.id)}</div>` : ""}</details>
+    <details class="more" data-more="${c.id}" ${OPENED.has(c.id) ? "open" : ""}><summary>くわしく・記録</summary>${special}${LIVE && c.by === me && MEDIA[c.id] && ([...(MEDIA[c.id].parts || []), ...(MEDIA[c.id].pics || [])].some(p => p && p.u)) ? `<p><button type="button" class="link" data-mdiag="${c.id}">置き場を確かめる</button></p>` : ""}${OPENED.has(c.id) ? `<div class="recb">${recBody(c.id)}</div>` : ""}</details>
   </section>`;
 }
 const OPENED = new Set(); let RETIRE = null;
@@ -945,10 +946,25 @@ const KEPT = Object.create(null);   // カード → 見回った時刻（10分�
 async function mediaKeep(id) {
   const c = S.cards[id], m = MEDIA[id]; if (!LIVE || !c || c.by !== me || !m || Date.now() - (KEPT[id] || 0) < 600000) return; KEPT[id] = Date.now();
   const ps = [...(m.parts || []), ...(m.pics || [])].filter(p => p && p.x); if (!ps.length) return;
-  let lost = 0, fixed = 0;
-  for (const p of ps) { try { const r = await JeniMedia.keep(p, LV.sign); if (!r.alive) lost++; fixed += r.fixed; } catch (e) {} }
+  let lost = 0, fixed = 0; KDIAG[id] = [];
+  for (const p of ps) { try { const r = await JeniMedia.keep(p, LV.sign); if (r.alive === 0) lost++; fixed += r.fixed; KDIAG[id].push(...(r.seen || [])); } catch (e) {} }
   if (fixed && !lost) toast("置き場の写しを直しました");
-  if (lost) { const pg = $("pg-" + id); if (pg && !pg.querySelector(".mlost")) pg.querySelector(".jc2").insertAdjacentHTML("afterend", `<p class="sub warnc mlost" style="margin:8px 0 0">写真・音・動画の一部が置き場から消えています。手元に残した元のファイルを選んで置き直してください。 <button type="button" class="pill" data-edit="${id}">置き直す</button></p>`); }
+  if (lost) { const pg = $("pg-" + id); if (pg && !pg.querySelector(".mlost")) pg.querySelector(".jc2").insertAdjacentHTML("afterend", `<p class="sub warnc mlost" style="margin:8px 0 0">写真・音・動画の一部が置き場から消えています。手元に残した元のファイルを選んで置き直してください。 <button type="button" class="pill" data-edit="${id}">置き直す</button> <button type="button" class="link" data-mdiag="${id}">くわしく</button></p>`); }
+}
+// 置き場の様子（作った人がたしかめる・知らせてもらうため）：どの置き場が、どう答えたか
+const KDIAG = Object.create(null), VDIAG = Object.create(null);
+async function mediaDiag(id) {
+  const m = MEDIA[id] || {}, ps = [...(m.parts || []), ...(m.pics || [])].filter(p => p && p.u);
+  openOver(`<h2 class="rh">置き場の様子</h2><p class="sub">確かめています…</p>`);
+  const rows = [];
+  for (const [i, p] of ps.entries()) for (const u of JeniMedia.urlsOf(p)) { const o = await JeniMedia.probe(u); rows.push({i, o, x: p.x}); }
+  const st = o => [o.st, o.st2].filter(x => x !== undefined).join(" → ");
+  const mb = n => n ? (n / 1048576).toFixed(1) + "MB" : "";
+  const v = VDIAG[id];
+  if (!$("over").hidden) openOver(`<h2 class="rh">置き場の様子</h2>
+    <div class="dg">${rows.map(r => `<div><b>${r.i + 1}</b> ${esc(r.o.host)}：${esc(st(r.o))} ${mb(r.o.len)} <small>${esc(r.o.type)}</small><br><small class="mono">${esc(String(r.o.u).slice(-24))}</small></div>`).join("") || "<div>置き場のファイルはありません</div>"}</div>
+    ${v ? `<p class="sub warnc">再生：${esc(v)}</p>` : ""}
+    <p class="sub">200・206 は「ある」、404 は「無い」です。この画面を写して送ってもらえると、原因を確かめられます。</p>`);
 }
 function doHold(id) {
   const c = S.cards[id], before = mine(c).length;
@@ -1236,7 +1252,8 @@ function cplay(id) {
       ch = VCH[id] = new Chain(v, partsOf(m), {
         tick: f => { const b = $("cbar-" + id); if (b) b.style.width = (f * 100) + "%"; ctime(id, f); posSave(id, f); },
         end: () => { const b = pg.querySelector("[data-cplay]"); if (b) b.classList.remove("on"); },
-        fail: () => toast("再生できませんでした（置き場につながりません）")});
+        fail: () => { VDIAG[id] = VDIAG[id] || ("置き場から取れない（" + (ch && ch.el.error ? "エラー " + ch.el.error.code : "つながらない") + "）"); toast("再生できませんでした"); },
+        why: w => { VDIAG[id] = w; }});
     }
     ch.el.muted = false; ch.el.style.opacity = "1";
     if (ch.paused) { const first = !ch.started; ch.started = true; ch.play().catch(() => {}); msSet(id); if (first) posResume(id, ch); } else ch.pause();
@@ -1638,6 +1655,7 @@ class Chain {
     const p = this.parts[j], key = j + " " + u; this.seen = this.seen || {}; if (this.seen[key]) return; this.seen[key] = 1;
     let ok = null; try { const r = await fetch(u); if (r.ok) ok = JeniMedia.hashOk(p, hexOfBuf(await crypto.subtle.digest("SHA-256", await r.arrayBuffer()))); } catch (e) {}
     if (ok !== false || this.gone || this.i !== j || this.el.getAttribute("src") !== u) return;
+    if (this.h.why) this.h.why("中身の指紋が合わない（" + ((u.match(/^https:\/\/([^/]+)/) || [])[1] || "") + "）");
     this.el.pause(); this.el.removeAttribute("src"); try { this.el.load(); } catch (e) {} if (this.h.fail) this.h.fail();
   }
   async prefetch(j) {
@@ -1928,6 +1946,7 @@ document.addEventListener("click", e => {
   if ((b = q("[data-attach]"))) { const pid = sel; emit(me, {t: "attach", project: pid, card: b.dataset.attach}); closeOver(); refreshPage(pid); return toast("つなぎました"); }
   if ((b = q("[data-vis]"))) { const c = S.cards[b.dataset.vis], v = mine(c)[0].vis === "hide" ? "show" : "hide"; emit(me, {t: "vis", card: c.id, vis: v}); refreshPage(c.id); return toast(`見せ方：${VIS[v]}`); }
   if (q("[data-imm]")) return immToggle();
+  if ((b = q("[data-mdiag]"))) return mediaDiag(b.dataset.mdiag);
   if (q("[data-editme]")) return meCard(true);
   if (q("[data-invite]")) return inviteSheet();
   if ((b = q("[data-qas]"))) { const id = b.dataset.qid, c = S.cards[id]; QRBACK = {me, id, n: qCount(c), t: c.tipped}; me = b.dataset.qas; closeOver(); closeSheet(); return quickSheet(id); }

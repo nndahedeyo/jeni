@@ -179,12 +179,12 @@
   async function upload(blob, sign, onp = () => {}) {
     let x = await sha256(blob); const now = Math.floor(Date.now() / 1000);
     const auth = async (t, h = x) => "Nostr " + b64(JSON.stringify(await sign(24242, "jeni に置く", [["t", t], ["x", h], ["expiration", String(now + 900)]])));
-    let got = null, used = null, err = null;
+    let got = null, used = null; const errs = [];
     for (const s of SERVERS) {
       try { got = await put(s + "/upload", blob, {"Authorization": await auth("upload"), "Content-Type": blob.type || "application/octet-stream", "X-SHA-256": x}, onp); used = s; break; }
-      catch (e) { err = e; }
+      catch (e) { errs.push(s.replace(/^https:\/\//, "") + "：" + ((e && e.message) || "だめでした")); }
     }
-    if (!got) throw err || new Error("置けませんでした");
+    if (!got) throw new Error(errs.join(" ／ ") || "置けませんでした");
     const url = got.url || `${used}/${x}`;
     // 置き場が中身を整え直したときは、置き場の指紋（住所に入っているもの）を正とする
     { const h = /^[0-9a-f]{64}$/.test(got.sha256 || "") ? got.sha256 : pathHash(url); if (h && h !== x) x = h; }
@@ -196,15 +196,26 @@
     return {u: url, x, m: mir, e: ext};
   }
   // 置き場の見回り（作った人の端末で）：どこかに残っていれば、消えた置き場へ写し直す。どこにも残っていなければ 0 を返す（元のファイルから置き直してもらう）
+  // 置き場の1つを確かめる：まず HEAD、だめなら最初の1バイトだけ GET。st は数（HTTP の答え）か、つながらなかった理由
+  async function probe(u) {
+    const o = {u, host: (String(u).match(/^https:\/\/([^/]+)/) || [])[1] || u};
+    try { const r = await fetch(u, {method: "HEAD", cache: "no-store"}); o.st = r.status; o.len = +r.headers.get("content-length") || 0; o.type = r.headers.get("content-type") || ""; if (r.ok) return o; } catch (e) { o.st = "HEAD できない（" + (e.name || "エラー") + "）"; }
+    try { const r = await fetch(u, {headers: {Range: "bytes=0-0"}, cache: "no-store"}); o.st2 = r.status; const cr = r.headers.get("content-range") || ""; o.len = +(cr.split("/")[1] || r.headers.get("content-length") || 0); o.type = r.headers.get("content-type") || o.type; }
+    catch (e) { o.st2 = "つながらない（" + (e.name || "エラー") + "）"; }
+    return o;
+  }
+  const okSt = o => [o.st, o.st2].some(x => x === 200 || x === 206);
+  const goneSt = o => !okSt(o) && [o.st, o.st2].some(x => x === 404 || x === 410);
   async function keep(p, sign) {
-    const us = urlsOf(p), alive = [], gone = [];
-    for (const u of us) { try { const r = await fetch(u, {method: "HEAD"}); (r.ok ? alive : gone).push(u); } catch (e) { gone.push(u); } }
-    if (!alive.length) return {alive: 0, fixed: 0};
+    const us = urlsOf(p), alive = [], gone = [], seen = [];
+    for (const u of us) { const o = await probe(u); seen.push(o); if (okSt(o)) alive.push(u); else if (goneSt(o)) gone.push(u); }
+    // つながらなかっただけのもの（電波・置き場の都合）は「消えた」と決めない
+    if (!alive.length) return {alive: gone.length === us.length ? 0 : -1, fixed: 0, seen};
     let fixed = 0; const now = Math.floor(Date.now() / 1000);
     for (const u of gone) { const base = SERVERS.find(s => u.startsWith(s + "/")); if (!base || !p.x) continue;
       try { const auth = "Nostr " + b64(JSON.stringify(await sign(24242, "jeni に置く", [["t", "upload"], ["x", p.x], ["expiration", String(now + 900)]])));
         await put(base + "/mirror", JSON.stringify({url: alive[0]}), {"Authorization": auth, "Content-Type": "application/json"}); fixed++; } catch (e) {} }
-    return {alive: alive.length, fixed};
+    return {alive: alive.length, fixed, seen};
   }
   // 同じ中身を、写しのある置き場からも取れるように
   const urlsOf = p => [p.u, ...((p.m || []).map(b => `${b}/${p.x}${p.e || ""}`))].filter(Boolean);
@@ -217,5 +228,5 @@
     return null;
   }
 
-  root.JeniMedia = {hashOk, pathHash, LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked, keep};
+  root.JeniMedia = {probe, hashOk, pathHash, LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked, keep};
 })(typeof globalThis !== "undefined" ? globalThis : this);

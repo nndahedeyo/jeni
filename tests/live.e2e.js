@@ -261,6 +261,10 @@ async function relay(page) {
       check("下の線で後ろの部分へ飛べる（2つ目）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 50), 15000, vid));
       { const host0 = new U2(p0.u).hostname; await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.evaluate(id => { delete __jt.KEPT[id]; __jt.detail(id); }, vid);
         check("作った人が開くと、置き場の消えた写しを直す（ほかの置き場から写し直す）", await (async () => { for (let k = 0; k < 40; k++) { if (BLOB[host0][p0.x]) return true; await wait(250); } return false; })()); }
+      { await a.evaluate(id => { const d = document.querySelector(`#pg-${id} details.more`); if (d) d.open = true; }, vid); await wait(300);
+        await a.click(`#pg-${vid} [data-mdiag]`);
+        check("作った人は「置き場を確かめる」で、どの置き場にあるかを見られる", await until(a, () => /置き場の様子/.test(document.getElementById("over").textContent) && (document.getElementById("over").textContent.match(/：200|：206/g) || []).length >= 2, 15000));
+        await a.click("#over [data-overclose]").catch(() => {}); }
       { // 置き場で動画の中身を差し替えられたら：すぐ流しはじめても、裏で指紋を確かめて止める
         const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; BLOB[h][p0.x] = {...keep[h], body: Buffer.concat([keep[h].body, Buffer.from("x")])}; }
         await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
