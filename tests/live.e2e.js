@@ -15,7 +15,7 @@ let realSockets = 0;
 const crypto = require("crypto"), fs = require("fs"), os = require("os"), cp = require("child_process");
 const U2 = globalThis.URL;
 const JeniMedia_pathHash = u => (/\/([0-9a-f]{64})(?:\.[a-z0-9]{2,5})?$/.exec(u) || [])[1];
-const BLOB = {"blossom.nostr.build": {}, "blossom.primal.net": {}}, AUTHS = []; let failPrimary = 0, XFORM = 0;   // XFORM：置き場が受け取った中身を整え直す（指紋が変わる）
+const BLOB = {"blossom.nostr.build": {}, "blossom.primal.net": {}}, AUTHS = []; let failPrimary = 0, XFORM = 0, NORANGE = 0;   // NORANGE：置き場が「途中から取る」に答えない   // XFORM：置き場が受け取った中身を整え直す（指紋が変わる）
 const CORS = {"access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, x-sha-256", "access-control-allow-methods": "GET, HEAD, PUT, OPTIONS"};
 async function blossom(page) {
   await page.route(/^https:\/\/(blossom\.nostr\.build|blossom\.primal\.net)\//, async r => {
@@ -36,6 +36,7 @@ async function blossom(page) {
     }
     const it = box[u.pathname.slice(1).split(".")[0]]; if (!it) return r.fulfill({status: 404, headers: CORS, body: ""});
     const m = /bytes=(\d*)-(\d*)/.exec(q.headers()["range"] || ""), n = it.body.length;
+    if (NORANGE && m) return r.fulfill({status: 500, headers: CORS, body: ""});
     if (!m) return r.fulfill({status: 200, headers: {...CORS, "accept-ranges": "bytes"}, contentType: it.type, body: it.body});
     const a = m[1] ? +m[1] : 0, z = m[2] ? Math.min(+m[2], n - 1) : n - 1;
     return r.fulfill({status: 206, headers: {...CORS, "accept-ranges": "bytes", "content-range": `bytes ${a}-${z}/${n}`}, contentType: it.type, body: it.body.subarray(a, z + 1)});
@@ -277,6 +278,12 @@ async function relay(page) {
         const stopped = await until(bp, id => { const vs = [...document.querySelectorAll(`#pg-${id} video.inplay`)]; return vs.length > 0 && vs.every(v => !v.getAttribute("src") || v.error || v.paused); }, 20000, vid);
         check("置き場で動画でないものにすり替えられたら、流さない", stopped);
         for (const h in keep) BLOB[h][p0.x] = keep[h]; }
+      { // 置き場が「途中から取る」に答えなくても（iPhone で止まる原因）、取り終えた写しに切り替えて流す
+        NORANGE = 1;
+        await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
+        await bp.click(`#pg-${vid} [data-cplay]`);
+        check("置き場が途中から取れなくても、取り終えた写しで流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^blob:/.test(v.src) && !v.paused && v.currentTime > .5), 25000, vid));
+        NORANGE = 0; }
       await bp.click(`#pg-${vid} [data-cplay]`);
     } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
     // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----
