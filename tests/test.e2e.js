@@ -149,6 +149,14 @@ async function routeMB(p) {
     // プロフィールを編集（名前・ひとこと・見せ方）
     await p.click("[data-me]"); await p.click("[data-editme]"); await p.fill("#p-name", "けんじ"); await p.fill("#p-line", "畑と音のあいだ"); await p.check(`[name="p-vis"][value="hide"]`); await p.click("[data-saveme]"); await p.waitForTimeout(200);
     await p.click("#sheet [data-close]");
+    { await p.click("[data-me]"); await p.click("[data-editme]"); await p.setInputFiles("#p-pic", path.join(root, "media", "radish.jpg")); await p.waitForSelector("#crop-img", {timeout: 3000}).catch(() => {});
+      const t0 = await p.$eval("#crop-img", e => e.style.transform).catch(() => ""); const bx = await p.$eval("#crop", e => { const r = e.getBoundingClientRect(); return {x: r.x + r.width / 2, y: r.y + r.height / 2}; });
+      await p.$eval("#crop-z", e => { e.value = "2"; e.dispatchEvent(new Event("input", {bubbles: true})); }); await p.mouse.move(bx.x, bx.y); await p.mouse.down(); await p.mouse.move(bx.x + 40, bx.y + 30, {steps: 4}); await p.mouse.up();
+      const t1 = await p.$eval("#crop-img", e => e.style.transform);
+      check(tag + " アイコンの位置：指で動かす・大きさを変えると、写る所が変わる", !!t0 && t1 !== t0);
+      await p.click("[data-cropok]"); await p.waitForTimeout(200);
+      check(tag + " アイコンの位置を決めると、アイコンが変わる", /data:image\/jpeg/.test(await p.innerHTML("#sheet")) && (await p.$eval("#over", e => e.hidden)));
+      await p.click("#sheet [data-close]").catch(() => {}); }
     check(tag + " プロフィールの名前とひとことが変わる", (await p.textContent("#home .me")).includes("けんじ") && (await p.textContent("#home .me")).includes("畑と音のあいだ"));
     const bread = await id("天然酵母カンパーニュ");
     await p.click(`#home [data-detail="${bread}"].line`); await p.waitForTimeout(300);
@@ -205,17 +213,18 @@ async function routeMB(p) {
     check(tag + " 会話の名前から、その人のカード", await p.evaluate(() => document.getElementById("over").hidden && /プロフィール/.test(document.getElementById("sheet").textContent)));
     await p.click("#sheet [data-close]");
     // 自分のプロフィールカードから「話す」：お互いに友達の人の一覧 → 会話・通話
-    check(tag + " 残高の下に、話す・電話（ひとつ）・贈る・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="chats"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "chats,gifts,news" && r.width <= 30; }));
+    check(tag + " 残高の下に、話す・電話・贈る（ひとつ）・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="chats"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "chats,news" && r.width <= 30; }));
     check(tag + " 不在着信と新しい会話は、吹き出しの小さな赤い印（数ではなく）", !(await p.$('[data-fx="phones"]')) && !/\d/.test(await p.textContent(".comm")));
-    // 贈る：残高の下の「贈る」→ 相手 → jeni を長押しで。相手のお知らせに届く
+    // 贈る：会話の＋から（人から人へ直接渡すものは、会話にまとめる）→ jeni を長押しで。会話の中と相手のお知らせに残る
     { const me0 = await p.evaluate(() => __jt.me);
-      await p.click('[data-fx="gifts"]'); await p.waitForTimeout(150);
-      const to = await p.$eval("#sheet [data-giftp]", b => b.dataset.giftp);
-      check(tag + " 贈る：参加している人が並ぶ（友達が先）", (await p.$$("#sheet [data-giftp]")).length >= 2);
-      await p.click(`#sheet [data-giftp="${to}"]`); await p.waitForTimeout(150);
+      await p.click('[data-fx="chats"]'); await p.waitForTimeout(150);
+      const to = await p.$eval("#sheet .crow[data-chat]", b => b.dataset.chat); await p.click(`#sheet .crow[data-chat="${to}"]`); await p.waitForTimeout(150);
+      await p.click("[data-cplus]"); await p.click("[data-cgift]"); await p.waitForTimeout(150);
       check(tag + " 贈る画面：取り消せないと書いてあり、長押しで決める", /取り消せません/.test(await p.textContent("#over")) && !!(await p.$('#over [data-lp="gsend"]')));
       await p.fill("#g-amt", "25"); const b0 = await bal(); await lp('#over [data-lp="gsend"]');
       check(tag + " jeni を長押しで贈れる", /25 jeni を贈りました/.test(await p.textContent("#over")) && await bal() === b0 - 25);
+      await p.click('#over [data-chat]'); await p.waitForTimeout(150);
+      check(tag + " 贈ったあと会話にもどり、会話の中に「25 jeni を贈りました」", /25 jeni を贈りました/.test(await p.textContent("#c-talk")));
       await p.click("#over [data-overclose]"); await p.click("#sheet [data-close]");
       await p.selectOption("#who", to); await p.waitForTimeout(150);
       check(tag + " 受け取った人の鈴に印、お知らせに「から 25 jeni が届きました」", !!(await p.$('[data-fx="news"] b')) && await (async () => { await p.click('[data-fx="news"]'); await p.waitForTimeout(150); const r = /から 25 jeni が届きました/.test(await p.textContent("#sheet")); await p.click("#sheet [data-close]"); return r; })());
@@ -251,7 +260,7 @@ async function routeMB(p) {
       check(tag + " カードも探せる（題・作った人・場所）", n > 3 && vis.length >= 1 && vis.length < n && vis.every(t => /大根/.test(t)));
       await p.fill("#pq", ""); await p.waitForTimeout(100); check(tag + " 探す言葉を消すと全部に戻る", (await p.$$eval("#home .list .row[data-pn]", rs => rs.filter(r => !r.hidden).length)) === n); }
     await p.selectOption("#lite", "1"); await p.waitForTimeout(150);
-    check(tag + " 見せ方を比べる：はじめは3つ（しぼり・並び・作る・贈る・お知らせが隠れ、話すは残る）", await p.evaluate(() => { const vis = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; }; return !vis(".mods") && !vis("[data-make]") && !vis('[data-fx="gifts"]') && !vis('[data-fx="news"]') && vis('[data-fx="chats"]') && vis('[data-f="people"]') && !vis('[data-f="music"]'); }));
+    check(tag + " 見せ方を比べる：はじめは少なく（しぼり・並び・お知らせが隠れ、作る・話すは残る）", await p.evaluate(() => { const vis = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; }; return !vis(".mods") && vis("[data-make]") && !vis('[data-fx="news"]') && vis('[data-fx="chats"]') && vis('[data-f="people"]') && !vis('[data-f="music"]'); }));
     await p.selectOption("#lite", ""); await p.waitForTimeout(150);
     check(tag + " すべての機能に戻せる", await p.evaluate(() => getComputedStyle(document.querySelector("[data-make]")).display !== "none"));
     await p.evaluate(() => { __jt.CALLS.push({from: __jt.P.farmer.pk, to: __jt.me, at: __jt.clock + 1, missed: true}); __jt.home(); }); await p.waitForTimeout(150);
@@ -433,7 +442,7 @@ async function routeMB(p) {
     const wv2 = await id("Ambient Waves");
     await p.selectOption("#who", K("d")); await p.waitForTimeout(100);
     await p.evaluate(id => __jt.detail(id), wv2); await p.click(`#pg-${wv2} [data-qrshow]`); await p.waitForTimeout(150);
-    check(tag + " 作った人のボタンは「QRで受け取る」：読んだ人に 持つ・投げ銭、読んでも jeni は動かないと書いてある", /QRで受け取る/.test(await p.textContent("#over h2")) && !(await p.$("#over [data-qk]")) && /読んだ人の画面に：持つ.*投げ銭/.test(await p.textContent("#over")) && /読んだだけで jeni は動きません/.test(await p.textContent("#over")) && !!(await p.$("#over [data-qrwatch] .qth")));
+    check(tag + " 作った人のボタンは「QRで受け取る」：読んだ人に 持つ・投げ銭、読んでも jeni は動かないと書いてある", /QRで受け取る/.test(await p.textContent("#over h2")) && !(await p.$("#over [data-qk]")) && /読んだ人が長押しすると届きます（持つ.*投げ銭）/.test(await p.textContent("#over")) && /読んだだけで jeni は動きません/.test(await p.textContent("#over")) && !!(await p.$("#over [data-qrwatch] .qth")));
     await p.click("#over [data-qas]"); await p.waitForTimeout(200);
     const qb = await bal();
     check(tag + " QRを読んだ人の画面は「QRで払う」：カードを開かずに 持つ と 投げ銭 が1つに", /QRで払う/.test(await p.textContent("#over h2")) && !!(await p.$('#over [data-lp="qtip"]')) && (!!(await p.$('#over [data-lp="qhold"]')) || /もう持っています/.test(await p.textContent("#over"))) && await p.evaluate(() => document.getElementById("sheet").hidden));

@@ -332,7 +332,7 @@ async function relay(page) {
     await bp3.close();
     // プロフィールのアイコン
     await bp.evaluate(() => __jt.closeSheet()); await bp.click(".me [data-me]"); await wait(200); await bp.click("[data-editme]"); await wait(200);
-    await bp.setInputFiles("#p-pic", path.resolve(__dirname, "..", "app", "media", "radish.jpg")); await wait(1500);
+    await bp.setInputFiles("#p-pic", path.resolve(__dirname, "..", "app", "media", "radish.jpg")); await wait(600); await bp.click("[data-cropok]"); await wait(1500);
     check("プロフィールのアイコンは小さくして中継へ、相手に見える", store.some(e => e.kind === 7741 && e.pubkey === bpk && e.content.includes('"pic"')) && await until(a, pk => /background-image|url\(/.test(document.body.innerHTML) && true, 4000, bpk));
     // 書き出し（自分の記録をファイルに）
     const dl = bp.waitForEvent("download", {timeout: 5000}).catch(() => null); await bp.click("[data-saveme]").catch(() => {}); await bp.click("[data-export]").catch(() => {});

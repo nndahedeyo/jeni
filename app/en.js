@@ -25,7 +25,9 @@ root.JENI_EN = [
   ["{*}・{#}枚", "$1 · $2"], ["{*}・{*}・{#}枚", "$1 · $2 · $3"], ["{*}・{*}・{*}・{#}枚", "$1 · $2 · $3 · $4"], ["仲間の輪・{#}枚・輪の人だけ", "Circle · $1 · members only"],
   ["近い順", "Nearest first"], ["・近い順", " · nearest"], ["・お気に入り", " · favorites"], ["・持っている", " · mine"], ["・輪の人だけ", " · members only"],
   ["カードを作る・その場で売る", "Make a card · sell on the spot"], ["話す・電話・お知らせ", "Chat · call · notices"],
-  ["電話", "Call"], ["話す", "Chat"], ["贈る", "Give"], ["お知らせ", "Notices"],
+  ["電話", "Call"], ["話す", "Chat"], ["贈る", "Give"],
+  ["贈りました・{#}:{#}", "Gave · $1:$2"], ["届きました・{#}:{#}", "Received · $1:$2"], ["話す・電話・贈る（新しい知らせあり）", "Chat · call · give (new)"],
+  ["わたしのカードの「招待する」。一度きりのリンクとQRを LINE などで送ります（7日間・1人・認められる人数に数える）。", "“Invite” on your card. Send the one-time link and QR by LINE etc. (7 days · 1 person · counts toward your vouches)."], ["お知らせ", "Notices"],
   ["電話（新しい知らせあり）", "Call (new)"], ["話す（新しい知らせあり）", "Chat (new)"], ["お知らせ（新しい知らせあり）", "Notices (new)"],
 
   // ---- はじまり ----
@@ -326,6 +328,21 @@ root.JENI_EN = [
   ["参加するには", "How to join"], ["招待のリンクの形が合いません", "That doesn't look like an invite link"],
   ["署名", "Signature"], ["見える人", "Who can see"], ["記録", "Record"], ["だれでも読めます", "Anyone can read"], ["下書き", "Draft"],
   ["認められませんでした（{#}人まで・もう参加している人は認められません）", "Couldn't vouch (up to $1 people · members can't be vouched for)"],
+  // ---- 12月：すっきり・アイコンの位置・会話で贈る ----
+  ["アイコンの位置", "Icon position"], ["指で動かして、見せたい所を枠に合わせます", "Drag to frame the part you want"], ["大きさ", "Size"], ["このアイコンにする", "Use this icon"],
+  ["会話にもどる", "Back to chat"], ["作る", "Make"], ["はじめは少なく", "Fewer to start"], ["{#} jeni を贈りました・{#}:{#}", "Gave $1 jeni · $2:$3"], ["「{*}」を贈りました・{#}:{#}", "Gave “$1” · $2:$3"], ["{#} jeni が届きました・{#}:{#}", "Received $1 jeni · $2:$3"], ["「{*}」が届きました・{#}:{#}", "Received “$1” · $2:$3"],
+  ["お店に読んでもらいます（一度きり）", "Have the shop scan it (once)"], ["受付に読んでもらいます（一度きり）", "Have the desk scan it (once)"], ["一度きり。金の線が消えると使えません", "One use. Expires when the gold line runs out"],
+  ["読んだ人が長押しすると届きます（{*}・投げ銭）", "Arrives when the scanner long-presses ($1 · tip)"], ["読んだ人が長押しすると届きます（投げ銭）", "Arrives when the scanner long-presses (tip)"], ["読んだだけで jeni は動きません", "Scanning alone moves no jeni"],
+  ["印を押すと裏のQR。読まれても jeni は動きません。", "Tap the mark for the QR. Being scanned moves no jeni."], ["印を押すと裏のQR。読まれても jeni は動きません。認めてあげられるのは{#}人まで。", "Tap the mark for the QR. Being scanned moves no jeni. You can vouch for up to $1."],
+  ["友達どうしで、話す・電話・贈る（鍵つき）。電話は相手が開いているときだけ鳴ります。", "Chat, call and give between friends (locked). Calls ring only while they have jeni open."],
+  ["贈ると取り消せません。相手を確かめて長押しを。", "Gifts can't be undone. Check who, then long-press."], ["鍵はこの端末だけ。なくすと戻せないので、守っておきます。", "Your key is only on this device. Lost keys can't be restored, so protect it."],
+  ["書き出すと、記録と写真を端末に保存できます。毎日、記録の指紋だけをビットコインに刻みます（中身は書きません）。", "Export saves your records and photos to this device. Each day only a fingerprint of the record is stamped on Bitcoin (no contents)."],
+  ["身内にだけ送ってください（7日間・1人）。", "Send only to people you know (7 days · 1 person)."], ["招待のリンクを開くか、裏のQRを参加している人に読んでもらいます。", "Open an invite link, or have a member scan the QR on the back."],
+  ["輪の中のカードは、輪の人だけが読めます（鍵つき）。", "Cards in a circle are readable only by its members (locked)."],
+  ["音はよい音質にそろえて置きます", "Audio is stored at good quality"], ["動画は軽くして置きます（長いほど時間がかかるので、開いたままに）", "Video is compressed before storing (longer takes longer, keep this open)"],
+  ["{*}。リンクを知る人はだれでも見られます。自分で作ったか、権利のあるものだけに。元のファイルは手元に残してください。", "$1. Anyone with the link can view it. Only your own work or what you have rights to. Keep the original file."],
+  ["{*}。自分で作ったか、権利のあるものだけに。元のファイルは手元に残してください。", "$1. Only your own work or what you have rights to. Keep the original file."],
+  ["新しい知らせをホーム画面のアイコンに出す", "Show a mark on the home-screen icon for news"], ["新しい知らせがあると、アイコンに印が出ます", "A mark appears on the icon when there's news"], ["話す・電話・贈る", "Chat · call · give"], ["贈る", "Give"],
 ];
 // 見本の画面にだけ出る、見本のカード・人の言葉（本物の人が書いたものは、置き換えない）
 root.JENI_EN_SAMPLE = [
