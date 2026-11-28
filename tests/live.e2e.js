@@ -254,6 +254,13 @@ async function relay(page) {
       check("下の線で後ろの部分へ飛べる（2つ目）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 50), 15000, vid));
       { const host0 = new U2(p0.u).hostname; await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.evaluate(id => { delete __jt.KEPT[id]; __jt.detail(id); }, vid);
         check("作った人が開くと、置き場の消えた写しを直す（ほかの置き場から写し直す）", await (async () => { for (let k = 0; k < 40; k++) { if (BLOB[host0][p0.x]) return true; await wait(250); } return false; })()); }
+      { // 置き場で動画の中身を差し替えられたら：すぐ流しはじめても、裏で指紋を確かめて止める
+        const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; BLOB[h][p0.x] = {...keep[h], body: Buffer.concat([keep[h].body, Buffer.from("x")])}; }
+        await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
+        await bp.click(`#pg-${vid} [data-cplay]`);
+        const stopped = await until(bp, id => { const vs = [...document.querySelectorAll(`#pg-${id} video.inplay`)]; return vs.length > 0 && vs.every(v => !v.getAttribute("src")); }, 20000, vid);
+        check("置き場で動画を差し替えられたら、指紋が合わないので止める", stopped);
+        for (const h in keep) BLOB[h][p0.x] = keep[h]; }
       await bp.click(`#pg-${vid} [data-cplay]`);
     } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
     // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----
