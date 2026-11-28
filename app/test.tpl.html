@@ -900,7 +900,7 @@ async function edMedia(file) {
   try {
     const r = await JeniMedia.prepare(file, kind, p => set(p * 70, word), (blob, i, n) => putFile(blob, f => set(100 * (i + .7 + .3 * f) / n, `${word}${n > 1 ? `（${i + 1}/${n}）` : ""}`), c.circle));
     const poster = r.poster ? await shrink(URL.createObjectURL(r.poster), 640) : "";
-    ED.media = {parts: r.parts.map(({u, x, m, e, d, k, t}) => ({u, x, m, e, d, k, t})), dur: Math.round(r.dur), len: JeniMedia.fmtLen(r.dur), poster}; ED.job = null;
+    ED.media = {parts: r.parts.map(({u, x, m, e, d, k, t, c}) => ({u, x, m, e, d, k, t, ...segOf(c, x, k)})), dur: Math.round(r.dur), len: JeniMedia.fmtLen(r.dur), poster}; ED.job = null;
   } catch (e) { ED.job = {err: (e && e.message) || "できませんでした", pct: 0}; }
   if (ED.id === id && !$("over").hidden) editSheet(id, true);
 }
@@ -1383,7 +1383,7 @@ async function mediaJob(file, kind) {
       const dd = Math.round(d * 100) / 100;
       r = {parts: [{...(await onPart(file, 0, 1, dd)), d: dd, size: file.size}], dur: d, poster: null};
     }
-    const parts = r.parts.map(({u, x, m, e, d, k, t}) => ({u, x, m, e, d, k, t}));
+    const parts = r.parts.map(({u, x, m, e, d, k, t, c}) => ({u, x, m, e, d, k, t, ...segOf(c, x, k)}));
     const poster = r.poster ? await shrink(URL.createObjectURL(r.poster), 640) : "";
     MK.media = {parts, dur: Math.round(r.dur), len: JeniMedia.fmtLen(r.dur), poster, mb: r.parts.reduce((s, x) => s + (x.size || 0), 0) / 1048576};
   } catch (e) { JOB.err = (e && e.message) || "できませんでした"; }
@@ -1536,7 +1536,7 @@ function create() {
 // カードの中身：表の画像（小さな写し）・音や動画（分けて置いたもの）・アルバム
 function medOf(k) {
   const mm = MK.media, med = {img: MK.img || "", note: "", url: k === "app" ? MK.url : "", src: "", len: MK.len || ""};
-  if ((k === "music" || k === "video") && mm) { med.parts = mm.parts.map(({u, x, m, e, d, k, t}) => ({u, x, m, e, d, k, t})); med.src = mm.parts[0].u; med.len = mm.len; med.dur = mm.dur; if (!med.img && mm.poster && k === "video") med.img = mm.poster; }
+  if ((k === "music" || k === "video") && mm) { med.parts = mm.parts.map(({u, x, m, e, d, k, t, c}) => ({u, x, m, e, d, k, t, ...(c ? {c} : {})})); med.src = mm.parts[0].u; med.len = mm.len; med.dur = mm.dur; if (!med.img && mm.poster && k === "video") med.img = mm.poster; }
   else if (k === "music" || k === "video") med.src = MK.src || "";
   if (k === "picture" && MK.pics.length) { med.img = MK.pics[0].thumb; med.pics = MK.pics.map(({u, x, m, e, k, t}) => ({u, x, m, e, k, t})); }
   return med;
@@ -1632,6 +1632,83 @@ function rules() {
 // 置き場が1つ止まっていたら、同じ中身（同じ番号）の写しから取る
 const partsOf = m => (m.parts && m.parts.length ? m.parts : m.src ? [{u: m.src, d: 0}] : []).map(p => ({...p, us: JeniMedia.urlsOf(p)}));
 const hexOfBuf = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, "0")).join("");
+/* ---- 切れ端ごとに確かめて流す（動画）：置き場から1MBほどずつ取り、指紋が合った切れ端だけを再生器に渡す。
+   すり替えられた切れ端は一瞬も映らない。動画配信と同じ流し方（MediaSource／iPhone は ManagedMediaSource） ---- */
+const MSC = () => window.ManagedMediaSource || window.MediaSource;
+const segOK = c => { const M = MSC(); try { return !!(c && M && M.isTypeSupported(c.m)); } catch (e) { return false; } };
+const hostOf = u => (String(u).match(/^https:\/\/([^/]+)/) || [])[1] || "";
+class Seg {
+  constructor(el, p, h) {
+    Object.assign(this, {el, p, h, c: p.c, n: p.c.l.length, off: [], next: 1, ui: 0, gen: 0});
+    let o = 0; for (const l of this.c.l) { this.off.push(o); o += l; }
+    const M = MSC(); this.ms = new M();
+    if (window.ManagedMediaSource && this.ms instanceof window.ManagedMediaSource) el.disableRemotePlayback = true;
+    this.onSeek = () => this.seekTo(el.currentTime); this.onTime = () => this.pump();
+    // 待たされたとき（端末が手元の分を捨てたときなど）は、いまの位置の切れ端から取り直す
+    this.onWait = () => { if (this.ahead() < .3) this.seekTo(el.currentTime); else this.pump(); };
+    el.addEventListener("seeking", this.onSeek); el.addEventListener("timeupdate", this.onTime); el.addEventListener("waiting", this.onWait);
+    this.ms.addEventListener("sourceopen", () => this.open(), {once: true});
+    if (this.ms.addEventListener) this.ms.addEventListener("startstreaming", this.onTime);
+    this.url = URL.createObjectURL(this.ms); el.src = this.url;
+  }
+  async open() {
+    if (this.gone) return;
+    try { this.sb = this.ms.addSourceBuffer(this.c.m); } catch (e) { return this.bail("この端末では切れ端で流せない"); }
+    try { if (+this.p.d) this.ms.duration = +this.p.d; } catch (e) {}
+    if (!(await this.append(0))) return;
+    this.ready = true; if (this.startAt) { const t = this.startAt; this.startAt = 0; this.next = this.idxAt(t); } this.pump(true);
+  }
+  ahead() { const b = this.sb && this.sb.buffered, t = this.el.currentTime; try { for (let i = 0; b && i < b.length; i++) if (b.start(i) <= t + .4 && b.end(i) > t) return b.end(i) - t; } catch (e) {} return 0; }
+  idxAt(t) { let k = 1; for (let i = 1; i < this.n; i++) if (this.c.t[i] <= t + .05) k = i; return k; }
+  seekTo(t) { if (this.gone) return; if (!this.ready) { this.startAt = t; return; } if (this.ahead() > .5) return; this.next = this.idxAt(t); this.ended = false; this.gen++; this.pump(true); }
+  async pump(force) {
+    if (this.busy || this.gone || !this.ready) return;
+    if (this.next >= this.n) return this.finish();
+    if (!force && this.ahead() > 25) return;
+    this.busy = true; const g = this.gen, i = this.next; const ok = await this.append(i); this.busy = false;
+    if (!ok || this.gone) return;
+    if (g !== this.gen) return this.pump(true);
+    this.next = i + 1; this.trim(); if (this.ahead() < 25) this.pump();
+  }
+  finish() { if (this.ended || !this.sb) return; this.idle().then(() => { try { if (this.ms.readyState === "open" && this.next >= this.n) { this.ms.endOfStream(); this.ended = true; } } catch (e) {} }); }
+  idle() { const sb = this.sb; return !sb || !sb.updating ? Promise.resolve() : new Promise(r => sb.addEventListener("updateend", r, {once: true})); }
+  trim() { const t = this.el.currentTime, sb = this.sb; if (!sb || sb.updating || t < 45) return; try { if (sb.buffered.length && sb.buffered.start(0) < t - 30) sb.remove(0, t - 30); } catch (e) {} }
+  async get(i) {
+    const us = this.p.us, a = this.off[i], len = this.c.l[i], z = a + len - 1;
+    for (let k = 0; k < us.length; k++) {
+      const j = (this.ui + k) % us.length, u = us[j]; let b = null;
+      try {
+        if (this.whole && this.whole.u === u) b = this.whole.b.subarray(a, z + 1);
+        else { const r = await fetch(u, {headers: {Range: `bytes=${a}-${z}`}});
+          if (r.status === 206) b = new Uint8Array(await r.arrayBuffer());
+          else if (r.ok) { const w = new Uint8Array(await r.arrayBuffer()); this.whole = {u, b: w}; b = w.subarray(a, z + 1); } }   // 途中から取れない置き場：丸ごと取って切り分ける
+      } catch (e) { b = null; }
+      if (!b || b.length !== len) continue;
+      if (hexOfBuf(await crypto.subtle.digest("SHA-256", b)) === this.c.h[i]) { this.ui = j; return b; }
+      this.bad = 1; if (this.whole && this.whole.u === u) this.whole = null;
+      if (this.h.why) this.h.why("置き場で中身が変わっていたので、その切れ端は流しません（" + hostOf(u) + "・" + (i + 1) + "/" + this.n + "）");
+    }
+    return null;
+  }
+  async append(i) {
+    const b = await this.get(i); if (this.gone) return false;
+    if (!b) {
+      if (this.bad) { this.stop(); return false; }   // どの置き場でも指紋が合わない：流さない
+      this.net = (this.net || 0) + 1; if (this.net > 4) { this.bail("置き場から取れない"); return false; }
+      await new Promise(r => setTimeout(r, 1200 * this.net)); return this.append(i);
+    }
+    this.net = 0; await this.idle(); if (this.gone) return false;
+    try { await new Promise((res, rej) => { const sb = this.sb, ok = () => { sb.removeEventListener("error", ng); res(); }, ng = () => { sb.removeEventListener("updateend", ok); rej(new Error("append")); };
+      sb.addEventListener("updateend", ok, {once: true}); sb.addEventListener("error", ng, {once: true}); sb.appendBuffer(b); }); }
+    catch (e) { if (e && e.name === "QuotaExceededError") { try { this.sb.remove(0, Math.max(0, this.el.currentTime - 5)); await this.idle(); return this.append(i); } catch (x) {} } this.bail("この端末では切れ端で流せない"); return false; }
+    return true;
+  }
+  stop() { if (this.gone) return; this.dispose(); try { this.el.pause(); this.el.removeAttribute("src"); this.el.load(); } catch (e) {} if (this.h.fail) this.h.fail(); }
+  bail(why) { if (this.gone) return; const t = this.el.currentTime || 0, run = !this.el.paused; if (this.h.why) this.h.why(why + "（ふつうの流し方にもどしました）"); this.dispose(); if (this.h.fallback) this.h.fallback(t, run); }
+  dispose() { if (this.gone) return; this.gone = true; const el = this.el;
+    el.removeEventListener("seeking", this.onSeek); el.removeEventListener("timeupdate", this.onTime); el.removeEventListener("waiting", this.onWait);
+    try { URL.revokeObjectURL(this.url); } catch (e) {} this.whole = null; }
+}
 class Chain {
   // 1つの再生器で続けて流す（スマホでも、押したあとの再生がそのまま続く）。次の部分は流れているあいだに先に取っておく
   constructor(el, parts, h) {
@@ -1644,19 +1721,28 @@ class Chain {
       if (!el.paused && !el.ended && c === this.lastT && el.readyState < 3) { if (++this.stall >= 3) { this.stall = 0; this.stuckNow(); } } else this.stall = 0; this.lastT = c; }, 1000);
     el.dataset.chain = "1";
     const k = parts[0] && !parts[0].k ? parts[0].us.indexOf(el.getAttribute("src")) : -1;
-    if (k < 0 || el.error) this.load(0); else el.dataset.u = k;
+    if (k < 0 || el.error || this.segFor(0)) this.load(0); else el.dataset.u = k;
   }
   // 置き場から流せない・止まったときだけ、ファイルを丸ごと取って手元の写しから流す（ふだんは置き場からそのまま流し、余計に取らない）
-  stuckNow() { const j = this.i, p = this.parts[j]; if (!p || p.k || !p.x) return; if (this.cache[j] && this.el.src !== this.cache[j]) return this.swap(j); this.stuck = true; if (!(this.loading && this.loading[j])) this.check(j, this.el.getAttribute("src") || p.us[0]); }
+  segFor(j) { const p = this.parts[j]; return !!(LIVE && p && p.c && !p.k && !(this.noSeg && this.noSeg[j]) && segOK(p.c)); }
+  stuckNow() { if (this.seg && !this.seg.gone) return; const j = this.i, p = this.parts[j]; if (!p || p.k || !p.x) return; if (this.cache[j] && this.el.src !== this.cache[j]) return this.swap(j); this.stuck = true; if (!(this.loading && this.loading[j])) this.check(j, this.el.getAttribute("src") || p.us[0]); }
   swap(j) {
     const el = this.el, t = el.currentTime || 0; this.stuck = false; if (this.h.why) this.h.why("置き場から流すと止まるので、取り終えた写しから流しています");
     el.src = this.cache[j]; el.addEventListener("loadedmetadata", () => { try { el.currentTime = t; } catch (e) {} el.play().catch(() => {}); }, {once: true}); el.play().catch(() => {});
   }
-  dispose() { clearInterval(this.dog); for (const [t, f] of this.ev) this.el.removeEventListener(t, f); this.el.pause(); for (const k in this.cache) if (!this.parts[k].k) URL.revokeObjectURL(this.cache[k]); this.cache = {}; this.gone = true; }
+  dispose() { clearInterval(this.dog); if (this.seg) this.seg.dispose(); for (const [t, f] of this.ev) this.el.removeEventListener(t, f); this.el.pause(); for (const k in this.cache) if (!this.parts[k].k) URL.revokeObjectURL(this.cache[k]); this.cache = {}; this.gone = true; }
   load(j, t = 0, run = false) {
     const el = this.el, p = this.parts[j]; this.i = j; el.dataset.u = 0;
     // 封をしたもの（輪のカード）は取って開いてから流す。公開のものはすぐ流しはじめ、裏で中身の指紋を確かめる（合わなければ止める）
     // （先に全部を取ってから流すと、iPhone では押してから時間がたつため再生が止められ、長い動画は待たされる）
+    if (this.seg) { this.seg.dispose(); this.seg = null; }
+    if (this.segFor(j)) {   // 切れ端ごとに確かめて流す
+      this.seg = new Seg(el, p, {why: w => this.h.why && this.h.why(w), fail: () => this.h.fail && this.h.fail(),
+        fallback: (tt, rr) => { (this.noSeg = this.noSeg || {})[j] = 1; this.seg = null; if (this.i === j && !this.gone) this.load(j, tt, rr); }});
+      if (t) this.seg.startAt = t;
+      if (t || run) { const go = () => { try { if (t) el.currentTime = t; } catch (e) {} if (run) el.play().catch(() => {}); }; el.addEventListener("loadedmetadata", go, {once: true}); }
+      return;
+    }
     if (p.k && !this.cache[j]) { this.wait = true; this.prefetch(j).then(() => { if (this.gone || this.i !== j) return; this.wait = false; if (!this.cache[j]) { if (this.h.fail) this.h.fail(); return; } this.load(j, t, run || this.want); }); return; }
     el.src = this.cache[j] || p.us[0];
     if (t || run) { const go = () => { try { if (t) el.currentTime = t; } catch (e) {} if (run) el.play().catch(() => {}); }; if (el.readyState >= 1) go(); else el.addEventListener("loadedmetadata", go, {once: true}); }
@@ -1679,6 +1765,7 @@ class Chain {
     this.el.pause(); this.el.removeAttribute("src"); try { this.el.load(); } catch (e) {} if (this.h.fail) this.h.fail();
   }
   async prefetch(j) {
+    if (this.segFor(j)) return;   // 切れ端で流すものは、そのときに取る
     if (j >= this.parts.length || this.cache[j] || this.busy[j] || !window.fetch) return; this.busy[j] = true;
     const p = this.parts[j];
     if (p.k) { try { const u = await JeniMedia.openPart(p); if (!this.gone) this.cache[j] = u; } catch (e) {} this.busy[j] = false; return; }
@@ -1704,6 +1791,7 @@ class Chain {
     if (j === this.i) { try { this.el.currentTime = t; } catch (e) {} if (this.el.paused) this.el.play().catch(() => {}); } else this.load(j, t, true);
   }
   fail() {
+    if (this.seg && !this.seg.gone) return this.seg.bail("再生器のエラー");
     const el = this.el, j = this.i, us = this.parts[j].us, t = el.currentTime || 0;
     if (this.parts[j].k) { if (this.h.fail) this.h.fail(); return; }
     // 置き場から流せないとき：取り終えた写しがあればそれで、取っている途中なら終わりしだい切り替える
@@ -2241,8 +2329,16 @@ function dmClean(d) {
   if (typeof d.card === "string" && /^[0-9a-zA-Z]{4,80}$/.test(d.card)) o.card = d.card;
   return o.text || o.pics || o.file || o.card ? o : null;
 }
+// 切れ端の表（動画）：置き場が受け取ったままの中身のときだけ（整え直した置き場では使えない）。封をした輪のカードは使わない
+const segOf = (c, x, k) => c && !k && c.x0 === x ? {c: {m: c.m, l: c.l, t: c.t, h: c.h}} : {};
+const cleanSeg = c => { if (!c || typeof c !== "object") return null; const n = Array.isArray(c.l) ? c.l.length : 0;
+  if (n < 2 || n > 400 || !/^video\/mp4; ?codecs="[\w.,\s-]{1,80}"$/.test(c.m || "") || !Array.isArray(c.t) || !Array.isArray(c.h) || c.t.length !== n || c.h.length !== n) return null;
+  if (!c.l.every(v => Number.isInteger(v) && v > 0 && v <= 20 * 1048576) || c.l.reduce((a, b) => a + b, 0) > 20 * 1048576) return null;
+  if (!c.t.every(v => typeof v === "number" && isFinite(v) && v >= 0 && v <= 7200) || !c.h.every(v => /^[0-9a-f]{64}$/.test(v))) return null;
+  return {m: c.m, l: c.l.slice(), t: c.t.slice(), h: c.h.slice()}; };
 const cleanPart = p => { if (!p || !httpsOk(p.u)) return null; const o = {u: p.u, x: /^[0-9a-f]{64}$/.test(p.x) ? p.x : "", m: Array.isArray(p.m) ? p.m.filter(httpsOk).slice(0, 3) : [], e: /^\.[a-z0-9]{2,4}$/i.test(p.e || "") ? p.e : "", d: Math.max(0, Math.min(3600, +p.d || 0))};
-  if (/^[0-9a-f]{64}$/.test(p.k || "")) { o.k = p.k; o.t = /^(image|audio|video)\/[\w.+-]{1,30}$/.test(p.t || "") ? p.t : ""; } return o; };
+  if (/^[0-9a-f]{64}$/.test(p.k || "")) { o.k = p.k; o.t = /^(image|audio|video)\/[\w.+-]{1,30}$/.test(p.t || "") ? p.t : ""; }
+  else { const c = cleanSeg(p.c); if (c) o.c = c; } return o; };
 function cleanMedia(m) {
   const o = {img: dataImgOk(m.img) ? m.img : "", src: httpsOk(m.src) ? m.src : "", len: /^\d{1,2}(:\d\d){1,2}$/.test(String(m.len || "")) ? String(m.len) : "", note: String(m.note || "").slice(0, 300), url: httpsOk(m.url) ? m.url : "", where: String(m.where || "").slice(0, 60)};
   if (Array.isArray(m.parts)) { const ps = m.parts.slice(0, 120).map(cleanPart).filter(Boolean); if (ps.length) { o.parts = ps; o.src = ps[0].u; o.dur = Math.max(0, Math.min(7300, +m.dur || 0)); } }

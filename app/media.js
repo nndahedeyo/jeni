@@ -78,8 +78,11 @@
     const mp3 = kind === "music" && ac === "mp3";
     const n = copyOK ? 1 : mp3 ? Math.max(1, Math.ceil(dur / Math.floor(LIM.part * 8 / (srcRate * 1.08)))) : Math.max(1, Math.ceil(dur / Math.floor(LIM.part * 8 / (rate * 1.08))));
     const seg = dur / n, parts = [];
+    // 動画は「切れ端に分けた MP4」（fMP4）で作り、切れ端ごとの指紋を控える。流すときに切れ端ごとに確かめてから画面に送る（すり替えられた切れ端は映らない）
+    const frag = kind === "video";
     for (let i = 0; i < n; i++) {
-      const out = new M.Output({format: mp3 ? new M.Mp3OutputFormat() : new M.Mp4OutputFormat({fastStart: "in-memory"}), target: new M.BufferTarget()});
+      const moofs = [];
+      const out = new M.Output({format: mp3 ? new M.Mp3OutputFormat() : frag ? new M.Mp4OutputFormat({fastStart: "fragmented", minimumFragmentDuration: 1, onMoof: (d, pos, ts) => { moofs.push([pos, ts]); }}) : new M.Mp4OutputFormat({fastStart: "in-memory"}), target: new M.BufferTarget()});
       const start = i * seg, end = i === n - 1 ? dur : (i + 1) * seg;
       const opts = {input: i === 0 ? input : open(), output: out, tags: {}, showWarnings: false};
       if (n > 1) opts.trim = {start, end};
@@ -98,13 +101,26 @@
       if (at && conv.discardedTracks.some(x => x.track.type === "audio" && x.reason !== "discarded_by_user")) throw new Error("この端末では、この音を変換できません");
       conv.onProgress = p => onp((i + p) / n);
       await conv.execute();
-      const blob = new Blob([out.target.buffer], {type: mp3 ? "audio/mpeg" : kind === "music" ? "audio/mp4" : "video/mp4"});
+      const buf = out.target.buffer;
+      const blob = new Blob([buf], {type: mp3 ? "audio/mpeg" : kind === "music" ? "audio/mp4" : "video/mp4"});
       if (blob.size > 19.5 * MiB) throw new Error("分けても大きすぎました");
       const d = Math.round((end - start) * 100) / 100;
-      if (onPart) parts.push({...(await onPart(blob, i, n, d)), d, size: blob.size}); else parts.push({blob, d, size: blob.size});
+      let c = null;
+      if (frag && moofs.length) { try { c = await chunkTable(buf, moofs, await out.getMimeType()); } catch (e) { c = null; } }
+      if (onPart) parts.push({...(await onPart(blob, i, n, d)), d, size: blob.size, c}); else parts.push({blob, d, size: blob.size, c});
     }
     onp(1);
     return {parts, dur, poster, w, h, codec: mp3 ? "mp3" : aCopy ? "aac" : acodec, copied: copyOK};
+  }
+
+  // 切れ端の表：はじめ（ftyp+moov）と、1MB ほどずつにまとめた切れ端（moof+mdat の並び）。それぞれの長さ・はじまる時刻・指紋と、全体の指紋
+  async function chunkTable(buf, moofs, mime) {
+    const u8 = new Uint8Array(buf), N = u8.length, TARGET = 1024 * 1024;
+    const starts = [0, moofs[0][0]], times = [0, Math.round(moofs[0][1] * 100) / 100];
+    for (const [pos, ts] of moofs.slice(1)) if (pos - starts[starts.length - 1] >= TARGET) { starts.push(pos); times.push(Math.round(ts * 100) / 100); }
+    const l = [], h = [];
+    for (let i = 0; i < starts.length; i++) { const a = starts[i], z = i + 1 < starts.length ? starts[i + 1] : N; l.push(z - a); h.push(hexOf(await crypto.subtle.digest("SHA-256", u8.subarray(a, z)))); }
+    return {m: mime, l, t: times, h, x0: hexOf(await crypto.subtle.digest("SHA-256", u8))};
   }
 
   // 写真：長い辺 2048 まで、描き直して位置情報などを消す。表に使う小さい写し（640）も作る

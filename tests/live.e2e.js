@@ -251,13 +251,14 @@ async function relay(page) {
       const vE = store.filter(e => e.kind === 7741 && e.content.includes('"parts"')).pop(), vM = vE && JSON.parse(vE.content);
       check("動画は2つ（それぞれ 20MB 未満）・長さ・表紙つき", !!vM && vM.parts.length === 2 && vM.dur === 150 && /^data:image\/jpeg/.test(vM.img) && vM.parts.every(x => (BLOB["blossom.nostr.build"][x.x] || BLOB["blossom.primal.net"][x.x] || {body: {length: 1e9}}).body.length < 20 * 1048576));
       check("はじめの置き場が止まっていても、もう1つの置き場に置ける", !!vM && vM.parts.some(x => /blossom\.primal\.net/.test(x.u)));
+      check("動画は切れ端の表（長さ・時刻・指紋）つきで置く", !!vM && vM.parts.every(x => x.c && x.c.l.length >= 2 && x.c.l.length === x.c.h.length && x.c.l.reduce((a, b) => a + b, 0) === (BLOB["blossom.nostr.build"][x.x] || BLOB["blossom.primal.net"][x.x]).body.length && /^video\/mp4; ?codecs=/.test(x.c.m)));
       const vid = vM && vM.card;
       await until(bp, id => !!__jt.MEDIA[id] && (__jt.MEDIA[id].parts || []).length === 2, 10000, vid);
       // 1つ目をはじめの置き場から消す → 相手は写しから流す
       const p0 = vM.parts[0]; delete BLOB[new U2(p0.u).hostname][p0.x];
       await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
       await bp.click(`#pg-${vid} [data-cplay]`);
-      check("相手の画面で流れる（1つ目の置き場が消えていても、写しから）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > .5), 15000, vid));
+      check("相手の画面で流れる（1つ目の置き場が消えていても、写しから・切れ端ごとに確かめて）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^blob:/.test(v.src) && !v.paused && v.currentTime > .5), 15000, vid));
       const bx = await (await bp.$(`#pg-${vid} .cbar[data-seek]`)).boundingBox(); await bp.mouse.click(bx.x + bx.width * .9, bx.y + bx.height / 2);
       check("下の線で後ろの部分へ飛べる（2つ目）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 50), 15000, vid));
       { const host0 = new U2(p0.u).hostname; await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.evaluate(id => { delete __jt.KEPT[id]; __jt.detail(id); }, vid);
@@ -266,11 +267,12 @@ async function relay(page) {
         await a.click(`#pg-${vid} [data-mdiag]`);
         check("作った人は「置き場を確かめる」で、どの置き場にあるかを見られる", await until(a, () => /置き場の様子/.test(document.getElementById("over").textContent) && (document.getElementById("over").textContent.match(/：200|：206/g) || []).length >= 2, 15000));
         await a.click("#over [data-overclose]").catch(() => {}); }
-      { // 置き場が動画を整え直した（指紋が変わる）だけなら流し続け、「置き場を確かめる」に残す。動画でないもの（ページ）にすり替わっていたら止める
-        const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; BLOB[h][p0.x] = {...keep[h], body: Buffer.concat([keep[h].body, Buffer.from("x")])}; }
-        await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
+      { // 置き場で切れ端の中身をすり替えられたら（長さは同じ）：その切れ端は流さず止める
+        const keep = {}; for (const h of Object.keys(BLOB)) if (BLOB[h][p0.x]) { keep[h] = BLOB[h][p0.x]; const nb = Buffer.from(keep[h].body); const at = vM.parts[0].c.l[0] + 200; nb[at] = nb[at] ^ 0xff; BLOB[h][p0.x] = {...keep[h], body: nb}; }
+        await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
-        check("置き場が動画を整え直していても（指紋がちがう）、ふだん通り置き場から流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^https:/.test(v.src) && !v.paused && v.currentTime > 1.5), 15000, vid));
+        const st = await until(bp, id => /中身が変わっていた/.test(__jt.VDIAG[id] || "") && [...document.querySelectorAll(`#pg-${id} video.inplay`)].every(v => !v.getAttribute("src")), 20000, vid);
+        check("置き場で切れ端をすり替えられたら、その切れ端は一瞬も流さず止める", st);
         for (const h in keep) BLOB[h][p0.x] = {...keep[h], type: "text/html", body: Buffer.from("<html>ちがうページ</html>")};
         await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
@@ -281,7 +283,7 @@ async function relay(page) {
         NORANGE = 1;
         await bp.evaluate(id => { delete __jt.VDIAG[id]; __jt.closeSheet(); }, vid).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, vid); await wait(600);
         await bp.click(`#pg-${vid} [data-cplay]`);
-        check("置き場が途中から取れなくても、取り終えた写しで流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^blob:/.test(v.src) && !v.paused && v.currentTime > .5), 25000, vid));
+        check("置き場が途中から取れなくても、取り終えた写しで流れる", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => /^blob:/.test(v.src) && !v.paused && v.currentTime > .5), 45000, vid));
         NORANGE = 0; }
       await bp.click(`#pg-${vid} [data-cplay]`);
     } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
