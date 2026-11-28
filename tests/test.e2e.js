@@ -390,7 +390,7 @@ async function routeMB(p) {
     check(tag + " 招待のリンクから参加すると 1,000 jeni", /1,000 jeni が届きました/.test(await p.textContent("#sheet")) && await p.evaluate(() => __jt.S.users["e".repeat(64)].member));
     await p.click("#sheet [data-close]"); await p.selectOption("#who", K("a")); await p.waitForTimeout(150);
     // きまりの版・記録の控え（書き出し・要約を刻む）・ウォレットの場所
-    check(tag + " 出来事にきまりの版が付く", await p.evaluate(() => __jt.EV.every(e => JSON.parse(e.content).v === 3)));
+    check(tag + " 出来事にきまりの版が付く", await p.evaluate(() => __jt.EV.every(e => JSON.parse(e.content).v === 4)));
     await p.click(".me [data-me]"); await p.waitForTimeout(150);
     check(tag + " わたしのカード：記録の控え（書き出す・刻む）", !!(await p.$("[data-export]")) && /刻んだ要約 1日分/.test(await p.textContent("#sheet")));
     await p.click("[data-anchor]"); await p.waitForTimeout(150);

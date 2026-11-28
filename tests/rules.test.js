@@ -298,6 +298,24 @@ test("自分のカードには投げ銭できない。取り下げたカード�
   const S = reduce([...base(), a, pj, ev(A, 12, {t: "tip", card: a.id, amount: 10}), ev(A, 13, {t: "retire", card: a.id}), ev(A, 14, {t: "attach", project: pj.id, card: a.id})], 20, opt);
   assert.equal(S.users[A].bal, 1000); assert.equal(S.cards[a.id].tipped, 0); assert.equal(S.cards[pj.id].items.length, 0);
 });
+test("認められる人数は、はじまりの人から遠いほど少ない（版4：10・10・10・5・3）。版3の出来事は全員10人", () => {
+  const { R } = require("../app/rules.js");
+  const hx = n => n.toString(16).padStart(64, "0");
+  let n = 1000, at = 100; const evs = [ev(A, 1, {t: "genesis", code: "g", v: 4})];
+  // A（はじまり）→ L1 → L2 → L3 → L4。各段の人が、上限まで＋1人を認めようとする
+  const chain = [A]; for (let d = 0; d < 4; d++) { const next = hx(n++); evs.push(ev(chain[d], at++, {t: "vouch", who: next, v: 4})); chain.push(next); }
+  const extra = {}; for (let d = 1; d <= 4; d++) { extra[d] = []; for (let i = 0; i < 11; i++) { const x = hx(n++); extra[d].push(x); evs.push(ev(chain[d], at++, {t: "vouch", who: x, v: 4})); } }
+  const S = reduce(evs, at + 10, {...opt, genesis: sha256hex("g")});
+  assert.deepEqual([0, 1, 2, 3, 4].map(d => S.users[chain[d]].depth), [0, 1, 2, 3, 4]);
+  const got = d => S.users[chain[d]].vouched.length;
+  assert.equal(got(1), 10); assert.equal(got(2), 10); assert.equal(got(3), 5); assert.equal(got(4), 3);
+  assert.equal(R.vmax(S.users[chain[3]]), 5);
+  // 同じことを版3で出すと、だれでも10人
+  const v3 = evs.map(e => { const c = JSON.parse(e.content); return c.t === "vouch" ? ev(e.pubkey, e.created_at, {...c, v: 3}) : e; });
+  const S3 = reduce(v3, at + 10, {...opt, genesis: sha256hex("g")});
+  assert.equal(S3.users[chain[3]].vouched.length, 10);
+});
+
 test("招待：一度きりの番号で参加できる。期限・使い回し・10人の上限を守る", () => {
   const { sha256hex } = require("../app/rules.js");
   const D = "d".repeat(64), E = "e".repeat(64);

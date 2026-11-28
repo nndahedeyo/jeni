@@ -29,11 +29,22 @@
   function add(ev) { if (known.has(ev.id)) return false; known.add(ev.id); events.push(ev); save(); return true; }
   let t0; const changed = () => { clearTimeout(t0); t0 = setTimeout(() => onChange(), 120); };
 
-  const ours = ev => ev && Object.values(K).includes(ev.kind) && Array.isArray(ev.tags) && ev.tags.some(t => t[0] === "t" && t[1] === TAG);
+  // 受け取る出来事の形を先に確かめる（番号・署名の形、大きさ、付け札の数）。形の合わないもの・大きすぎるものは読まない
+  const H64 = /^[0-9a-f]{64}$/, H128 = /^[0-9a-f]{128}$/, MAXC = 500000, MAXRULE = 20000;
+  const shapeOk = ev => H64.test(ev.id) && H64.test(ev.pubkey) && H128.test(ev.sig || "") && Number.isInteger(ev.created_at) && ev.created_at > 0 &&
+    typeof ev.content === "string" && ev.content.length <= (ev.kind === K.rule ? MAXRULE : MAXC) && ev.tags.length <= 10 && ev.tags.every(t => Array.isArray(t) && t.length <= 4 && t.every(x => typeof x === "string" && x.length <= 200));
+  const ours = ev => ev && typeof ev === "object" && Object.values(K).includes(ev.kind) && Array.isArray(ev.tags) && shapeOk(ev) && ev.tags.some(t => t[0] === "t" && t[1] === TAG);
+  // 大量に送りつけられても端末があふれないように：参加していない人の出来事は、1人40件・全部で3000件まで。
+  // 数えるのは、中継から昔の出来事を読み終えてから（読み終える前は、だれが参加しているかがまだ分からないため）
+  let members = null; const stranger = Object.create(null); let strangers = 0;
+  function setMembers(list) { members = new Set(list); for (const k in stranger) delete stranger[k]; strangers = 0;
+    for (const e of events) if (!members.has(e.pubkey) && !(me && e.pubkey === me.pk)) { stranger[e.pubkey] = (stranger[e.pubkey] || 0) + 1; strangers++; } }
   async function accept(ev) {
     if (!ours(ev) || known.has(ev.id)) return;
+    const outsider = members && synced() && !members.has(ev.pubkey) && !(me && ev.pubkey === me.pk);
+    if (outsider && ((stranger[ev.pubkey] || 0) >= 40 || strangers >= 3000)) return;
     if (!(await Sig.verifyEvent(ev))) return;
-    if (add(ev)) changed();
+    if (add(ev)) { if (outsider) { stranger[ev.pubkey] = (stranger[ev.pubkey] || 0) + 1; strangers++; } changed(); }
   }
 
   // ---- かぎ ----
@@ -78,11 +89,12 @@
   // ---- 中継につなぐ（古い出来事もさかのぼって全部読む） ----
   function connectOne(url, wait) {
     let ws; try { ws = new WebSocket(url); } catch (e) { return; }
-    const flt = {kinds: Object.values(K), "#t": [TAG]}, pg = {oldest: Infinity, got: 0, page: 0};
+    const flt = {kinds: Object.values(K), "#t": [TAG]}, pg = {oldest: Infinity, got: 0, page: 0}; ws._done = false;
     ws.onopen = () => { ws.send(JSON.stringify(["REQ", "j", {...flt, limit: 500}])); flush(); changed(); };
     ws.onmessage = m => { try { const d = JSON.parse(m.data);
       if (d[0] === "EVENT") { pg.got++; if (d[2] && d[2].created_at < pg.oldest) pg.oldest = d[2].created_at; accept(d[2]); }
       if (d[0] === "EOSE" && pg.got >= 500 && pg.page < 60) { pg.page++; pg.got = 0; ws.send(JSON.stringify(["REQ", "j" + pg.page, {...flt, until: pg.oldest - 1, limit: 500}])); }
+      else if (d[0] === "EOSE") ws._done = true;
     } catch (e) {} };
     ws.onclose = () => { const i = sockets.indexOf(ws); if (i >= 0) sockets.splice(i, 1); changed(); setTimeout(() => connectOne(url, Math.min((wait || 2000) * 2, 60000)), wait || 2000); };
     ws.onerror = () => {};
@@ -96,6 +108,7 @@
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   }
   const online = () => sockets.some(s => s.readyState === 1);
+  function synced() { const os = sockets.filter(s => s.readyState === 1); return os.length > 0 && os.every(s => s._done); }
 
   // ---- 封：2人のかぎ（ECDH）・輪のかぎ ----
   const pairBytes = pk => Seal.pairKey(me.sk, pk);
@@ -157,7 +170,7 @@
   root.JeniLive = {
     K, TAG, RELAYS, store, now,
     get me() { return me; }, newMe, importKey,
-    get events() { return events; }, get pending() { return outbox.length; }, publish, sign, start, online, flush,
+    get events() { return events; }, get pending() { return outbox.length; }, publish, sign, start, online, flush, setMembers,
     passkeyOK, passkeySave, passkeyRestore, backupKeep,
     sealTo, openFrom, sealWith, openWith, randHex: n => Sig.hex(crypto.getRandomValues(new Uint8Array(n))),
   };

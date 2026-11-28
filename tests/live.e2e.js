@@ -61,7 +61,7 @@ async function relay(page) {
   const b = await chromium.launch({args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]});
   const errs = [], log = [];
   const check = (l, c) => { if (!c) process.exitCode = 1; log.push((c ? "OK  " : "NG  ") + l); };
-  const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); }); await relay(p);
+  const open = async (ctx, hash = "") => { const p = await ctx.newPage(); p.on("pageerror", e => errs.push(e.message)); p.on("console", m => { if (/Content Security Policy/.test(m.text())) errs.push("CSP: " + m.text().slice(0, 200)); }); if (process.env.REC) { await p.exposeFunction("__jaRec", x => RECSET.add(x)).catch(() => {}); await p.addInitScript({path: path.join(__dirname, "i18n", "rec.js")}); } if (process.env.LANG_EN) await p.addInitScript(() => { Object.defineProperty(navigator, "languages", {get: () => ["en-US", "en"]}); Object.defineProperty(navigator, "language", {get: () => "en-US"}); }); await relay(p);
     await p.route(/^https?:\/\//, r => r.fulfill({status: 404, body: ""}));   // 外へは出さない（刻みの記録の読み込みなど）
     await blossom(p);
     await p.goto(URL + hash); await p.waitForTimeout(700); return p; };
@@ -130,6 +130,14 @@ async function relay(page) {
     await bp.click("[data-overclose]").catch(() => {});
     // 通話（2人の端末を直接つなぐ）
     await a.click("[data-overclose]").catch(() => {});
+    // 安全の確かめ：悪意のある中身を送りつけても、画面に紛れ込まない・表が書き換わらない
+    { const evil = 'x" onerror="window.__pwned=1" a="', img = "data:image/png;base64,AAAA" + evil;
+      await a.evaluate(([evil, img]) => { const L = __jt.LV || window.JeniLive; L.publish(L.K.media, {profile: true, pic: img, bg: img}); const c = Object.values(__jt.S.cards).find(c => c.by === L.me.pk); if (c) L.publish(L.K.media, {card: c.id, img, len: "<b>x</b>", src: "https://x.test/a\"b"});
+        L.publish(L.K.rule, {v: 4, t: "hold", card: "__proto__"}); L.publish(L.K.rule, {v: 4, t: "tip", card: "__proto__", amount: 1}); const u = __jt.S.users[L.me.pk]; window.__oldp = {name: u.name, line: u.line}; L.publish(L.K.rule, {v: 4, t: "profile", name: "<img src=x onerror=window.__pwned=2>", line: u.line}); }, [evil, img]);
+      await wait(1500);
+      for (const pg of [a, bp]) { await pg.evaluate(() => { __jt.closeSheet && __jt.closeSheet(); }); await pg.click('[data-f="people"]').catch(() => {}); await wait(300); await pg.click('[data-f="all"]').catch(() => {}); await wait(300); }
+      check("悪意のある画像・名前・番号を送りつけても、画面に紛れ込まない・表が書き換わらない", await bp.evaluate(() => !window.__pwned && !document.querySelector("[onerror]") && ({}).bal === undefined && ({}).holders === undefined && Object.prototype.tipped === undefined) && await a.evaluate(() => !window.__pwned));
+      await a.evaluate(() => { const L = window.JeniLive; L.publish(L.K.rule, {v: 4, t: "profile", ...window.__oldp}); }); await wait(800); }
     await a.evaluate(pk => __jt.person(pk), bpk); await wait(300);
     await a.click("#sheet .pcomm [data-call]"); await wait(1500);
     check("電話をかけると、相手に着信", await until(bp, () => !!document.querySelector("[data-pickup]"), 8000));
@@ -377,6 +385,7 @@ async function relay(page) {
     check("中継につながらないあいだは「つないでいます」", /つないでいます/.test(await a3.textContent(".tbar .tag")));
     down = false;
     check("どの中継にも、試験の外の宛先へはつながない", realSockets === 0);
+    check("読み込みの決まり（CSP）がページに入っていて、決まりに反するものがない", /http-equiv="Content-Security-Policy"/.test(fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8")) && !errs.some(x => /^CSP/.test(x)));
     check("画面のエラーなし", errs.length === 0);
   } catch (e) { log.push("NG  例外: " + e.message.split("\n")[0]); process.exitCode = 1; }
   console.log(log.join("\n")); if (errs.length) console.log("errors:", errs.slice(0, 5));

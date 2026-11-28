@@ -24,10 +24,21 @@ head = ('<!doctype html><html lang="ja"><head><meta charset="utf-8">'
         '<meta name="theme-color" content="#efe9dc"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">'
         '<meta name="apple-mobile-web-app-title" content="jeni"><meta name="apple-mobile-web-app-status-bar-style" content="default">'
         '<style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}[hidden]{display:none!important}img{max-width:100%}</style>'
-        '<script>window.JENI_LIVE = true;</script>'
+        # ほかのサイトの枠の中では動かない（見えない枠を重ねて押させる「クリックの乗っ取り」を防ぐ）
+        '<script>window.JENI_LIVE = true; if (window.top !== window.self) { document.documentElement.style.display = "none"; try { window.top.location = window.location.href; } catch (e) {} throw new Error("framed"); }</script>'
         f'<script>{rd("sig.js")}</script><script>{rd("seal.js")}</script><script>{rd("live.js")}</script>'
         '</head><body>\n')
 out = head + body + "\n</body></html>\n"
+# 読み込んでよいものを決める（CSP）：このページの中の決まったスクリプトと、動画の変換の部品（jsDelivr）だけを動かす。
+# 人が書いた文字に紛れたスクリプトは動かない。中の各スクリプトは、その中身の指紋（SHA-256）で許す
+import base64, hashlib as _h
+_sh = sorted({"'sha256-" + base64.b64encode(_h.sha256(m.encode("utf-8")).digest()).decode() + "'" for m in re.findall(r"<script>(.*?)</script>", out, flags=re.S)})
+csp = ("default-src 'self'; "
+       f"script-src 'self' {' '.join(_sh)} https://cdn.jsdelivr.net 'wasm-unsafe-eval'; "
+       "worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; media-src 'self' https: blob: data:; "
+       "connect-src 'self' https: wss:; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; "
+       "font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'; manifest-src 'self'")
+out = out.replace('<meta charset="utf-8">', f'<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="{csp}">', 1)
 # 公開する場所：このリポジトリのいちばん上（index.html）と、作ったものの置き場（nndahedeyo.github.io/jeni/）に同じものを置く
 open(os.path.join(here, "index.html"), "w", encoding="utf-8").write(out)
 print("built index.html", len(out))

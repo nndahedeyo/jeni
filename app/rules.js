@@ -12,9 +12,10 @@
 "use strict";
 (function (root) {
   const R = {
-    version: 3,         // きまりの版（2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人へ。3：1人が認められるのは10人まで）。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
+    version: 4,         // きまりの版（2：プロジェクトへの投げ銭の半分は、自分のカードをつないだ人へ。3：1人が認められるのは10人まで）。出来事には {v: 版} を付ける。版のない出来事は 1 とみなす。知らない（新しすぎる）版は読まない
     start: 1000,        // 参加したときに届く jeni（配る量は使われ方を見て変わることがある。変わるときも全員に同じきまり）
-    vouchMax: 10,       // 1人が認められる人数（版3から。版2までの出来事は3人まで）
+    vouchMax: 10,       // 1人が認められる人数のいちばん多いとき（はじまりの人と、その人が認めた人）
+    vouchBy: [10, 10, 10, 5, 3],   // はじまりの人から何段目か（0＝はじまりの人）で、認められる人数（版4から。近い2段は多く、3次は5人、4次から3人）。版3は全員10人、版2までは3人
     capPaid: 3,         // 同じカードを持てる数
     capFree: 1,         // 無料のカードを持てる数
     priceMax: 1000000,
@@ -28,6 +29,7 @@
     commentMax: 500,
     inviteMax: 7 * 86400,   // 招待のリンク・QR が使える長さ（秒）の上限
   };
+  R.vmax = u => R.vouchBy[Math.min((u && u.depth) || 0, R.vouchBy.length - 1)];   // いまの版で、その人が認められる人数
   const KINDS = ["rwa", "event", "service", "music", "video", "picture", "text", "app", "shop", "org", "project", "other"];
   // つなぐカード：ほかのカードを束ねる。プロジェクトはだれでも自分のカードをつなげる。お店・会社や団体は、作った人だけが自分のカードをつなぐ
   const BUNDLE = ["project", "shop", "org"], OPEN_BUNDLE = ["project"];
@@ -65,7 +67,8 @@
     const founders = new Set(opt.founders || R.founders);
     const evs = events.filter(e => e && e.created_at <= now + R.futureSkew).slice()
       .sort((a, b) => a.created_at - b.created_at || (a.id < b.id ? -1 : 1));
-    const S = {users: {}, cards: {}, circles: {}, comments: {}, log: [], genesis: null, sends: [], sealed: []};
+    // 名前の付いた表は、ふつうの物の性質を持たない形で作る（"__proto__" などの番号を送り込まれても、表そのものが書き換わらないように）
+    const S = {users: Object.create(null), cards: Object.create(null), circles: Object.create(null), comments: Object.create(null), log: [], genesis: null, sends: [], sealed: []};
     const U = pk => S.users[pk] || (S.users[pk] = {pk, name: "", member: false, bal: 0, vouchedBy: null, vouched: [], joinedAt: null, deals: 0, friends: [], invites: []});
     // 実績：持った・持たれた・譲った・譲られたことが1回でもある人（知らせを出せるのはこの人たち）
     const trusted = pk => S.users[pk] && S.users[pk].member && S.users[pk].deals >= 1;
@@ -76,7 +79,8 @@
     // 残り＝作った数から、作った人が渡した数を引いたもの（譲ったり贈ったりしても戻らない。返したときだけ戻る）
     const left = c => c.supply == null ? Infinity : c.supply - c.issued;
     const pay = (from, to, n) => { U(from).bal -= n; U(to).bal += n; };
-    const join = (pk, at, by) => { const u = U(pk); u.member = true; u.bal += R.start; u.joinedAt = at; u.vouchedBy = by; };
+    const vmaxOf = (u, v) => (v || 1) >= 4 ? R.vouchBy[Math.min(u.depth || 0, R.vouchBy.length - 1)] : (v || 1) === 3 ? 10 : 3;
+    const join = (pk, at, by) => { const u = U(pk); u.member = true; u.bal += R.start; u.joinedAt = at; u.vouchedBy = by; u.depth = by ? (U(by).depth || 0) + 1 : 0; };
     const ok = (e, what) => S.log.push({at: e.created_at, id: e.id, by: e.pubkey, what});
 
     for (const e of evs) {
@@ -93,10 +97,10 @@
 
       if (c.t === "profile") { me.name = str(c.name, 40); me.line = str(c.line, 60); continue; }
 
-      // 1 はじまり：参加している人が、まだの人を認める（1人10人まで）
-      const vmax = (c.v || 1) >= 3 ? R.vouchMax : 3;
+      // 1 はじまり：参加している人が、まだの人を認める（はじまりの人から遠いほど少なく：10→10→5→3人）
+      const vmax = u => vmaxOf(u, c.v);
       if (c.t === "vouch") {
-        if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || me.vouched.length >= vmax) continue;
+        if (!me.member || !isHex(c.who, 64) || c.who === e.pubkey || me.vouched.length >= vmax(me)) continue;
         if (U(c.who).member) continue;
         me.vouched.push(c.who); join(c.who, t, e.pubkey); ok(e, "vouch"); continue;
       }
@@ -105,13 +109,13 @@
       // （認められるのは1人10人まで。まだ使われていない招待も数に入れる）
       if (c.t === "invite") {
         const open = me.invites.filter(x => !x.used && x.until >= t).length;
-        if (!me.member || !isHex(c.lock, 64) || !int(c.until, t, t + R.inviteMax) || me.vouched.length + open >= vmax) continue;
+        if (!me.member || !isHex(c.lock, 64) || !int(c.until, t, t + R.inviteMax) || me.vouched.length + open >= vmax(me)) continue;
         me.invites.push({id: e.id, lock: c.lock, until: c.until, used: null}); ok(e, "invite"); continue;
       }
       if (c.t === "join") {
         if (me.member || !isHex(c.by, 64) || typeof c.code !== "string") continue;
         const inv = U(c.by), x = inv.invites.find(y => y.id === c.invite);
-        if (!inv.member || !x || x.used || t > x.until || sha256hex(c.code) !== x.lock || inv.vouched.length >= vmax) continue;
+        if (!inv.member || !x || x.used || t > x.until || sha256hex(c.code) !== x.lock || inv.vouched.length >= vmax(inv)) continue;
         x.used = e.pubkey; inv.vouched.push(e.pubkey); join(e.pubkey, t, c.by); ok(e, "join"); continue;
       }
 
@@ -315,7 +319,7 @@
       // 4 投げ銭：半分は作った人へ、半分は持っている人へ（枚数に応じて）。数に限りのあるカードと、つなぐカード（常連・会員）は全額が作った人へ
       if (c.t === "tip") {
         if (!me.member || e.pubkey === card.by || !int(c.amount, 1, R.tipMax) || me.bal < c.amount) continue;   // 自分のカードには投げ銭しない
-        const holders = {};
+        const holders = Object.create(null);
         if (card.supply == null && !BUNDLE.includes(card.kind)) for (const x of card.copies) if (!x.used && x.vis !== "lock") holders[x.owner] = (holders[x.owner] || 0) + 1;
         // 版2から：プロジェクトは、自分のカードをつないで育てた人（作った人のほか）で半分を等しく分ける。仲間になっただけの人には分けない
         if (card.kind === "project" && (c.v || 1) >= 2) for (const it of card.items) if (it.by !== card.by && U(it.by).member) holders[it.by] = 1;
