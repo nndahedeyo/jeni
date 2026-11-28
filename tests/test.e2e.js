@@ -213,7 +213,7 @@ async function routeMB(p) {
     check(tag + " 会話の名前から、その人のカード", await p.evaluate(() => document.getElementById("over").hidden && /プロフィール/.test(document.getElementById("sheet").textContent)));
     await p.click("#sheet [data-close]");
     // 自分のプロフィールカードから「話す」：お互いに友達の人の一覧 → 会話・通話
-    check(tag + " 残高の下に、話す・電話・贈る（ひとつ）・お知らせの順で小さく", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="chats"]').getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "chats,news" && r.width <= 30; }));
+    check(tag + " 名前の下に「やりとり」（人と人のアイコン＋文字）とお知らせ、残高の下に金の「作る」", await p.evaluate(() => { const b = document.querySelector(".bal").getBoundingClientRect(), ks = [...document.querySelectorAll(".comm [data-fx]")].map(x => x.dataset.fx), c = document.querySelector(".comm").getBoundingClientRect(), r = document.querySelector('[data-fx="chats"]'), mk = document.querySelector(".me-top .make").getBoundingClientRect(), mm = document.querySelector(".me-mid").getBoundingClientRect(); return c.top >= b.bottom - 2 && ks.join() === "chats,news" && /やりとり/.test(r.textContent) && !!r.querySelector('use[href="#i-pair"]') && mk.top >= b.bottom - 2 && mk.right > c.right && mk.bottom <= mm.top + 4 && c.bottom <= mm.top + 2; }));
     check(tag + " 不在着信と新しい会話は、吹き出しの小さな赤い印（数ではなく）", !(await p.$('[data-fx="phones"]')) && !/\d/.test(await p.textContent(".comm")));
     // 贈る：会話の＋から（人から人へ直接渡すものは、会話にまとめる）→ jeni を長押しで。会話の中と相手のお知らせに残る
     { const me0 = await p.evaluate(() => __jt.me);
@@ -522,7 +522,7 @@ async function routeMB(p) {
     check(tag + " プロジェクトの項目", (await p.textContent("#home .list")).includes("みんなの種の地図") && !(await p.textContent("#home .list")).includes("在来種の地図（アプリ）"));
     await p.click('[data-f="app"]');
     check(tag + " アプリの項目", (await p.textContent("#home .list")).includes("在来種の地図（アプリ）") && !(await p.textContent("#home .list")).includes("みんなの種の地図"));
-    check(tag + " 項目は1行で横に滑る・＋は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .make").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 14 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
+    check(tag + " 項目は1行で横に滑る・わたしのカード（螺旋）は右はしに見えている", await p.evaluate(() => { const m = document.querySelector(".menu"), bs = [...m.querySelectorAll("button")], pl = document.querySelector(".menu-w .pmark").getBoundingClientRect(), mr = m.getBoundingClientRect(); return bs.length === 14 && new Set(bs.map(b => Math.round(b.offsetTop))).size === 1 && bs.every(b => b.getBoundingClientRect().width >= 30) && m.scrollWidth > m.clientWidth && pl.left >= mr.right - 1 && pl.right <= innerWidth; }));
     check(tag + " 選んだ項目が見える位置まで滑っている", await p.evaluate(() => { const b = document.querySelector('.menu [aria-pressed="true"]').getBoundingClientRect(), m = document.querySelector(".menu").getBoundingClientRect(); return b.left >= m.left - 1 && b.right <= m.right + 1; }));
     if (SHOT) await p.screenshot({path: `${SHOT}/home2-${w}.png`});
     await p.click('[data-f="all"]');
@@ -536,7 +536,7 @@ async function routeMB(p) {
     if (SHOT) await p.screenshot({path: `${SHOT}/page2-${w}.png`});
     await p.click("#sheet [data-close]");
     // 変わったところ：それぞれ押すと画面が開く
-    const want = [/持っている/, /雨の作業小屋/, /名前・ひとことで探す|人・\d+人/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /Farmer_S さん/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /jeni は、貝のしるし/, /招待する/, /直す/, /定員/, /お知らせ/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
+    const want = [/持っている/, /雨の作業小屋/, /名前・ひとことで探す|人・\d+人/, /畑の収穫体験/, /Ambient Waves/, /畑の一日/, /QRで受け取る/, /田んぼと畑の朝/, /贈る/, /Farmer_S さん/, /見せ方/, /見せる相手|写真を選ぶ/, /畑の一日/, /動画を選ぶ/, /jeni は、貝のしるし/, /招待する/, /直す/, /定員/, /やりとり/, /Farmer_S/, /記録の控え/, /天然酵母/, /持っている人/, /来週の種まき/, /jeni のきまり/];
     for (let i = 0; i < want.length; i++) {
       await p.click("#guide"); await p.waitForTimeout(150); await p.click(`[data-go="${i}"]`); await p.waitForTimeout(300);
       const txt = (await p.evaluate(() => document.getElementById("sheet").hidden ? "" : document.getElementById("sheet").textContent)) + (await p.textContent("#over")) + (await p.textContent("#home"));
