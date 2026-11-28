@@ -245,6 +245,11 @@ async function routeMB(p) {
       await p.fill("#pq", "farmer"); await p.click("#home .list .row:not([hidden]) [data-person]"); await p.waitForTimeout(200);
       check(tag + " 押すとその人のプロフィールカード", !(await p.$eval("#sheet", e => e.hidden)) && /Farmer/.test(await p.textContent("#sheet")));
       await p.click("#sheet [data-close]"); await p.fill("#pq", ""); await p.evaluate(() => { document.getElementById("pq").dispatchEvent(new Event("input", {bubbles: true})); }); await p.click('[data-f="all"]'); }
+    { await p.waitForTimeout(150); const n = (await p.$$("#home .list .row[data-pn]")).length;
+      await p.fill("#pq", "大根"); await p.waitForTimeout(100);
+      const vis = await p.$$eval("#home .list .row[data-pn]", rs => rs.filter(r => !r.hidden).map(r => r.dataset.pn));
+      check(tag + " カードも探せる（題・作った人・場所）", n > 3 && vis.length >= 1 && vis.length < n && vis.every(t => /大根/.test(t)));
+      await p.fill("#pq", ""); await p.waitForTimeout(100); check(tag + " 探す言葉を消すと全部に戻る", (await p.$$eval("#home .list .row[data-pn]", rs => rs.filter(r => !r.hidden).length)) === n); }
     await p.evaluate(() => { __jt.CALLS.push({from: __jt.P.farmer.pk, to: __jt.me, at: __jt.clock + 1, missed: true}); __jt.home(); }); await p.waitForTimeout(150);
     check(tag + " 新しい不在着信は、吹き出しの小さな赤い印", !!(await p.$('[data-fx="chats"] b')));
     await p.click('[data-fx="chats"]'); await p.waitForTimeout(150);

@@ -277,6 +277,7 @@ root.JENI_EN = [
   ["お互いに友達の人と。相手との会話の右上のカメラの印から。受ける人は「ビデオで出る」か「声だけで出る」を選べます。", "With mutual friends, from the camera icon at the top right of your chat. The person receiving can answer with video or voice only."],
   ["残高の下に 吹き出し・贈り物・鈴。話すのも電話も、吹き出しひとつにまとめました（電話は会話の右上から）。知らせは小さな赤い印。相手のカードの吹き出しからも話せます（お互いに友達のとき）。", "Under your balance: bubble, gift, bell. Chats and calls are in the one bubble (calls from the top right of a chat). A small red dot means something new. You can also chat from their card's bubble (mutual friends)."],
   ["中身が確かめられませんでした", "Couldn't verify the content"],
+  ["カードを探す（題・作った人・場所）", "Search cards (title, maker, place)"], ["カードを探す", "Search cards"], ["前の続きから（{*}）", "Resuming from $1"],
   // ---- 人を探す ----
   ["人", "People"], ["人を探す", "Find people"], ["人・{#}人", "People · $1"], ["名前・ひとことで探す", "Search by name or bio"], ["見つかりません", "Not found"],
   ["まだほかに参加している人はいません", "No one else has joined yet"], ["友達", "Friend"], ["友達・{*}", "Friend · $1"],
