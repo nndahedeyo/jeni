@@ -189,6 +189,17 @@
     const ext = (url.match(/\.[a-z0-9]{2,4}$/i) || [""])[0];
     return {u: url, x, m: mir, e: ext};
   }
+  // 置き場の見回り（作った人の端末で）：どこかに残っていれば、消えた置き場へ写し直す。どこにも残っていなければ 0 を返す（元のファイルから置き直してもらう）
+  async function keep(p, sign) {
+    const us = urlsOf(p), alive = [], gone = [];
+    for (const u of us) { try { const r = await fetch(u, {method: "HEAD"}); (r.ok ? alive : gone).push(u); } catch (e) { gone.push(u); } }
+    if (!alive.length) return {alive: 0, fixed: 0};
+    let fixed = 0; const now = Math.floor(Date.now() / 1000);
+    for (const u of gone) { const base = SERVERS.find(s => u.startsWith(s + "/")); if (!base || !p.x) continue;
+      try { const auth = "Nostr " + b64(JSON.stringify(await sign(24242, "jeni に置く", [["t", "upload"], ["x", p.x], ["expiration", String(now + 900)]])));
+        await put(base + "/mirror", JSON.stringify({url: alive[0]}), {"Authorization": auth, "Content-Type": "application/json"}); fixed++; } catch (e) {} }
+    return {alive: alive.length, fixed};
+  }
   // 同じ中身を、写しのある置き場からも取れるように
   const urlsOf = p => [p.u, ...((p.m || []).map(b => `${b}/${p.x}${p.e || ""}`))].filter(Boolean);
 
@@ -200,5 +211,5 @@
     return null;
   }
 
-  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked};
+  root.JeniMedia = {LIM, PLAN, SERVERS, MB_URL, lib, prepare, imageOf, upload, urlsOf, linkOf, fmtLen, sha256, sealBlob, openBlob, openPart, fetchChecked, keep};
 })(typeof globalThis !== "undefined" ? globalThis : this);

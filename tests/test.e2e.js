@@ -250,6 +250,10 @@ async function routeMB(p) {
       const vis = await p.$$eval("#home .list .row[data-pn]", rs => rs.filter(r => !r.hidden).map(r => r.dataset.pn));
       check(tag + " カードも探せる（題・作った人・場所）", n > 3 && vis.length >= 1 && vis.length < n && vis.every(t => /大根/.test(t)));
       await p.fill("#pq", ""); await p.waitForTimeout(100); check(tag + " 探す言葉を消すと全部に戻る", (await p.$$eval("#home .list .row[data-pn]", rs => rs.filter(r => !r.hidden).length)) === n); }
+    await p.selectOption("#lite", "1"); await p.waitForTimeout(150);
+    check(tag + " 見せ方を比べる：はじめは3つ（しぼり・並び・作る・贈る・お知らせが隠れ、話すは残る）", await p.evaluate(() => { const vis = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; }; return !vis(".mods") && !vis("[data-make]") && !vis('[data-fx="gifts"]') && !vis('[data-fx="news"]') && vis('[data-fx="chats"]') && vis('[data-f="people"]') && !vis('[data-f="music"]'); }));
+    await p.selectOption("#lite", ""); await p.waitForTimeout(150);
+    check(tag + " すべての機能に戻せる", await p.evaluate(() => getComputedStyle(document.querySelector("[data-make]")).display !== "none"));
     await p.evaluate(() => { __jt.CALLS.push({from: __jt.P.farmer.pk, to: __jt.me, at: __jt.clock + 1, missed: true}); __jt.home(); }); await p.waitForTimeout(150);
     check(tag + " 新しい不在着信は、吹き出しの小さな赤い印", !!(await p.$('[data-fx="chats"] b')));
     await p.click('[data-fx="chats"]'); await p.waitForTimeout(150);

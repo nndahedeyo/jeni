@@ -252,6 +252,8 @@ async function relay(page) {
       check("相手の画面で流れる（1つ目の置き場が消えていても、写しから）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > .5), 15000, vid));
       const bx = await (await bp.$(`#pg-${vid} .cbar[data-seek]`)).boundingBox(); await bp.mouse.click(bx.x + bx.width * .9, bx.y + bx.height / 2);
       check("下の線で後ろの部分へ飛べる（2つ目）", await until(bp, id => [...document.querySelectorAll(`#pg-${id} video.inplay`)].some(v => !v.paused && v.currentTime > 50), 15000, vid));
+      { const host0 = new U2(p0.u).hostname; await a.evaluate(() => __jt.closeSheet()).catch(() => {}); await a.evaluate(id => { delete __jt.KEPT[id]; __jt.detail(id); }, vid);
+        check("作った人が開くと、置き場の消えた写しを直す（ほかの置き場から写し直す）", await (async () => { for (let k = 0; k < 40; k++) { if (BLOB[host0][p0.x]) return true; await wait(250); } return false; })()); }
       await bp.click(`#pg-${vid} [data-cplay]`);
     } else check("（変換の確かめは MB_DIST がないのでとばしました）", true);
     // ---- 現物の受け取り：持っている人の一度きりの QR を、作った人が読む ----

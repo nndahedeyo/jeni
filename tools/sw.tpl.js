@@ -18,3 +18,6 @@ self.addEventListener("fetch", e => {
     e.respondWith(caches.open(LIB).then(c => c.match(r).then(m => m || fetch(r).then(res => { if (res.ok) c.put(r, res.clone()); return res; }))));
   }
 });
+// 知らせを押したら、jeni を前に出す（開いていなければ開く）
+self.addEventListener("notificationclick", e => { e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(cs => { const c = cs.find(x => x.url.startsWith(self.registration.scope)); return c ? c.focus() : self.clients.openWindow("./"); })); });

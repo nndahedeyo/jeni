@@ -278,6 +278,11 @@ root.JENI_EN = [
   ["残高の下に 吹き出し・贈り物・鈴。話すのも電話も、吹き出しひとつにまとめました（電話は会話の右上から）。知らせは小さな赤い印。相手のカードの吹き出しからも話せます（お互いに友達のとき）。", "Under your balance: bubble, gift, bell. Chats and calls are in the one bubble (calls from the top right of a chat). A small red dot means something new. You can also chat from their card's bubble (mutual friends)."],
   ["中身が確かめられませんでした", "Couldn't verify the content"],
   ["カードを探す（題・作った人・場所）", "Search cards (title, maker, place)"], ["カードを探す", "Search cards"], ["前の続きから（{*}）", "Resuming from $1"],
+  ["ホーム画面のアイコンに数を出す", "Show a count on the home-screen icon"], ["アイコンに数が出ます（アプリを開いたときに新しくなります）", "A count will show on the icon (updated when you open the app)"], ["端末の設定で知らせが止められています", "Notifications are turned off in your device settings"],
+  ["電話がありました", "Incoming call"], ["新しい知らせがあります", "Something new for you"], ["置き場の写しを直しました", "Restored a missing copy in storage"],
+  ["写真・音・動画の一部が置き場から消えています。手元に残した元のファイルを選んで置き直してください。", "Some photos, audio or video are missing from storage. Pick the original file you kept and put it back."], ["置き直す", "Put back"],
+  ["見せ方", "View"], ["すべての機能", "All features"], ["はじめは3つ（見る・持つ・話す）", "Start with 3 (see, hold, talk)"],
+  ["お互いに友達の人とだけ、2人で話したり電話したりできます（鍵つき）。電話は、会話の右上から。電話が鳴るのは、相手が jeni を開いているときだけです。友達になるのは、その人のプロフィールカードから。", "You can chat and call only with mutual friends (end-to-end locked). Calls start from the top right of a chat, and ring only while the other person has jeni open. Become friends from their profile card."],
   // ---- 人を探す ----
   ["人", "People"], ["人を探す", "Find people"], ["人・{#}人", "People · $1"], ["名前・ひとことで探す", "Search by name or bio"], ["見つかりません", "Not found"],
   ["まだほかに参加している人はいません", "No one else has joined yet"], ["友達", "Friend"], ["友達・{*}", "Friend · $1"],
