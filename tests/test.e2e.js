@@ -63,11 +63,11 @@ async function routeMB(p) {
     // 投げ銭：金額を選んで長押し
     const waves = await id("Ambient Waves");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), waves); await p.waitForTimeout(200);
-    check(tag + " 投げ銭の額は最初に届く量に合わせた段（はじめ 5）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "5");
+    check(tag + " 投げ銭の額は最初に届く量に合わせた段（はじめ 1）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "1");
     await p.click(`#pg-${waves} [data-tipstep]`);
-    check(tag + " 額を押すと 5→10 に変わる（画面はそのまま）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "10");
+    check(tag + " 額を押すと 1→5 に変わる（画面はそのまま）", (await p.textContent(`#pg-${waves} [data-tipstep]`)) === "5");
     const b1 = await bal(); await lp(`#pg-${waves} [data-lp="tip"]`);
-    check(tag + " となりを長押しで投げ銭（10 jeni）・合計は変わらない", await bal() === b1 - 10 && await total());
+    check(tag + " となりを長押しで投げ銭（5 jeni）・合計は変わらない", await bal() === b1 - 5 && await total());
     // 動画はカードの中で再生
     const field = await id("畑の一日");
     await p.evaluate(id => document.getElementById("pg-" + id).scrollIntoView(), field);

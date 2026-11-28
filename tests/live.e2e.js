@@ -240,7 +240,19 @@ async function relay(page) {
       check("置き場で中身を差し替えられたら、その写真は使わない（指紋が合わない）", good && !bad);
       BLOB[host][pp.x] = keep; }
     // ---- 長い動画：その場で軽くして、2分ほどずつに分けて置く → 相手の画面で続けて流れる・置き場が1つ消えても写しから ----
-    if (VID) {
+    if (VID) {   // 音（AAC）：切れ端の表つきで置き、相手の画面で切れ端ごとに確かめて流れる
+      const AUD = path.join(os.tmpdir(), "jeni-live-aud.m4a"); if (!fs.existsSync(AUD)) require("child_process").execSync(`ffmpeg -loglevel error -y -f lavfi -i sine=frequency=330:sample_rate=48000 -t 20 -c:a aac -b:a 128k ${AUD}`);
+      await a.evaluate(() => __jt.closeSheet()).catch(() => {});
+      await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="music"]'); await wait(200);
+      await a.fill("#m-title", "試しの音"); await a.setInputFiles("#m-media", AUD);
+      await until(a, () => /音を選びました/.test(document.getElementById("sheet").textContent), 120000);
+      await a.click("[data-create]"); await wait(1200);
+      const aE = store.filter(e => e.kind === 7741 && e.content.includes('"parts"') && e.content.includes("audio/mp4")).pop(), aM = aE && JSON.parse(aE.content);
+      check("音も切れ端の表つきで置く", !!aM && aM.parts.every(x => x.c && /^audio\/mp4/.test(x.c.m)));
+      if (aM) { await until(bp, id => !!__jt.MEDIA[id], 10000, aM.card); await bp.evaluate(() => __jt.closeSheet()).catch(() => {}); await bp.evaluate(id => { __jt.detail(id); document.getElementById("pg-" + id).scrollIntoView(); }, aM.card); await wait(600);
+        await bp.click(`#pg-${aM.card} [data-cplay]`);
+        check("相手の画面で、音も切れ端ごとに確かめて流れる", await until(bp, () => { const p = document.getElementById("player"); return /^blob:/.test(p.src) && !p.paused && p.currentTime > .5; }, 15000));
+        await bp.click(`#pg-${aM.card} [data-cplay]`).catch(() => {}); }
       await a.evaluate(() => __jt.closeSheet()).catch(() => {});
       await a.click("[data-make]"); await a.click('.mk-g button:nth-child(2)'); await a.click('.mk-k [data-mk="video"]'); await wait(200);
       failPrimary = 1;   // はじめの置き場が1度だけ止まっている

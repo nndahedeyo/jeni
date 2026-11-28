@@ -10,8 +10,14 @@ self.addEventListener("fetch", e => {
   const u = new URL(r.url), scope = new URL(self.registration.scope);
   if (u.origin === scope.origin && u.pathname.startsWith(scope.pathname)) {
     // ページ：まず新しいものを取りにいき、つながらなければ控えから
-    e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put(r.mode === "navigate" ? "./" : r, cp)); } return res; })
-      .catch(() => caches.match(r.mode === "navigate" ? "./" : r, {ignoreSearch: true}).then(m => m || caches.match("./"))));
+    // 電波が弱いときは待たせない：新しいものが2.5秒で届かなければ控えから開き、届いたものは次に開くときのために控えておく
+    const key = r.mode === "navigate" ? "./" : r;
+    const net = fetch(r).then(res => { if (res.ok) { const cp = res.clone(); e.waitUntil(caches.open(V).then(c => c.put(key, cp))); } return res; });
+    const old = () => caches.match(key, {ignoreSearch: true}).then(m => m || caches.match("./"));
+    e.respondWith(new Promise(done => {
+      let over = false; const t = setTimeout(() => old().then(m => { if (m && !over) { over = true; done(m); } }), 2500);
+      net.then(res => { if (!over) { over = true; clearTimeout(t); done(res); } }, () => { clearTimeout(t); old().then(m => { if (!over) { over = true; done(m || Response.error()); } }); });
+    }));
     return;
   }
   if (u.hostname === "cdn.jsdelivr.net" && /\/npm\/(@mediabunny\/aac-encoder|mediabunny)@[\d.]+\//.test(u.pathname)) {
